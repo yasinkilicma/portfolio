@@ -575,6 +575,7 @@
             └── Port <span class="highlight3">9997</span>  →  Universal Forwarder
     </div>
 
+    <img src="images/dashboard-overview.png" alt="SOC Security Dashboard Overview" style="width:100%;border-radius:12px;border:1px solid #1e2a42;margin:20px 0;">
     <p>
         Splunk Enterprise runs inside Docker, managed entirely by Terraform. This means the entire lab can be
         destroyed and recreated with a single <code style="background:var(--bg3);padding:2px 8px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:13px;">terraform apply</code> command.
@@ -616,6 +617,7 @@
 
     <p>This revealed the dataset structure — Suricata IDS had 125,584 alerts, SMB traffic had 151,568 events, and Windows Security logs contained 87,430 entries.</p>
 
+    <img src="images/attack-signatures.png" alt="Top 10 Attack Signatures in Splunk" style="width:100%;border-radius:12px;border:1px solid #1e2a42;margin:20px 0;">
     <h3>Step 2 — Identifying the Target</h3>
     <p>Nessus vulnerability scan logs revealed which internal systems were being actively probed by the attacker.</p>
 
@@ -689,6 +691,7 @@
         </tbody>
     </table>
 
+    <img src="images/attacker-ips.png" alt="Top Attacker IPs in Splunk" style="width:100%;border-radius:12px;border:1px solid #1e2a42;margin:20px 0;">
     <!-- CRITICAL FINDING -->
     <div class="callout callout-red">
         <span class="callout-icon">🚨</span>
