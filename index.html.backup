@@ -199,57 +199,6 @@
                         </div>
                     </div>
                 </article>
-                <article class="project-card">
-                    <div class="project-image">
-                        <div class="project-placeholder">
-                            <span>SOC</span>
-                        </div>
-                    </div>
-                    <div class="project-info">
-                        <h3 class="project-title">SOC Home Lab — Terraform + Docker + Splunk</h3>
-                        <p class="project-description">
-                            Built a fully functional SOC lab using Terraform and Docker. Deployed Splunk Enterprise as a SIEM solution,
-                            loaded the BOTS v1 dataset (955,807 real attack events), and investigated a Cerber ransomware incident —
-                            identifying attacker IPs, lateral movement, and attack signatures using SPL queries.
-                        </p>
-                        <div class="project-tags">
-                            <span class="tag">Terraform</span>
-                            <span class="tag">Docker</span>
-                            <span class="tag">Splunk</span>
-                            <span class="tag">SIEM</span>
-                            <span class="tag">Incident Response</span>
-                        </div>
-                        <div class="project-links">
-                            <a href="https://github.com/yasinkilicma/terraform-splunk-demo" target="_blank" class="project-link">GitHub →</a>
-                        </div>
-                    </div>
-                </article>
-
-                <article class="project-card">
-                    <div class="project-image">
-                        <div class="project-placeholder">
-                            <span>IaC</span>
-                        </div>
-                    </div>
-                    <div class="project-info">
-                        <h3 class="project-title">AWS Infrastructure as Code — Terraform + LocalStack</h3>
-                        <p class="project-description">
-                            Provisioned a complete AWS network infrastructure (VPC, Subnet, Internet Gateway, Security Groups, EC2)
-                            using Terraform and LocalStack for local simulation. Demonstrates Infrastructure as Code principles
-                            with version-controlled, repeatable deployments.
-                        </p>
-                        <div class="project-tags">
-                            <span class="tag">Terraform</span>
-                            <span class="tag">AWS</span>
-                            <span class="tag">LocalStack</span>
-                            <span class="tag">IaC</span>
-                            <span class="tag">DevOps</span>
-                        </div>
-                        <div class="project-links">
-                            <a href="https://github.com/yasinkilicma/terraform-localstack-demo" target="_blank" class="project-link">GitHub →</a>
-                        </div>
-                    </div>
-                </article>
 
                 <article class="project-card">
                     <div class="project-image">
