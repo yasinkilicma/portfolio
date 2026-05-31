@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto-Mapping Network Topology with SNMP &amp; LLDP | Yasin Kilic</title>
+    <meta name="description" content="Discovering and visualising network topology automatically using SNMP, LLDP, and CDP — with PNG and interactive D3.js HTML output.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root{--bg:#0a0e1a;--bg2:#0f1525;--bg3:#161d30;--border:#1e2a42;--accent:#00d4ff;--accent2:#ff4757;--accent3:#2ed573;--text:#e0e6f0;--text-muted:#6b7a99;--code-bg:#0d1117}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{background:var(--bg);color:var(--text);font-family:'Sora',sans-serif;font-size:16px;line-height:1.8}
+        header{position:sticky;top:0;z-index:100;background:rgba(10,14,26,.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:16px 0}
+        .header-inner{max-width:860px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between}
+        .logo{font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--accent);text-decoration:none;font-size:18px}
+        .back-link{font-size:13px;color:var(--text-muted);text-decoration:none;display:flex;align-items:center;gap:6px;transition:color .2s}
+        .back-link:hover{color:var(--accent)}
+        .hero{max-width:860px;margin:0 auto;padding:64px 24px 48px;border-bottom:1px solid var(--border)}
+        .hero-meta{display:flex;align-items:center;gap:12px;margin-bottom:24px}
+        .badge{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;padding:4px 10px;border-radius:4px;letter-spacing:.5px}
+        .badge-blue{background:rgba(0,212,255,.1);color:var(--accent);border:1px solid rgba(0,212,255,.2)}
+        .badge-green{background:rgba(46,213,115,.1);color:var(--accent3);border:1px solid rgba(46,213,115,.2)}
+        .meta-date{font-size:13px;color:var(--text-muted);font-family:'JetBrains Mono',monospace}
+        h1{font-size:clamp(28px,5vw,44px);font-weight:700;line-height:1.2;letter-spacing:-1px;margin-bottom:20px}
+        h1 span{color:var(--accent)}
+        .hero-summary{font-size:17px;color:var(--text-muted);max-width:680px;line-height:1.7}
+        .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:28px}
+        .tag{font-family:'JetBrains Mono',monospace;font-size:12px;padding:5px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:20px;color:var(--text-muted)}
+        .content{max-width:860px;margin:0 auto;padding:56px 24px}
+        .stat-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:56px}
+        .stat-item{background:var(--bg2);padding:24px;text-align:center}
+        .stat-number{font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:600;color:var(--accent);display:block}
+        .stat-label{font-size:12px;color:var(--text-muted);margin-top:4px}
+        h2{font-size:22px;font-weight:700;margin:48px 0 20px;padding-left:16px;border-left:3px solid var(--accent);letter-spacing:-.3px}
+        h3{font-size:17px;font-weight:600;margin:32px 0 12px;color:var(--accent);font-family:'JetBrains Mono',monospace}
+        p{margin-bottom:16px;color:var(--text)}
+        .arch-box{background:var(--code-bg);border:1px solid var(--border);border-radius:12px;padding:28px;margin:24px 0;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.8;color:#8b9ab8;overflow-x:auto}
+        .arch-box .hl{color:var(--accent)}.arch-box .hl2{color:var(--accent3)}.arch-box .hl3{color:var(--accent2)}
+        .code-block{background:var(--code-bg);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin:20px 0}
+        .code-header{background:var(--bg3);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;justify-content:space-between}
+        .code-lang{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent);font-weight:600;letter-spacing:.5px}
+        .code-desc{font-size:12px;color:var(--text-muted)}
+        .code-body{padding:20px;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.7;color:#a8b8d8;overflow-x:auto}
+        .code-body .comment{color:#4a5568}.code-body .keyword{color:#ff79c6}.code-body .string{color:#f1fa8c}.code-body .number{color:var(--accent3)}.code-body .cmd{color:var(--accent)}
+        .findings{display:grid;gap:16px;margin:24px 0}
+        .finding-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px 24px;display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start;transition:border-color .2s}
+        .finding-card:hover{border-color:var(--accent)}
+        .finding-icon{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+        .icon-red{background:rgba(255,71,87,.15)}.icon-blue{background:rgba(0,212,255,.1)}.icon-green{background:rgba(46,213,115,.1)}.icon-yellow{background:rgba(255,200,0,.1)}
+        .finding-title{font-weight:600;font-size:15px;margin-bottom:4px}
+        .finding-desc{font-size:13px;color:var(--text-muted);line-height:1.6;margin:0}
+        .callout{border-radius:12px;padding:20px 24px;margin:24px 0;display:flex;gap:16px;align-items:flex-start}
+        .callout-blue{background:rgba(0,212,255,.06);border:1px solid rgba(0,212,255,.2)}
+        .callout-green{background:rgba(46,213,115,.06);border:1px solid rgba(46,213,115,.2)}
+        .callout-icon{font-size:20px;flex-shrink:0;margin-top:2px}
+        .callout-text{font-size:14px;line-height:1.7;color:var(--text);margin:0}
+        .callout-text strong{color:var(--accent)}
+        .lessons{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin:24px 0}
+        .lesson-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px}
+        .lesson-number{font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:600;color:var(--border);line-height:1;margin-bottom:12px}
+        .lesson-title{font-weight:600;font-size:14px;margin-bottom:6px}
+        .lesson-desc{font-size:13px;color:var(--text-muted);line-height:1.6;margin:0}
+        footer{border-top:1px solid var(--border);padding:40px 24px;text-align:center}
+        .footer-inner{max-width:860px;margin:0 auto}
+        .footer-links{display:flex;justify-content:center;gap:24px;margin-bottom:16px}
+        .footer-links a{font-size:13px;color:var(--text-muted);text-decoration:none;transition:color .2s}
+        .footer-links a:hover{color:var(--accent)}
+        .footer-copy{font-size:12px;color:var(--text-muted);font-family:'JetBrains Mono',monospace}
+        @media(max-width:600px){.stat-bar{grid-template-columns:1fr}.lessons{grid-template-columns:1fr}h1{font-size:28px}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+        .hero{animation:fadeUp .6s ease}.content{animation:fadeUp .6s ease .1s both}
+    </style>
+</head>
+<body>
+<header>
+    <div class="header-inner">
+        <a href="../index.html" class="logo">YK</a>
+        <a href="../index.html#projects" class="back-link">← Back to Projects</a>
+    </div>
+</header>
+
+<section class="hero">
+    <div class="hero-meta">
+        <span class="badge badge-green">🟢 NETWORK TOOL</span>
+        <span class="badge badge-blue">SNMP · LLDP · D3.js</span>
+        <span class="meta-date">May 2026</span>
+    </div>
+    <h1>Auto-Mapping Network Topology<br>with <span>SNMP &amp; LLDP</span></h1>
+    <p class="hero-summary">
+        A Python tool that automatically discovers network devices via SNMP, reads LLDP and CDP neighbour tables,
+        builds a topology graph using NetworkX, and visualises it as a hierarchical PNG or an interactive D3.js HTML map.
+    </p>
+    <div class="tags">
+        <span class="tag">Python</span>
+        <span class="tag">SNMP</span>
+        <span class="tag">LLDP</span>
+        <span class="tag">CDP</span>
+        <span class="tag">NetworkX</span>
+        <span class="tag">D3.js</span>
+        <span class="tag">pysnmp</span>
+        <span class="tag">matplotlib</span>
+    </div>
+</section>
+
+<main class="content">
+    <div class="stat-bar">
+        <div class="stat-item"><span class="stat-number">14</span><span class="stat-label">Devices in Demo Topology</span></div>
+        <div class="stat-item"><span class="stat-number">13</span><span class="stat-label">Discovered Connections</span></div>
+        <div class="stat-item"><span class="stat-number">3</span><span class="stat-label">Output Formats</span></div>
+    </div>
+
+    <h2>The Problem</h2>
+    <p>Network documentation is almost always out of date. Physical changes happen, diagrams don't get updated,
+    and a few months later nobody knows what connects to what. This tool solves that by
+    <strong>auto-discovering the topology directly from the devices</strong> using protocols they're already broadcasting.</p>
+
+    <div class="arch-box">
+Input: IP / CIDR  →  <span class="hl">SNMPEntdecker</span>
+                          │
+           ┌──────────────┼──────────────┐
+     <span class="hl2">sysName</span>        <span class="hl2">LLDP MIB</span>        <span class="hl3">CDP MIB</span>
+     <span class="hl2">sysDescr</span>    (IEEE 802.1AB)    (Cisco only)
+     <span class="hl2">sysLocation</span>       │                │
+           └──────────────┴──────────────┘
+                          │
+                 <span class="hl">TopologieAufbauer</span>
+                 NetworkX Graph (nodes + edges)
+                          │
+              ┌───────────┼───────────┐
+            <span class="hl2">PNG</span>          <span class="hl2">HTML</span>        <span class="hl2">Text</span>
+        (matplotlib)   (D3.js)   (Terminal)
+    </div>
+
+    <h2>How SNMP Discovery Works</h2>
+    <p>SNMP (Simple Network Management Protocol) organises all device information in a tree structure called the
+    <strong>MIB (Management Information Base)</strong>. Every data point has a unique address called an OID.
+    The tool queries three categories of OIDs:</p>
+
+    <div class="findings">
+        <div class="finding-card">
+            <div class="finding-icon icon-blue">📋</div>
+            <div><div class="finding-title">System OIDs (Standard MIB-2)</div>
+            <p class="finding-desc">sysName (1.3.6.1.2.1.1.5.0), sysDescr (1.3.6.1.2.1.1.1.0), sysLocation — supported by virtually every SNMP-capable device regardless of vendor.</p></div>
+        </div>
+        <div class="finding-card">
+            <div class="finding-icon icon-green">🔗</div>
+            <div><div class="finding-title">LLDP MIB (IEEE 802.1AB)</div>
+            <p class="finding-desc">lldpRemSysName, lldpRemPortId — vendor-neutral neighbour discovery. Supported by Cisco, HP, Juniper, Aruba, and Linux (lldpd).</p></div>
+        </div>
+        <div class="finding-card">
+            <div class="finding-icon icon-yellow">🔶</div>
+            <div><div class="finding-title">CDP MIB (Cisco proprietary)</div>
+            <p class="finding-desc">cdpCacheDeviceId, cdpCacheDevicePort — Cisco Discovery Protocol. Provides neighbour device name, port, and platform on Cisco IOS devices.</p></div>
+        </div>
+    </div>
+
+    <div class="code-block">
+        <div class="code-header"><span class="code-lang">PYTHON</span><span class="code-desc">SNMP WALK — read all LLDP neighbour entries</span></div>
+        <div class="code-body"><span class="comment"># nextCmd iterates through all sub-OIDs of the LLDP neighbour table</span>
+<span class="keyword">for</span> errorIndication, errorStatus, _, varBinds <span class="keyword">in</span> nextCmd(
+    SnmpEngine(),
+    CommunityData(<span class="string">"public"</span>, mpModel=<span class="number">1</span>),  <span class="comment"># SNMPv2c</span>
+    UdpTransportTarget((host, <span class="number">161</span>), timeout=<span class="number">2</span>, retries=<span class="number">0</span>),
+    ContextData(),
+    ObjectType(ObjectIdentity(<span class="string">"1.0.8802.1.1.2.1.4.1.1.9"</span>)),  <span class="comment"># lldpRemSysName</span>
+    lexicographicMode=<span class="keyword">False</span>  <span class="comment"># stop at end of this subtree</span>
+):
+    <span class="keyword">for</span> varBind <span class="keyword">in</span> varBinds:
+        results[str(varBind[<span class="number">0</span>])] = str(varBind[<span class="number">1</span>])</div>
+    </div>
+
+    <h2>Hierarchical Layout vs. Spring Layout</h2>
+    <p>The first version used NetworkX's default <code style="background:var(--bg3);padding:2px 8px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:13px;">spring_layout</code> (Fruchterman-Reingold algorithm),
+    which places nodes based on simulated physical forces. The result was aesthetically random — core switches
+    ended up in corners, workstations in the middle.</p>
+
+    <div class="callout callout-blue">
+        <span class="callout-icon">💡</span>
+        <p class="callout-text"><strong>Fix:</strong> I replaced spring_layout with a custom <strong>hierarchical layout</strong>
+        that assigns nodes to layers based on their role: Router/Firewall at the top, Core Switches below,
+        Access Switches next, then Servers, then Workstations — matching the actual network architecture.</p>
+    </div>
+
+    <div class="arch-box">
+Layer 0  ●─────────●  Router / Firewall
+              │   │
+Layer 1  ●────●   ●────●  Core Switches
+         │              │
+Layer 2  ●    ●    ●    ●  Access Switches
+         │    │         │
+Layer 3  ●    ●         ●  Servers
+         │
+Layer 4  ●  ●  ●  ●  ●  Workstations
+    </div>
+
+    <p>Node sizes also scale with the <strong>connection degree</strong> — a Core Switch with 4 connections
+    appears larger than a Workstation with 1, instantly communicating device importance.</p>
+
+    <h2>Interactive HTML Output (D3.js)</h2>
+    <p>The HTML output uses a <strong>D3.js force-directed simulation</strong>. Device data is embedded as JSON
+    directly in the HTML file — no server needed, just open in a browser. Features include:</p>
+
+    <div class="findings">
+        <div class="finding-card"><div class="finding-icon icon-blue">🖱️</div><div><div class="finding-title">Drag &amp; Drop</div><p class="finding-desc">Nodes can be repositioned manually by dragging, with the physics simulation resuming on release.</p></div></div>
+        <div class="finding-card"><div class="finding-icon icon-green">🔍</div><div><div class="finding-title">Zoom &amp; Pan</div><p class="finding-desc">Scroll to zoom, drag the background to pan. Useful for large topologies with many devices.</p></div></div>
+        <div class="finding-card"><div class="finding-icon icon-yellow">💬</div><div><div class="finding-title">Hover Tooltips</div><p class="finding-desc">Hovering a node shows device name, IP address, type, location, and sysDescr excerpt.</p></div></div>
+    </div>
+
+    <h2>Demo Mode</h2>
+    <p>The tool includes a <code style="background:var(--bg3);padding:2px 8px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:13px;">--demo</code> flag that loads a pre-built 14-device topology from a YAML file —
+    no SNMP-capable hardware required. The demo includes a router, firewall, two core switches, two access switches, three servers, and five workstations.</p>
+
+    <div class="code-block">
+        <div class="code-header"><span class="code-lang">BASH</span><span class="code-desc">Run without SNMP hardware</span></div>
+        <div class="code-body"><span class="cmd">python</span> mapper.py --demo --ausgabe html
+<span class="comment"># Opens a D3.js topology map in output/topologie_*.html</span>
+
+<span class="cmd">python</span> mapper.py --demo --ausgabe png
+<span class="comment"># Generates hierarchical PNG in output/topologie_*.png</span>
+
+<span class="comment"># Live scan (requires SNMP access)</span>
+<span class="cmd">python</span> mapper.py --netzwerk <span class="string">192.168.1.0/24</span> --community <span class="string">public</span></div>
+    </div>
+
+    <h2>Key Takeaways</h2>
+    <div class="lessons">
+        <div class="lesson-card"><div class="lesson-number">01</div><div class="lesson-title">LLDP is Underused</div><p class="lesson-desc">Most managed switches broadcast LLDP by default. Querying it via SNMP gives you a complete neighbour map with zero active probing.</p></div>
+        <div class="lesson-card"><div class="lesson-number">02</div><div class="lesson-title">Layout Matters</div><p class="lesson-desc">A topology diagram is only useful if it matches the viewer's mental model. Hierarchical layers communicate network structure instantly.</p></div>
+        <div class="lesson-card"><div class="lesson-number">03</div><div class="lesson-title">SNMP = Free Intelligence</div><p class="lesson-desc">sysDescr alone identifies device type, OS version, and vendor — without active fingerprinting or vulnerability scanning.</p></div>
+        <div class="lesson-card"><div class="lesson-number">04</div><div class="lesson-title">Demo Mode Matters</div><p class="lesson-desc">A portfolio project that requires specific hardware to run is a portfolio project nobody can evaluate. Demo mode makes it testable anywhere.</p></div>
+    </div>
+
+    <div class="callout callout-green">
+        <span class="callout-icon">✅</span>
+        <p class="callout-text"><strong>Source code on GitHub:</strong>
+        <a href="https://github.com/yasinkilicma/network-topology-mapper" target="_blank" style="color:var(--accent3);text-decoration:none;"> → network-topology-mapper</a></p>
+    </div>
+</main>
+
+<footer>
+    <div class="footer-inner">
+        <div class="footer-links">
+            <a href="../index.html">← Back to Portfolio</a>
+            <a href="https://github.com/yasinkilicma/network-topology-mapper" target="_blank">GitHub</a>
+            <a href="https://www.linkedin.com/in/yasin-kilic-cyber-security/" target="_blank">LinkedIn</a>
+        </div>
+        <p class="footer-copy">© 2026 Yasin Kilic</p>
+    </div>
+</footer>
+</body>
+</html>

@@ -11,7 +11,6 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <!-- Header / Navigation -->
     <header class="header">
         <div class="container">
             <a href="#" class="logo">YK</a>
@@ -29,15 +28,12 @@
                     <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
                 </button>
                 <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">
-                    <span></span>
-                    <span></span>
-                    <span></span>
+                    <span></span><span></span><span></span>
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- Hero Section -->
     <section class="hero">
         <div class="container">
             <div class="hero-content">
@@ -57,7 +53,6 @@
         </div>
     </section>
 
-    <!-- About Section -->
     <section class="section about" id="about">
         <div class="container">
             <div class="section-header">
@@ -87,7 +82,7 @@
                         <span class="stat-label">CompTIA Certs</span>
                     </div>
                     <div class="stat">
-                        <span class="stat-number">5+</span>
+                        <span class="stat-number">8+</span>
                         <span class="stat-label">Completed Projects</span>
                     </div>
                 </div>
@@ -95,7 +90,6 @@
         </div>
     </section>
 
-    <!-- Projects Section -->
     <section class="section projects" id="projects">
         <div class="container">
             <div class="section-header">
@@ -103,12 +97,77 @@
                 <div class="section-line"></div>
             </div>
             <div class="projects-grid">
+
                 <article class="project-card">
-                    <div class="project-image">
-                        <div class="project-placeholder">
-                            <span>IDS</span>
+                    <div class="project-image"><div class="project-placeholder"><span>Audit</span></div></div>
+                    <div class="project-info">
+                        <h3 class="project-title">Network Security Auditor — Python + CIS Benchmark</h3>
+                        <p class="project-description">
+                            A modular Python tool that performs TCP port scanning, service banner grabbing, and
+                            automated CIS Benchmark compliance checks. Produces reports in terminal, JSON, and
+                            interactive HTML. Supports single hosts and full CIDR subnets.
+                        </p>
+                        <div class="project-tags">
+                            <span class="tag">Python</span>
+                            <span class="tag">CIS Benchmark</span>
+                            <span class="tag">Port Scanner</span>
+                            <span class="tag">Network Security</span>
+                        </div>
+                        <div class="project-links">
+                            <a href="blog/network-security-audit.html" class="project-link">Read Blog Post →</a>
+                            <a href="https://github.com/yasinkilicma/network-security-audit" target="_blank" class="project-link">GitHub →</a>
                         </div>
                     </div>
+                </article>
+
+                <article class="project-card">
+                    <div class="project-image"><div class="project-placeholder"><span>Topo</span></div></div>
+                    <div class="project-info">
+                        <h3 class="project-title">Network Topology Mapper — SNMP + LLDP + D3.js</h3>
+                        <p class="project-description">
+                            Auto-discovers network devices via SNMP and reads LLDP/CDP neighbour tables to build
+                            a live topology map. Outputs a hierarchical PNG (matplotlib) and an interactive
+                            D3.js HTML map with drag, zoom, and device tooltips.
+                        </p>
+                        <div class="project-tags">
+                            <span class="tag">Python</span>
+                            <span class="tag">SNMP</span>
+                            <span class="tag">LLDP</span>
+                            <span class="tag">D3.js</span>
+                            <span class="tag">NetworkX</span>
+                        </div>
+                        <div class="project-links">
+                            <a href="blog/network-topology-mapper.html" class="project-link">Read Blog Post →</a>
+                            <a href="https://github.com/yasinkilicma/network-topology-mapper" target="_blank" class="project-link">GitHub →</a>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="project-card">
+                    <div class="project-image"><div class="project-placeholder"><span>IaC</span></div></div>
+                    <div class="project-info">
+                        <h3 class="project-title">Ansible Network Hardening — CIS Benchmark Automation</h3>
+                        <p class="project-description">
+                            Ansible role collection that automates CIS Benchmark Level 1 hardening across
+                            Cisco IOS devices and Linux servers. 16+ controls covering SSH, AAA, SNMPv3,
+                            UFW firewall, and kernel parameters. Tag-selectable and idempotent.
+                        </p>
+                        <div class="project-tags">
+                            <span class="tag">Ansible</span>
+                            <span class="tag">Cisco IOS</span>
+                            <span class="tag">CIS Benchmark</span>
+                            <span class="tag">SSH Hardening</span>
+                            <span class="tag">SNMPv3</span>
+                        </div>
+                        <div class="project-links">
+                            <a href="blog/ansible-network-hardening.html" class="project-link">Read Blog Post →</a>
+                            <a href="https://github.com/yasinkilicma/ansible-network-hardening" target="_blank" class="project-link">GitHub →</a>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="project-card">
+                    <div class="project-image"><div class="project-placeholder"><span>IDS</span></div></div>
                     <div class="project-info">
                         <h3 class="project-title">Snort Intrusion Detection System</h3>
                         <p class="project-description">
@@ -120,18 +179,12 @@
                             <span class="tag">Network Security</span>
                             <span class="tag">Linux</span>
                         </div>
-                        <div class="project-links">
-                            <a href="#" class="project-link">Details →</a>
-                        </div>
+                        <div class="project-links"><a href="#" class="project-link">Details →</a></div>
                     </div>
                 </article>
 
                 <article class="project-card">
-                    <div class="project-image">
-                        <div class="project-placeholder">
-                            <span>DC Ops</span>
-                        </div>
-                    </div>
+                    <div class="project-image"><div class="project-placeholder"><span>DC Ops</span></div></div>
                     <div class="project-info">
                         <h3 class="project-title">Data Center Remote Hands Operations</h3>
                         <p class="project-description">
@@ -144,20 +197,14 @@
                             <span class="tag">Hardware</span>
                             <span class="tag">IT Support</span>
                         </div>
-                        <div class="project-links">
-                            <a href="#" class="project-link">Details →</a>
-                        </div>
+                        <div class="project-links"><a href="#" class="project-link">Details →</a></div>
                     </div>
                 </article>
 
                 <article class="project-card">
-                    <div class="project-image">
-                        <div class="project-placeholder">
-                            <span>ITSM</span>
-                        </div>
-                    </div>
+                    <div class="project-image"><div class="project-placeholder"><span>ITSM</span></div></div>
                     <div class="project-info">
-                        <h3 class="project-title">IT Ticket Systems & Infrastructure Support</h3>
+                        <h3 class="project-title">IT Ticket Systems &amp; Infrastructure Support</h3>
                         <p class="project-description">
                             Customer IT infrastructure support through IT-Direct, SPC, and ServiceNow (SNOW) 
                             ticket systems, incident management, and improving operational processes.
@@ -167,20 +214,14 @@
                             <span class="tag">IT-Direct</span>
                             <span class="tag">SPC</span>
                         </div>
-                        <div class="project-links">
-                            <a href="#" class="project-link">Details →</a>
-                        </div>
+                        <div class="project-links"><a href="#" class="project-link">Details →</a></div>
                     </div>
                 </article>
 
                 <article class="project-card">
-                    <div class="project-image">
-                        <div class="project-placeholder">
-                            <span>NetAuto</span>
-                        </div>
-                    </div>
+                    <div class="project-image"><div class="project-placeholder"><span>NetAuto</span></div></div>
                     <div class="project-info">
-                        <h3 class="project-title">Network Automation with Ansible & Python</h3>
+                        <h3 class="project-title">Network Automation with Ansible &amp; Python</h3>
                         <p class="project-description">
                             Network device configuration management and backup automation using Ansible and Python (Netmiko/NAPALM).
                             Template-based configuration deployment, compliance checks, and multi-vendor device management.
@@ -192,17 +233,12 @@
                             <span class="tag">Python</span>
                             <span class="tag">NAPALM</span>
                         </div>
-                        <div class="project-links">
-                            <a href="#" class="project-link">Details →</a>
-                        </div>
+                        <div class="project-links"><a href="#" class="project-link">Details →</a></div>
                     </div>
                 </article>
+
                 <article class="project-card">
-                    <div class="project-image">
-                        <div class="project-placeholder">
-                            <span>SOC</span>
-                        </div>
-                    </div>
+                    <div class="project-image"><div class="project-placeholder"><span>SOC</span></div></div>
                     <div class="project-info">
                         <h3 class="project-title">SOC Home Lab — Terraform + Docker + Splunk</h3>
                         <p class="project-description">
@@ -218,17 +254,14 @@
                             <span class="tag">Incident Response</span>
                         </div>
                         <div class="project-links">
-                            <a href="blog/soc-lab-splunk-ransomware-analysis.html" class="project-link">Read Blog Post →</a> <a href="https://github.com/yasinkilicma/terraform-splunk-demo" target="_blank" class="project-link">GitHub →</a>
+                            <a href="blog/soc-lab-splunk-ransomware-analysis.html" class="project-link">Read Blog Post →</a>
+                            <a href="https://github.com/yasinkilicma/terraform-splunk-demo" target="_blank" class="project-link">GitHub →</a>
                         </div>
                     </div>
                 </article>
 
                 <article class="project-card">
-                    <div class="project-image">
-                        <div class="project-placeholder">
-                            <span>IaC</span>
-                        </div>
-                    </div>
+                    <div class="project-image"><div class="project-placeholder"><span>IaC</span></div></div>
                     <div class="project-info">
                         <h3 class="project-title">AWS Infrastructure as Code — Terraform + LocalStack</h3>
                         <p class="project-description">
@@ -250,13 +283,9 @@
                 </article>
 
                 <article class="project-card">
-                    <div class="project-image">
-                        <div class="project-placeholder">
-                            <span>NMS</span>
-                        </div>
-                    </div>
+                    <div class="project-image"><div class="project-placeholder"><span>NMS</span></div></div>
                     <div class="project-info">
-                        <h3 class="project-title">Network Monitoring with Zabbix, Prometheus & Grafana</h3>
+                        <h3 class="project-title">Network Monitoring with Zabbix, Prometheus &amp; Grafana</h3>
                         <p class="project-description">
                             SNMP-based network infrastructure monitoring with Zabbix, metric collection and visualization using Prometheus and Grafana.
                             Detailed traffic analysis with Wireshark and proactive network management through threshold-based alerting.
@@ -268,16 +297,14 @@
                             <span class="tag">SNMP</span>
                             <span class="tag">Wireshark</span>
                         </div>
-                        <div class="project-links">
-                            <a href="#" class="project-link">Details →</a>
-                        </div>
+                        <div class="project-links"><a href="#" class="project-link">Details →</a></div>
                     </div>
                 </article>
+
             </div>
         </div>
     </section>
 
-    <!-- Skills Section -->
     <section class="section skills" id="skills">
         <div class="container">
             <div class="section-header">
@@ -286,73 +313,36 @@
             </div>
             <div class="skills-grid">
                 <div class="skill-category">
-                    <h3 class="skill-category-title">SOC & Blue Team</h3>
+                    <h3 class="skill-category-title">SOC &amp; Blue Team</h3>
                     <ul class="skill-list">
-                        <li class="skill-item">
-                            <span class="skill-name">SIEM & Log Analysis</span>
-                            <div class="skill-bar"><div class="skill-progress" style="width: 90%"></div></div>
-                        </li>
-                        <li class="skill-item">
-                            <span class="skill-name">Threat Hunting</span>
-                            <div class="skill-bar"><div class="skill-progress" style="width: 85%"></div></div>
-                        </li>
-                        <li class="skill-item">
-                            <span class="skill-name">Incident Response (IR)</span>
-                            <div class="skill-bar"><div class="skill-progress" style="width: 85%"></div></div>
-                        </li>
-                        <li class="skill-item">
-                            <span class="skill-name">CompTIA CySA+ / Security+ / Network+</span>
-                            <div class="skill-bar"><div class="skill-progress" style="width: 90%"></div></div>
-                        </li>
+                        <li class="skill-item"><span class="skill-name">SIEM &amp; Log Analysis</span><div class="skill-bar"><div class="skill-progress" style="width: 90%"></div></div></li>
+                        <li class="skill-item"><span class="skill-name">Threat Hunting</span><div class="skill-bar"><div class="skill-progress" style="width: 85%"></div></div></li>
+                        <li class="skill-item"><span class="skill-name">Incident Response (IR)</span><div class="skill-bar"><div class="skill-progress" style="width: 85%"></div></div></li>
+                        <li class="skill-item"><span class="skill-name">CompTIA CySA+ / Security+ / Network+</span><div class="skill-bar"><div class="skill-progress" style="width: 90%"></div></div></li>
                     </ul>
                 </div>
                 <div class="skill-category">
-                    <h3 class="skill-category-title">Network & Infrastructure</h3>
+                    <h3 class="skill-category-title">Network &amp; Infrastructure</h3>
                     <ul class="skill-list">
-                        <li class="skill-item">
-                            <span class="skill-name">Network Security (IDS/IPS)</span>
-                            <div class="skill-bar"><div class="skill-progress" style="width: 90%"></div></div>
-                        </li>
-                        <li class="skill-item">
-                            <span class="skill-name">Firewall & Switching</span>
-                            <div class="skill-bar"><div class="skill-progress" style="width: 85%"></div></div>
-                        </li>
-                        <li class="skill-item">
-                            <span class="skill-name">TCP/IP & Routing</span>
-                            <div class="skill-bar"><div class="skill-progress" style="width: 95%"></div></div>
-                        </li>
-                        <li class="skill-item">
-                            <span class="skill-name">Data Center Operations</span>
-                            <div class="skill-bar"><div class="skill-progress" style="width: 90%"></div></div>
-                        </li>
+                        <li class="skill-item"><span class="skill-name">Network Security (IDS/IPS)</span><div class="skill-bar"><div class="skill-progress" style="width: 90%"></div></div></li>
+                        <li class="skill-item"><span class="skill-name">Firewall &amp; Switching</span><div class="skill-bar"><div class="skill-progress" style="width: 85%"></div></div></li>
+                        <li class="skill-item"><span class="skill-name">TCP/IP &amp; Routing</span><div class="skill-bar"><div class="skill-progress" style="width: 95%"></div></div></li>
+                        <li class="skill-item"><span class="skill-name">Data Center Operations</span><div class="skill-bar"><div class="skill-progress" style="width: 90%"></div></div></li>
                     </ul>
                 </div>
                 <div class="skill-category">
-                    <h3 class="skill-category-title">Systems & Tools</h3>
+                    <h3 class="skill-category-title">Systems &amp; Tools</h3>
                     <ul class="skill-list">
-                        <li class="skill-item">
-                            <span class="skill-name">Splunk / SIEM Platforms</span>
-                            <div class="skill-bar"><div class="skill-progress" style="width: 85%"></div></div>
-                        </li>
-                        <li class="skill-item">
-                            <span class="skill-name">Linux Server Administration</span>
-                            <div class="skill-bar"><div class="skill-progress" style="width: 80%"></div></div>
-                        </li>
-                        <li class="skill-item">
-                            <span class="skill-name">Python / Bash Scripting</span>
-                            <div class="skill-bar"><div class="skill-progress" style="width: 75%"></div></div>
-                        </li>
-                        <li class="skill-item">
-                            <span class="skill-name">ServiceNow (SNOW)</span>
-                            <div class="skill-bar"><div class="skill-progress" style="width: 80%"></div></div>
-                        </li>
+                        <li class="skill-item"><span class="skill-name">Splunk / SIEM Platforms</span><div class="skill-bar"><div class="skill-progress" style="width: 85%"></div></div></li>
+                        <li class="skill-item"><span class="skill-name">Linux Server Administration</span><div class="skill-bar"><div class="skill-progress" style="width: 80%"></div></div></li>
+                        <li class="skill-item"><span class="skill-name">Python / Bash Scripting</span><div class="skill-bar"><div class="skill-progress" style="width: 75%"></div></div></li>
+                        <li class="skill-item"><span class="skill-name">ServiceNow (SNOW)</span><div class="skill-bar"><div class="skill-progress" style="width: 80%"></div></div></li>
                     </ul>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Contact Section -->
     <section class="section contact" id="contact">
         <div class="container">
             <div class="section-header">
@@ -375,7 +365,6 @@
         </div>
     </section>
 
-    <!-- Footer -->
     <footer class="footer">
         <div class="container">
             <p>© 2026 Yasin Kilic. All rights reserved.</p>
