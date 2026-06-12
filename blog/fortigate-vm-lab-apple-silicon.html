@@ -729,7 +729,7 @@ $PB -c <span class="string">"Add :Serial:0:TcpPort integer 4555"</span> config.p
   <span class="cmd">next</span>
 <span class="cmd">end</span>
 
-<span class="comment"># --- DHCP-Server fuer das LAN ---</span>
+<span class="comment"># --- DHCP-Server für das LAN ---</span>
 <span class="cmd">config</span> system dhcp server
   <span class="cmd">edit</span> <span class="number">1</span>
     <span class="cmd">set</span> interface port2
@@ -772,7 +772,7 @@ $PB -c <span class="string">"Add :Serial:0:TcpPort integer 4555"</span> config.p
 <span class="cmd">execute</span> ping 8.8.8.8
 <span class="comment">  → 3 packets transmitted, 3 received, 0% loss, time 10 ms</span>
 
-<span class="comment"># Routing: Default-Route ueber port1, LAN connected ueber port2</span>
+<span class="comment"># Routing: Default-Route über port1, LAN connected über port2</span>
 S*  0.0.0.0/0 [5/0] via <span class="number">192.168.64.1</span>, port1
 C   192.168.1.0/24 is directly connected, port2
 
