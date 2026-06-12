@@ -895,7 +895,7 @@ C  = Connected</div>
             <code class="inline">Connected = 0</code>,
             <code class="inline">DHCP-Route = 5</code>,
             <code class="inline">Static = 10</code>,
-            <code class="inline">BGP = 20</code>,
+            <code class="inline">eBGP = 20 / iBGP = 200</code>,
             <code class="inline">OSPF = 110</code>.
             Die DHCP-Default-Route mit Distance 5 übertrumpft eine statische Route mit 10.
         </p>
@@ -970,18 +970,19 @@ C  = Connected</div>
         <tbody>
             <tr><td>IPS</td><td class="severity-crit">Flow-based</td><td>Schnell, Paket-basiert, geringe Latenz</td></tr>
             <tr><td>Application Control</td><td class="severity-crit">Flow-based</td><td>App-ID, QoS, Traffic Shaping</td></tr>
-            <tr><td>Antivirus</td><td style="color:#ffa502">Proxy-based</td><td>Datei-Rekonstruktion, tiefgehend</td></tr>
-            <tr><td>Web Filter</td><td style="color:#ffa502">Proxy-based</td><td>URL-Kategorisierung, SSL-Inspection</td></tr>
-            <tr><td>DLP</td><td style="color:#ffa502">Proxy-based</td><td>Data Fingerprinting, Content</td></tr>
+            <tr><td>Antivirus</td><td style="color:#2ed573">Flow / Proxy</td><td>Beide Modi; Proxy = Datei-Rekonstruktion, tiefer</td></tr>
+            <tr><td>Web Filter</td><td style="color:#2ed573">Flow / Proxy</td><td>Beide Modi; Proxy bietet mehr URL-/SSL-Optionen</td></tr>
+            <tr><td>DLP</td><td style="color:#2ed573">Flow / Proxy</td><td>Beide Modi; Proxy = Fingerprinting/Content</td></tr>
         </tbody>
     </table>
 
     <div class="callout callout-yellow">
         <span class="callout-icon">📝</span>
         <p class="callout-text">
-            <strong>NSE4 Merke:</strong> <code class="inline">inspection-mode: flow</code> in der Policy-Config
-            bedeutet, dass IPS und App Control im Flow-Mode arbeiten. AV und Web Filter würden
-            Proxy-Mode erfordern — erkennbar am <code class="inline">profile-type</code>.
+            <strong>NSE4 Merke:</strong> IPS und Application Control sind <strong>immer flow-based</strong>.
+            AntiVirus, Web Filter und DLP unterstützen <strong>beide Modi</strong> — gesteuert per Policy
+            (<code class="inline">set inspection-mode flow|proxy</code>). Proxy bietet tiefere Analyse
+            (Datei-Rekonstruktion, mehr SSL-Optionen), Flow geringere Latenz.
         </p>
     </div>
 
@@ -1164,8 +1165,8 @@ name=VPN-to-Lab2 ver=<span class="number">2</span> serial=<span class="number">1
             <div class="quiz-option">D) Inline</div>
         </div>
         <div class="quiz-answer visible">
-            <strong>Antwort B.</strong> IPS und Application Control arbeiten <strong>Flow-based</strong> (schnell, paket-basiert).
-            Antivirus, Web Filter und DLP arbeiten <strong>Proxy-based</strong> (tiefgehende Inspektion).
+            <strong>Antwort B.</strong> IPS und Application Control arbeiten <strong>immer flow-based</strong> (schnell, paket-basiert).
+            AntiVirus, Web Filter und DLP können dagegen <strong>flow- oder proxy-based</strong> laufen (Proxy = tiefere Inspektion) — der Modus wird in der Policy festgelegt.
         </div>
     </div>
 
@@ -1193,7 +1194,7 @@ name=VPN-to-Lab2 ver=<span class="number">2</span> serial=<span class="number">1
         </div>
         <div class="quiz-answer visible">
             <strong>Antwort C.</strong> Static = 10. Die DHCP-Default-Route hat Distance <strong>5</strong> und übertrumpft
-            somit eine statische Default-Route mit 10. BGP = 20, OSPF = 110.
+            somit eine statische Default-Route mit 10. eBGP = 20 / iBGP = 200, OSPF = 110.
         </div>
     </div>
 
