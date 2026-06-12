@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FortiGate-VM auf Apple Silicon mit UTM | Yasin Kilic</title>
+    <meta name="description" content="Wie ich eine FortiGate-VM 7.4.12 (ARM64) nativ auf einem Mac mini M4 in UTM aufgesetzt habe — inklusive der Stolpersteine, die kein Tutorial erwähnt: UTM lädt keine handgebauten VMs, die serielle Konsole läuft über TCP und eine unlizenzierte FortiOS sperrt die GUI.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0e1a;
+            --bg2: #0f1525;
+            --bg3: #161d30;
+            --border: #1e2a42;
+            --accent: #00d4ff;
+            --accent2: #ff4757;
+            --accent3: #2ed573;
+            --text: #e0e6f0;
+            --text-muted: #6b7a99;
+            --code-bg: #0d1117;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Sora', sans-serif;
+            font-size: 16px;
+            line-height: 1.8;
+        }
+
+        /* ── HEADER ── */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(10, 14, 26, 0.9);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 0;
+        }
+
+        .header-inner {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 18px;
+            letter-spacing: -0.5px;
+        }
+
+        .back-link {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: var(--accent); }
+
+        /* ── HERO ── */
+        .hero {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 64px 24px 48px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .hero-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 4px;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-red { background: rgba(255, 71, 87, 0.15); color: var(--accent2); border: 1px solid rgba(255, 71, 87, 0.3); }
+        .badge-blue { background: rgba(0, 212, 255, 0.1); color: var(--accent); border: 1px solid rgba(0, 212, 255, 0.2); }
+        .badge-green { background: rgba(46, 213, 115, 0.1); color: var(--accent3); border: 1px solid rgba(46, 213, 115, 0.2); }
+
+        .meta-date {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        h1 {
+            font-size: clamp(28px, 5vw, 44px);
+            font-weight: 700;
+            line-height: 1.2;
+            letter-spacing: -1px;
+            margin-bottom: 20px;
+        }
+
+        h1 span { color: var(--accent); }
+
+        .hero-summary {
+            font-size: 17px;
+            color: var(--text-muted);
+            max-width: 680px;
+            line-height: 1.7;
+        }
+
+        /* ── TAGS ── */
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 28px;
+        }
+
+        .tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            padding: 5px 12px;
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            color: var(--text-muted);
+        }
+
+        /* ── CONTENT ── */
+        .content {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 56px 24px;
+        }
+
+        /* ── STAT BAR ── */
+        .stat-bar {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1px;
+            background: var(--border);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 56px;
+        }
+
+        .stat-item {
+            background: var(--bg2);
+            padding: 24px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--accent);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* ── SECTIONS ── */
+        h2 {
+            font-size: 22px;
+            font-weight: 700;
+            margin: 48px 0 20px;
+            padding-left: 16px;
+            border-left: 3px solid var(--accent);
+            letter-spacing: -0.3px;
+        }
+
+        h3 {
+            font-size: 17px;
+            font-weight: 600;
+            margin: 32px 0 12px;
+            color: var(--accent);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        p { margin-bottom: 16px; color: var(--text); }
+
+        code.inline {
+            background: var(--bg3);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: var(--accent);
+        }
+
+        /* ── ARCHITECTURE ── */
+        .arch-box {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 28px;
+            margin: 24px 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            line-height: 1.8;
+            color: #8b9ab8;
+            overflow-x: auto;
+        }
+
+        .arch-box .highlight { color: var(--accent); }
+        .arch-box .highlight2 { color: var(--accent3); }
+        .arch-box .highlight3 { color: var(--accent2); }
+
+        /* ── CODE BLOCK ── */
+        .code-block {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .code-header {
+            background: var(--bg3);
+            border-bottom: 1px solid var(--border);
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .code-lang {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--accent);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .code-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .code-body {
+            padding: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            line-height: 1.7;
+            color: #a8b8d8;
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        .code-body .comment { color: #4a5568; }
+        .code-body .keyword { color: #ff79c6; }
+        .code-body .string { color: #f1fa8c; }
+        .code-body .number { color: var(--accent3); }
+        .code-body .cmd { color: var(--accent); }
+
+        /* ── CALLOUT ── */
+        .callout {
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin: 24px 0;
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .callout-blue { background: rgba(0, 212, 255, 0.06); border: 1px solid rgba(0, 212, 255, 0.2); }
+        .callout-red { background: rgba(255, 71, 87, 0.06); border: 1px solid rgba(255, 71, 87, 0.2); }
+        .callout-green { background: rgba(46, 213, 115, 0.06); border: 1px solid rgba(46, 213, 115, 0.2); }
+
+        .callout-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+
+        .callout-text { font-size: 14px; line-height: 1.7; color: var(--text); margin: 0; }
+        .callout-text strong { color: var(--accent); }
+        .callout-red .callout-text strong { color: var(--accent2); }
+        .callout-green .callout-text strong { color: var(--accent3); }
+
+        /* ── TIMELINE ── */
+        .timeline {
+            position: relative;
+            margin: 24px 0;
+            padding-left: 32px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--accent), var(--accent3));
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 28px;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: -28px;
+            top: 4px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: 2px solid var(--bg);
+        }
+
+        .timeline-dot.red { background: var(--accent2); }
+        .timeline-dot.green { background: var(--accent3); }
+
+        .timeline-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent);
+        }
+
+        .timeline-desc {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        /* ── TABLE ── */
+        .alert-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 13px;
+        }
+
+        .alert-table th {
+            background: var(--bg3);
+            color: var(--text-muted);
+            font-weight: 600;
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+        }
+
+        .alert-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(30, 42, 66, 0.5);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .alert-table tr:hover td { background: var(--bg2); }
+
+        /* ── LESSONS ── */
+        .lessons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin: 24px 0;
+        }
+
+        .lesson-card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .lesson-number {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--border);
+            line-height: 1;
+            margin-bottom: 12px;
+        }
+
+        .lesson-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 6px;
+        }
+
+        .lesson-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        /* ── FOOTER ── */
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 40px 24px;
+            text-align: center;
+        }
+
+        .footer-inner {
+            max-width: 860px;
+            margin: 0 auto;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover { color: var(--accent); }
+
+        .footer-copy {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 600px) {
+            .stat-bar { grid-template-columns: 1fr; }
+            .lessons { grid-template-columns: 1fr; }
+            h1 { font-size: 28px; }
+        }
+
+        /* ── ANIMATIONS ── */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero { animation: fadeUp 0.6s ease; }
+        .content { animation: fadeUp 0.6s ease 0.1s both; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-inner">
+        <a href="../index.html" class="logo">YK</a>
+        <a href="../index.html#projects" class="back-link">
+            ← Zurück zu den Projekten
+        </a>
+    </div>
+</header>
+
+<section class="hero">
+    <div class="hero-meta">
+        <span class="badge badge-green">🛡️ FIREWALL LAB</span>
+        <span class="badge badge-blue">NETWORK SECURITY</span>
+        <span class="meta-date">Juni 2026</span>
+    </div>
+    <h1>FortiGate-VM nativ auf <span>Apple Silicon</span><br>— ein NSE4-Heimlabor mit UTM</h1>
+    <p class="hero-summary">
+        Wie ich eine FortiGate-VM 7.4.12 (ARM64) nativ auf einem Mac mini M4 in UTM zum Laufen brachte —
+        mit voller Hardware-Beschleunigung statt langsamer x86-Emulation. Inklusive der Stolpersteine,
+        die kein Tutorial erwähnt: UTM lädt keine handgebauten VMs, die serielle Konsole läuft über TCP
+        statt <code class="inline" style="font-size:12px;">utmctl attach</code>, und eine unlizenzierte FortiOS sperrt die komplette GUI.
+    </p>
+    <div class="tags">
+        <span class="tag">FortiGate</span>
+        <span class="tag">FortiOS 7.4</span>
+        <span class="tag">UTM</span>
+        <span class="tag">QEMU</span>
+        <span class="tag">Apple Silicon</span>
+        <span class="tag">ARM64</span>
+        <span class="tag">Hypervisor.framework</span>
+        <span class="tag">NSE4</span>
+        <span class="tag">Firewall / NAT</span>
+        <span class="tag">Serielle Konsole</span>
+    </div>
+</section>
+
+<main class="content">
+
+    <!-- STATS -->
+    <div class="stat-bar">
+        <div class="stat-item">
+            <span class="stat-number">ARM64</span>
+            <span class="stat-label">Native Virtualisierung (Apple hvf)</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">~55 s</span>
+            <span class="stat-label">Boot-Zeit bis zum Login-Prompt</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">10 ms</span>
+            <span class="stat-label">Internet-Latenz durch NAT</span>
+        </div>
+    </div>
+
+    <!-- ZIEL -->
+    <h2>Das Ziel</h2>
+    <p>
+        Für meine NSE4-Vorbereitung wollte ich eine echte FortiGate-Firewall als Heimlabor — nicht in der Cloud,
+        sondern lokal auf dem Mac mini M4. Die naheliegende Annahme: FortiGate-VM gibt es nur als x86-64-Image,
+        also bleibt nur langsame Emulation auf dem ARM-Mac. Diese Annahme stellte sich als <em>veraltet</em> heraus.
+    </p>
+
+    <div class="callout callout-blue">
+        <span class="callout-icon">💡</span>
+        <p class="callout-text">
+            <strong>Die Überraschung:</strong> Fortinet veröffentlicht inzwischen ein natives
+            <strong>ARM64-KVM-Image</strong> (<code class="inline" style="font-size:12px;">FGT_ARM64_KVM-v7.4.12...out.kvm.zip</code>).
+            Auf dem M4 läuft es über Apples Hypervisor.framework mit voller Geschwindigkeit — keine x86-Emulation,
+            keine Performance-Strafe. Im Download-Center muss man dafür Plattform <em>KVM</em> wählen und die
+            Variante <em>„New deployment … ARM64"</em> nehmen (nicht die „Upgrade"-Datei und nicht FortiFirewall).
+        </p>
+    </div>
+
+    <!-- ARCHITEKTUR -->
+    <h2>Die Topologie</h2>
+    <p>
+        Eine klassische Edge-Firewall: ein WAN-/Management-Interface mit Internetzugang über die Mac-NAT und
+        ein internes LAN-Interface, hinter dem später Client-VMs hängen.
+    </p>
+
+    <div class="arch-box">
+<span class="highlight">Mac mini M4</span>  (Host, 192.168.64.1)
+    │
+    └─ <span class="highlight">UTM 4.7.5</span>  (QEMU-Backend + Apple hvf)
+         │
+         └─ <span class="highlight2">FortiGate-VM 7.4.12 ARM64</span>  (1 vCPU / 2 GB)
+              │
+              ├─ port1  <span class="highlight">Shared / NAT</span>   192.168.64.2   →  WAN + Mgmt + Internet
+              │           (GUI: https://192.168.64.2)
+              │
+              └─ port2  <span class="highlight2">LAN</span>            192.168.1.99/24
+                          DHCP-Server: .100–.200
+                          Policy: LAN → WAN  (NAT enable)
+    </div>
+
+    <!-- DER WEG -->
+    <h2>Der Weg — chronologisch</h2>
+    <div class="timeline">
+        <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-title">1 — Image-Download</div>
+            <p class="timeline-desc">Aus dem Fortinet-Support-Portal das native ARM64-KVM-Image gezogen. Das ZIP enthält die Boot-Disk <code class="inline" style="font-size:12px;">fortios.qcow2</code> (~105 MB).</p>
+        </div>
+        <div class="timeline-item">
+            <div class="timeline-dot red"></div>
+            <div class="timeline-title">2 — UTM verweigert das handgebaute Bundle</div>
+            <p class="timeline-desc">Ein per Skript erstelltes <code class="inline" style="font-size:12px;">.utm</code>-Bundle wird von UTM nicht geladen („Failed to create object"). Lösung: VM einmal über den Wizard anlegen.</p>
+        </div>
+        <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-title">3 — config.plist-Chirurgie</div>
+            <p class="timeline-desc">Hardware-Beschleunigung (hvf), zweite NIC und serielle Konsole direkt in der <code class="inline" style="font-size:12px;">config.plist</code> nachgerüstet.</p>
+        </div>
+        <div class="timeline-item">
+            <div class="timeline-dot red"></div>
+            <div class="timeline-title">4 — „Display output is not active"</div>
+            <p class="timeline-desc">FortiOS gibt auf ARM64-KVM nichts auf dem Grafik-Display aus — die Konsole liegt seriell. Zugriff über eine TCP-Serielle statt <code class="inline" style="font-size:12px;">utmctl attach</code>.</p>
+        </div>
+        <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-title">5 — Grundkonfiguration per CLI</div>
+            <p class="timeline-desc">Interfaces, DHCP-Server und die LAN→WAN-Policy skriptgesteuert über die serielle Konsole gesetzt.</p>
+        </div>
+        <div class="timeline-item">
+            <div class="timeline-dot green"></div>
+            <div class="timeline-title">6 — Lizenz & Feinschliff</div>
+            <p class="timeline-desc">Kostenlose Evaluation-Lizenz aktiviert (GUI war ohne Lizenz gesperrt) und die VM auf 1 vCPU getrimmt, um in den Lizenz-Limits zu bleiben.</p>
+        </div>
+    </div>
+
+    <!-- BUNDLE PROBLEM -->
+    <h2>Stolperstein 1 — UTM lädt keine handgebauten Bundles</h2>
+    <p>
+        Mein erster Reflex war, das <code class="inline">.utm</code>-Bundle (im Grunde ein Ordner mit einer
+        <code class="inline">config.plist</code> und der Disk) komplett per Skript zu erzeugen. UTM ignorierte es —
+        beim Start im Terminal verriet die einzige Fehlerzeile den Grund:
+    </p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">UTM LOG</span>
+            <span class="code-desc">UTM aus dem Terminal gestartet, um stderr zu sehen</span>
+        </div>
+        <div class="code-body"><span class="cmd">error</span> com.utmapp.UTM : Failed to create object for
+file:///.../Documents/<span class="string">FortiGate-NSE4.utm</span>/</div>
+    </div>
+
+    <p>
+        UTM scannt zwar seinen Documents-Ordner, kann eine extern erzeugte VM aber nicht registrieren (vermutlich
+        fehlende Security-Scoped-Bookmarks). <strong>Die Lösung:</strong> die VM einmal über den UTM-Wizard anlegen
+        (Emulate → ARM64 → „Andere") und dabei die bereits heruntergeladene <code class="inline">fortios.qcow2</code>
+        als „Drive Image" importieren. Danach lässt sich die von UTM erzeugte, gültige <code class="inline">config.plist</code>
+        gefahrlos weiterbearbeiten.
+    </p>
+
+    <!-- CONFIG PLIST -->
+    <h2>Stolperstein 2 — config.plist anpassen (und der Reload-Trick)</h2>
+    <p>
+        Der Wizard erstellt die VM bewusst konservativ: ohne Hardware-Beschleunigung und mit nur einem Interface.
+        Die nötigen Änderungen lassen sich sauber mit Apples <code class="inline">PlistBuddy</code> nachziehen —
+        native Beschleunigung (hvf + <code class="inline">CPU=host</code>), eine zweite NIC für das LAN und eine
+        serielle Schnittstelle.
+    </p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">BASH</span>
+            <span class="code-desc">config.plist mit PlistBuddy editieren</span>
+        </div>
+        <div class="code-body"><span class="comment"># Native ARM64-Beschleunigung (Apple Hypervisor.framework)</span>
+PB=/usr/libexec/PlistBuddy
+$PB -c <span class="string">"Set :System:CPU host"</span> config.plist
+$PB -c <span class="string">"Set :QEMU:Hypervisor true"</span> config.plist
+
+<span class="comment"># Zweite NIC -> internes LAN (in UTM: Mode 'Emulated')</span>
+$PB -c <span class="string">"Add :Network:1:Hardware string virtio-net-pci"</span> config.plist
+$PB -c <span class="string">"Add :Network:1:Mode string Emulated"</span> config.plist
+
+<span class="comment"># Serielle Konsole als TCP-Server (siehe unten)</span>
+$PB -c <span class="string">"Add :Serial:0:Mode string TcpServer"</span> config.plist
+$PB -c <span class="string">"Add :Serial:0:TcpPort integer 4555"</span> config.plist</div>
+    </div>
+
+    <div class="callout callout-red">
+        <span class="callout-icon">⚠️</span>
+        <p class="callout-text">
+            <strong>Die Falle:</strong> UTM hält die VM-Konfiguration im Speicher. Editiert man die Datei, während
+            UTM läuft, startet <code class="inline" style="font-size:12px;">utmctl start</code> trotzdem mit der
+            <em>alten</em> Config — meine CPU-Begrenzung verpuffte zunächst (QEMU bekam weiter <code class="inline" style="font-size:12px;">-smp 4</code>).
+            Nach jeder <code class="inline" style="font-size:12px;">config.plist</code>-Änderung muss die UTM-<em>App</em>
+            neu gestartet werden: <code class="inline" style="font-size:12px;">pkill -9 -f UTM.app &amp;&amp; open -a UTM</code>.
+        </p>
+    </div>
+
+    <p>
+        Noch ein Detail zur seriellen Schnittstelle: Der „Built-In Terminal"-Modus heißt in der Plist nicht etwa
+        „Builtin", sondern <code class="inline">Terminal</code> — falsche Enum-Werte führen dazu, dass UTM die VM
+        als „nicht verfügbar" markiert. Solche Schemata habe ich am verlässlichsten ermittelt, indem ich das Gerät
+        einmal über die UTM-GUI hinzufügte und die resultierende Plist auslas.
+    </p>
+
+    <!-- SERIELLE KONSOLE -->
+    <h2>Stolperstein 3 — die serielle Konsole über TCP</h2>
+    <p>
+        Nach dem Start zeigte das VM-Fenster nur <em>„Display output is not active"</em>. FortiOS spricht auf
+        ARM64-KVM ausschließlich über die serielle Schnittstelle (PL011-UART), nicht über das Grafik-Display.
+        Naheliegend wäre <code class="inline">utmctl attach</code> gewesen — das ist in UTM 4.7.5 aber noch nicht
+        implementiert (<code class="inline" style="font-size:12px;">attach command is not implemented yet!</code>).
+    </p>
+    <p>
+        Die saubere Alternative: die serielle Schnittstelle als <strong>TCP-Server</strong> konfigurieren. Dann lauscht
+        UTM auf <code class="inline">127.0.0.1:4555</code> und man verbindet sich vom Terminal aus — interaktiv mit
+        <code class="inline">nc</code> oder skriptgesteuert mit <code class="inline">expect</code>.
+    </p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">EXPECT</span>
+            <span class="code-desc">Login + erzwungener Passwortwechsel über die serielle Konsole</span>
+        </div>
+        <div class="code-body"><span class="cmd">spawn</span> nc 127.0.0.1 <span class="number">4555</span>
+<span class="cmd">send</span> <span class="string">"\r"</span>
+<span class="cmd">expect</span> <span class="string">"login:"</span>          ; <span class="cmd">send</span> <span class="string">"admin\r"</span>
+<span class="cmd">expect</span> <span class="string">"Password:"</span>       ; <span class="cmd">send</span> <span class="string">"\r"</span>   <span class="comment"># Default: leer</span>
+<span class="comment"># FortiOS erzwingt beim ersten Login einen Passwortwechsel</span>
+<span class="cmd">expect</span> <span class="string">"New Password:"</span>   ; <span class="cmd">send</span> <span class="string">"&lt;starkes-Passwort&gt;\r"</span>
+<span class="cmd">expect</span> <span class="string">"Confirm Password:"</span>; <span class="cmd">send</span> <span class="string">"&lt;starkes-Passwort&gt;\r"</span>
+<span class="cmd">expect</span> <span class="string">"# "</span></div>
+    </div>
+
+    <div class="callout callout-blue">
+        <span class="callout-icon">🧰</span>
+        <p class="callout-text">
+            <strong>Praktischer Nebeneffekt:</strong> Mit einer TCP-Seriellen lässt sich die gesamte
+            FortiGate-Grundkonfiguration <em>automatisieren</em> — ideal für reproduzierbare Labs. Erster Befehl
+            nach dem Login sollte immer <code class="inline" style="font-size:12px;">config system console / set output standard</code>
+            sein, sonst stoppt FortiOS lange Ausgaben mit <code class="inline" style="font-size:12px;">--More--</code>.
+        </p>
+    </div>
+
+    <!-- GRUNDKONFIG -->
+    <h2>Die FortiGate-Grundkonfiguration</h2>
+    <p>
+        Über dieselbe serielle Verbindung wird die Edge-Firewall aufgesetzt: WAN per DHCP (port1), statisches LAN
+        mit eigenem DHCP-Server (port2) und eine Security-Policy, die das LAN per Source-NAT ins Internet lässt.
+    </p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">FORTIOS CLI</span>
+            <span class="code-desc">Interfaces, DHCP-Server &amp; LAN→WAN-Policy</span>
+        </div>
+        <div class="code-body"><span class="comment"># --- Interfaces ---</span>
+<span class="cmd">config</span> system interface
+  <span class="cmd">edit</span> port1                                  <span class="comment"># WAN + Mgmt (DHCP von der Mac-NAT)</span>
+    <span class="cmd">set</span> allowaccess ping https ssh http
+  <span class="cmd">next</span>
+  <span class="cmd">edit</span> port2                                  <span class="comment"># internes LAN</span>
+    <span class="cmd">set</span> mode static
+    <span class="cmd">set</span> ip <span class="number">192.168.1.99 255.255.255.0</span>
+    <span class="cmd">set</span> allowaccess ping https ssh
+  <span class="cmd">next</span>
+<span class="cmd">end</span>
+
+<span class="comment"># --- DHCP-Server fuer das LAN ---</span>
+<span class="cmd">config</span> system dhcp server
+  <span class="cmd">edit</span> <span class="number">1</span>
+    <span class="cmd">set</span> interface port2
+    <span class="cmd">set</span> default-gateway <span class="number">192.168.1.99</span>
+    <span class="cmd">set</span> netmask <span class="number">255.255.255.0</span>
+    <span class="cmd">config</span> ip-range
+      <span class="cmd">edit</span> <span class="number">1</span>
+        <span class="cmd">set</span> start-ip <span class="number">192.168.1.100</span>
+        <span class="cmd">set</span> end-ip <span class="number">192.168.1.200</span>
+      <span class="cmd">next</span>
+    <span class="cmd">end</span>
+  <span class="cmd">next</span>
+<span class="cmd">end</span>
+
+<span class="comment"># --- Security-Policy: LAN -> WAN mit NAT ---</span>
+<span class="cmd">config</span> firewall policy
+  <span class="cmd">edit</span> <span class="number">1</span>
+    <span class="cmd">set</span> name <span class="string">"LAN-to-WAN"</span>
+    <span class="cmd">set</span> srcintf port2
+    <span class="cmd">set</span> dstintf port1
+    <span class="cmd">set</span> srcaddr all
+    <span class="cmd">set</span> dstaddr all
+    <span class="cmd">set</span> action accept
+    <span class="cmd">set</span> schedule always
+    <span class="cmd">set</span> service ALL
+    <span class="cmd">set</span> nat enable
+  <span class="cmd">next</span>
+<span class="cmd">end</span></div>
+    </div>
+
+    <h3>Verifikation</h3>
+    <p>Routing-Tabelle, Internet-Erreichbarkeit von der FortiGate und GUI-Zugriff vom Mac:</p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">SHELL / CLI</span>
+            <span class="code-desc">Funktionstest</span>
+        </div>
+        <div class="code-body"><span class="comment"># FortiGate -> Internet (durch die Mac-NAT)</span>
+<span class="cmd">execute</span> ping 8.8.8.8
+<span class="comment">  → 3 packets transmitted, 3 received, 0% loss, time 10 ms</span>
+
+<span class="comment"># Routing: Default-Route ueber port1, LAN connected ueber port2</span>
+S*  0.0.0.0/0 [5/0] via <span class="number">192.168.64.1</span>, port1
+C   192.168.1.0/24 is directly connected, port2
+
+<span class="comment"># Mac -> FortiGate-GUI</span>
+$ curl -k -o /dev/null -w <span class="string">"%{http_code}\n"</span> https://192.168.64.2
+<span class="comment">  → 200</span></div>
+    </div>
+
+    <!-- LIZENZ -->
+    <h2>Stolperstein 4 — ohne Lizenz keine GUI</h2>
+    <p>
+        Bis hierher lief alles über die CLI. Beim Versuch, die Web-GUI zu nutzen, kam die nächste Überraschung:
+        Eine FortiGate-VM mit <code class="inline">License Status: Invalid</code> sperrt in FortiOS 7.4 die komplette
+        Oberfläche auf die Lizenz-Upload-Seite. Kein Dashboard, keine Menüs — die CLI funktioniert weiter, die GUI nicht.
+    </p>
+
+    <table class="alert-table">
+        <thead>
+            <tr><th>OPTION</th><th>KOSTEN</th><th>EIGNUNG FÜRS LAB</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Full license (.lic)</td><td style="color:var(--accent2);">kostenpflichtig</td><td>nein</td></tr>
+            <tr><td>FortiFlex Token</td><td style="color:#ffa502;">Programm nötig</td><td>meist Enterprise</td></tr>
+            <tr><td style="color:var(--accent3);">Evaluation license</td><td style="color:var(--accent3);">kostenlos</td><td style="color:var(--accent3);">ja (mit Limits)</td></tr>
+        </tbody>
+    </table>
+
+    <div class="callout callout-blue">
+        <span class="callout-icon">ℹ️</span>
+        <p class="callout-text">
+            Die kostenlose <strong>Evaluation-Lizenz</strong> wird im FortiCare-Konto aktiviert, ist aber
+            <em>einmalig pro Konto</em> und bringt harte Limits mit: <strong>1 vCPU, 2 GB RAM, max. 3 Interfaces /
+            3 Policies / 3 Routen</strong>. Für ein Lernlabor reicht das — man sollte sich der Grenzen nur bewusst sein.
+        </p>
+    </div>
+
+    <p>
+        Wichtig für die CPU-Begrenzung: Erst nach Reduktion auf <strong>1 vCPU</strong> (passend zum Lizenz-Limit)
+        und einem UTM-App-Neustart verschwand die Warnung „exceeding allowed 1 CPUs". Der Login-Banner meldete
+        anschließend nur noch ein freundliches <code class="inline">Welcome!</code> und der Status sprang auf
+        <code class="inline" style="color:var(--accent3);">License Status: Valid</code>.
+    </p>
+
+    <!-- STOLPERSTEINE -->
+    <h2>Die wichtigsten Erkenntnisse</h2>
+    <div class="lessons">
+        <div class="lesson-card">
+            <div class="lesson-number">01</div>
+            <div class="lesson-title">Native ARM64 statt Emulation</div>
+            <p class="lesson-desc">Fortinets ARM64-KVM-Image läuft auf dem M4 über Apple hvf mit voller Geschwindigkeit — die alte „nur x86, also lahm"-Annahme stimmt nicht mehr.</p>
+        </div>
+        <div class="lesson-card">
+            <div class="lesson-number">02</div>
+            <div class="lesson-title">UTM-VMs gehören dem Wizard</div>
+            <p class="lesson-desc">Handgebaute Bundles lädt UTM nicht. Einmal über den Wizard anlegen, danach die config.plist gezielt nachbearbeiten — und nach jeder Änderung die App neu starten.</p>
+        </div>
+        <div class="lesson-card">
+            <div class="lesson-number">03</div>
+            <div class="lesson-title">Serielle Konsole über TCP</div>
+            <p class="lesson-desc">FortiOS-Konsole liegt seriell, nicht am Display. Da utmctl attach fehlt, ist eine TCP-Serielle der Schlüssel — und ermöglicht zugleich die komplette Automatisierung per expect.</p>
+        </div>
+        <div class="lesson-card">
+            <div class="lesson-number">04</div>
+            <div class="lesson-title">Ohne Lizenz keine GUI</div>
+            <p class="lesson-desc">Eine unlizenzierte FortiOS 7.4 sperrt die Web-Oberfläche komplett. Die kostenlose Evaluation-Lizenz schaltet sie frei — innerhalb fester 1-CPU/3-Policy-Grenzen.</p>
+        </div>
+    </div>
+
+    <!-- ERGEBNIS -->
+    <h2>Ergebnis</h2>
+    <p>
+        Eine voll funktionsfähige FortiGate-VM 7.4.12, nativ auf Apple Silicon, mit Internetzugang, eigenem LAN samt
+        DHCP, einer NAT-Policy und freigeschalteter GUI — die Basis für NSE4-Übungen zu Policies, Routing, VPN und
+        Security-Profilen. Der nächste Schritt ist eine Client-VM hinter port2 (über QEMU-Socket-Networking als echtes,
+        isoliertes L2-Segment), damit Datenverkehr tatsächlich durch die Firewall inspiziert wird.
+    </p>
+
+    <div class="callout callout-green">
+        <span class="callout-icon">✅</span>
+        <p class="callout-text">
+            <strong>Quellcode &amp; vollständige Anleitung auf GitHub:</strong> Konfiguration, Skripte und alle
+            Stolpersteine sind dokumentiert und versioniert.
+            <a href="https://github.com/yasinkilicma/fortigate-vm-lab-apple-silicon" target="_blank"
+               style="color:var(--accent3);text-decoration:none;"> → fortigate-vm-lab-apple-silicon</a>
+        </p>
+    </div>
+
+</main>
+
+<footer>
+    <div class="footer-inner">
+        <div class="footer-links">
+            <a href="../index.html">← Zurück zum Portfolio</a>
+            <a href="https://github.com/yasinkilicma/fortigate-vm-lab-apple-silicon" target="_blank">GitHub</a>
+            <a href="https://www.linkedin.com/in/yasin-kilic-cyber-security/" target="_blank">LinkedIn</a>
+        </div>
+        <p class="footer-copy">© 2026 Yasin Kilic — SOC Analyst in Training</p>
+    </div>
+</footer>
+
+</body>
+</html>
