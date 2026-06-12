@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NSE4 Sınavına 1 Hafta Kala: FortiGate Lab'da 8 Pratik Egzersiz | Yasin Kilic</title>
+    <meta name="description" content="FortiGate-VM 7.4.12 üzerinde 8 pratik egzersiz: CLI temel komutlar, interface yönetimi, firewall policy, routing, security profiles, debug, VPN ve NSE4 quiz — evaluation license limitleriyle birlikte.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0e1a;
+            --bg2: #0f1525;
+            --bg3: #161d30;
+            --border: #1e2a42;
+            --accent: #00d4ff;
+            --accent2: #ff4757;
+            --accent3: #2ed573;
+            --text: #e0e6f0;
+            --text-muted: #6b7a99;
+            --code-bg: #0d1117;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Sora', sans-serif;
+            font-size: 16px;
+            line-height: 1.8;
+        }
+
+        /* ── HEADER ── */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(10, 14, 26, 0.9);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 0;
+        }
+
+        .header-inner {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 18px;
+            letter-spacing: -0.5px;
+        }
+
+        .back-link {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: var(--accent); }
+
+        /* ── HERO ── */
+        .hero {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 64px 24px 48px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .hero-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 4px;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-red { background: rgba(255, 71, 87, 0.15); color: var(--accent2); border: 1px solid rgba(255, 71, 87, 0.3); }
+        .badge-blue { background: rgba(0, 212, 255, 0.1); color: var(--accent); border: 1px solid rgba(0, 212, 255, 0.2); }
+        .badge-green { background: rgba(46, 213, 115, 0.1); color: var(--accent3); border: 1px solid rgba(46, 213, 115, 0.2); }
+        .badge-yellow { background: rgba(255, 200, 0, 0.1); color: #ffc800; border: 1px solid rgba(255, 200, 0, 0.2); }
+
+        .meta-date {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        h1 {
+            font-size: clamp(28px, 5vw, 44px);
+            font-weight: 700;
+            line-height: 1.2;
+            letter-spacing: -1px;
+            margin-bottom: 20px;
+        }
+
+        h1 span { color: var(--accent); }
+
+        .hero-summary {
+            font-size: 17px;
+            color: var(--text-muted);
+            max-width: 680px;
+            line-height: 1.7;
+        }
+
+        /* ── TAGS ── */
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 28px;
+        }
+
+        .tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            padding: 5px 12px;
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            color: var(--text-muted);
+        }
+
+        /* ── CONTENT ── */
+        .content {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 56px 24px;
+        }
+
+        /* ── STAT BAR ── */
+        .stat-bar {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1px;
+            background: var(--border);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 56px;
+        }
+
+        .stat-item {
+            background: var(--bg2);
+            padding: 24px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--accent);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* ── SECTIONS ── */
+        h2 {
+            font-size: 22px;
+            font-weight: 700;
+            margin: 48px 0 20px;
+            padding-left: 16px;
+            border-left: 3px solid var(--accent);
+            letter-spacing: -0.3px;
+        }
+
+        h3 {
+            font-size: 17px;
+            font-weight: 600;
+            margin: 32px 0 12px;
+            color: var(--accent);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        h4 {
+            font-size: 15px;
+            font-weight: 600;
+            margin: 24px 0 8px;
+            color: var(--text);
+        }
+
+        p { margin-bottom: 16px; color: var(--text); }
+
+        code.inline {
+            background: var(--bg3);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: var(--accent);
+        }
+
+        /* ── CODE BLOCK ── */
+        .code-block {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .code-header {
+            background: var(--bg3);
+            border-bottom: 1px solid var(--border);
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .code-lang {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--accent);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .code-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .code-body {
+            padding: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            line-height: 1.7;
+            color: #a8b8d8;
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        .code-body .comment { color: #4a5568; }
+        .code-body .keyword { color: #ff79c6; }
+        .code-body .string { color: #f1fa8c; }
+        .code-body .number { color: var(--accent3); }
+        .code-body .cmd { color: var(--accent); }
+        .code-body .error { color: var(--accent2); }
+        .code-body .success { color: var(--accent3); }
+
+        /* ── CALLOUT ── */
+        .callout {
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin: 24px 0;
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .callout-blue { background: rgba(0, 212, 255, 0.06); border: 1px solid rgba(0, 212, 255, 0.2); }
+        .callout-red { background: rgba(255, 71, 87, 0.06); border: 1px solid rgba(255, 71, 87, 0.2); }
+        .callout-green { background: rgba(46, 213, 115, 0.06); border: 1px solid rgba(46, 213, 115, 0.2); }
+        .callout-yellow { background: rgba(255, 200, 0, 0.06); border: 1px solid rgba(255, 200, 0, 0.2); }
+
+        .callout-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+
+        .callout-text { font-size: 14px; line-height: 1.7; color: var(--text); margin: 0; }
+        .callout-text strong { color: var(--accent); }
+        .callout-red .callout-text strong { color: var(--accent2); }
+        .callout-green .callout-text strong { color: var(--accent3); }
+        .callout-yellow .callout-text strong { color: #ffc800; }
+
+        /* ── TIMELINE ── */
+        .timeline {
+            position: relative;
+            margin: 24px 0;
+            padding-left: 32px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--accent), var(--accent3));
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 28px;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: -28px;
+            top: 4px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: 2px solid var(--bg);
+        }
+
+        .timeline-dot.red { background: var(--accent2); }
+        .timeline-dot.green { background: var(--accent3); }
+
+        .timeline-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent);
+        }
+
+        .timeline-desc {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        /* ── QUIZ ── */
+        .quiz {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin: 24px 0;
+        }
+
+        .quiz-question {
+            font-weight: 600;
+            font-size: 15px;
+            margin-bottom: 12px;
+            color: var(--text);
+        }
+
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .quiz-option {
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 14px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quiz-option:hover {
+            border-color: var(--accent);
+            color: var(--text);
+        }
+
+        .quiz-option.correct {
+            border-color: var(--accent3);
+            background: rgba(46, 213, 115, 0.1);
+            color: var(--accent3);
+        }
+
+        .quiz-option.wrong {
+            border-color: var(--accent2);
+            background: rgba(255, 71, 87, 0.1);
+            color: var(--accent2);
+        }
+
+        .quiz-answer {
+            margin-top: 12px;
+            padding: 12px;
+            background: var(--bg3);
+            border-radius: 8px;
+            font-size: 14px;
+            color: var(--text-muted);
+            display: none;
+        }
+
+        .quiz-answer.visible { display: block; }
+
+        /* ── TABLE ── */
+        .alert-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 13px;
+        }
+
+        .alert-table th {
+            background: var(--bg3);
+            color: var(--text-muted);
+            font-weight: 600;
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+        }
+
+        .alert-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(30, 42, 66, 0.5);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .alert-table tr:hover td { background: var(--bg2); }
+
+        /* ── LESSONS ── */
+        .lessons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin: 24px 0;
+        }
+
+        .lesson-card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .lesson-number {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--border);
+            line-height: 1;
+            margin-bottom: 12px;
+        }
+
+        .lesson-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 6px;
+        }
+
+        .lesson-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        /* ── EXERCISE NAV ── */
+        .exercise-nav {
+            display: flex;
+            gap: 8px;
+            margin: 32px 0;
+            flex-wrap: wrap;
+        }
+
+        .exercise-nav a {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            padding: 6px 12px;
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .exercise-nav a:hover {
+            background: var(--accent);
+            color: var(--bg);
+            border-color: var(--accent);
+        }
+
+        /* ── FOOTER ── */
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 40px 24px;
+            text-align: center;
+        }
+
+        .footer-inner {
+            max-width: 860px;
+            margin: 0 auto;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover { color: var(--accent); }
+
+        .footer-copy {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 600px) {
+            .stat-bar { grid-template-columns: 1fr; }
+            .lessons { grid-template-columns: 1fr; }
+            h1 { font-size: 28px; }
+        }
+
+        /* ── ANIMATIONS ── */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero { animation: fadeUp 0.6s ease; }
+        .content { animation: fadeUp 0.6s ease 0.1s both; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-inner">
+        <a href="../index.html" class="logo">YK</a>
+        <a href="../index.html#projects" class="back-link">
+            ← Zurück zu den Projekten
+        </a>
+    </div>
+</header>
+
+<section class="hero">
+    <div class="hero-meta">
+        <span class="badge badge-red">🎯 NSE4 VORBEREITUNG</span>
+        <span class="badge badge-blue">FORTIOS CLI</span>
+        <span class="badge badge-yellow">EVALUATION LICENSE</span>
+        <span class="meta-date">Juni 2026</span>
+    </div>
+    <h1>NSE4 Sınavına <span>1 Hafta Kala</span><br>FortiGate Lab'da 8 Pratik Egzersiz</h1>
+    <p class="hero-summary">
+        Ein FortiGate-VM 7.4.12 Lab auf Apple Silicon — 8 praktische Übungen von CLI-Grundlagen über
+        Firewall-Policies, NAT, Routing, Security Profiles, Debug, VPN bis zum abschließenden Quiz.
+        Alles mit der Evaluation-Lizenz und ihren realen Limits (3 Policies, 1 CPU, 2 GB RAM).
+    </p>
+    <div class="tags">
+        <span class="tag">NSE4</span>
+        <span class="tag">FortiGate</span>
+        <span class="tag">FortiOS 7.4</span>
+        <span class="tag">CLI</span>
+        <span class="tag">NAT</span>
+        <span class="tag">Firewall Policy</span>
+        <span class="tag">VPN</span>
+        <span class="tag">IPS</span>
+        <span class="tag">Debug</span>
+        <span class="tag">Evaluation License</span>
+    </div>
+</section>
+
+<main class="content">
+
+    <!-- STATS -->
+    <div class="stat-bar">
+        <div class="stat-item">
+            <span class="stat-number">8</span>
+            <span class="stat-label">Praktische Übungen</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">15+</span>
+            <span class="stat-label">CLI-Kommandos</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">7</span>
+            <span class="stat-label">Quiz-Fragen</span>
+        </div>
+    </div>
+
+    <!-- LAB UMGEBUNG -->
+    <h2>Die Lab-Umgebung</h2>
+    <p>
+        Die Übungen laufen auf einer FortiGate-VM 7.4.12 (ARM64-KVM), nativ auf einem Mac mini M4 in UTM.
+        Die Evaluation-Lizenz bringt harte, aber realistische Grenzen mit — genau die, die auch in der NSE4
+        Prüfung thematisiert werden.
+    </p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">TOPOLOGIE</span>
+            <span class="code-desc">Lab-Aufbau im Überblick</span>
+        </div>
+        <div class="code-body">Mac mini M4 (Host)
+    │
+    └─ <span class="cmd">UTM 4.7.5</span> (QEMU + Apple hvf)
+         │
+         └─ <span class="cmd">FortiGate-VM 7.4.12</span> (1 vCPU / 2 GB / Eval-Lizenz)
+              │
+              ├─ port1  <span class="string">DHCP</span>        → WAN + Internet (NAT)
+              │
+              └─ port2  <span class="string">192.168.x.x/24</span>  → LAN + DHCP-Server
+
+<span class="comment"># Lizenz-Limit der Evaluation</span>
+- Max 3 Firewall-Policies
+- Max 3 Interfaces
+- Max 3 statische Routen
+- 1 vCPU, 2 GB RAM
+- Security Profiles konfigurierbar, aber mit Einschränkungen</div>
+    </div>
+
+    <div class="callout callout-yellow">
+        <span class="callout-icon">⚠️</span>
+        <p class="callout-text">
+            <strong>Evaluation-Lizenz:</strong> Die GUI ist ohne Lizenz gesperrt. Die kostenlose Eval-Lizenz
+            schaltet sie frei — innerhalb fester Grenzen (1 CPU, 3 Policies, 3 Routen). Für ein Lernlabor
+            reicht das völlig aus.
+        </p>
+    </div>
+
+    <!-- EGSERZISE NAV -->
+    <div class="exercise-nav">
+        <a href="#ex1">Egz. 1</a>
+        <a href="#ex2">Egz. 2</a>
+        <a href="#ex3">Egz. 3</a>
+        <a href="#ex4">Egz. 4</a>
+        <a href="#ex5">Egz. 5</a>
+        <a href="#ex6">Egz. 6</a>
+        <a href="#ex7">Egz. 7</a>
+        <a href="#ex8">Egz. 8</a>
+    </div>
+
+    <!-- EXERCISE 1 -->
+    <h2 id="ex1">Egzersiz 1 — CLI Temel Komutlar: <code class="inline">get</code> vs <code class="inline">show</code> vs <code class="inline">diagnose</code></h2>
+    <p>
+        Das wichtigste Unterscheidungsmerkmal in der NSE4: <code class="inline">get</code> zeigt den aktuellen
+        <strong>running state</strong>, <code class="inline">show</code> die gespeicherte <strong>Config</strong>
+        (VDOM-bezogen) und <code class="inline">diagnose</code> ist für Troubleshooting.
+    </p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">CLI</span>
+            <span class="code-desc">System-Status und Performance abfragen</span>
+        </div>
+        <div class="code-body"><span class="cmd">get</span> system status
+<span class="cmd">get</span> system performance status
+<span class="cmd">get</span> system interface
+<span class="cmd">get</span> system arp
+<span class="cmd">get</span> router info routing-table all
+<span class="cmd">execute</span> ping 8.8.8.8</div>
+    </div>
+
+    <div class="callout callout-blue">
+        <span class="callout-icon">💡</span>
+        <p class="callout-text">
+            <strong>NSE4 Merke:</strong> <code class="inline">get</code> zeigt immer den aktuellen Zustand —
+            inklusive per DHCP bezogener IP, Lease-Zeit, Gateway und MAC-Adresse. <code class="inline">show</code>
+            zeigt nur das, was der Admin explizit konfiguriert hat.
+        </p>
+    </div>
+
+    <h3>Die wichtigsten Erkenntnisse</h3>
+    <div class="lessons">
+        <div class="lesson-card">
+            <div class="lesson-number">01</div>
+            <div class="lesson-title"><code class="inline">get</code> = Running State</div>
+            <p class="lesson-desc">DHCP-IP, Lease-Zeit, Gateway, MAC, Link-Status — alles nur über <code class="inline">get</code> sichtbar.</p>
+        </div>
+        <div class="lesson-card">
+            <div class="lesson-number">02</div>
+            <div class="lesson-title"><code class="inline">show</code> = Config</div>
+            <p class="lesson-desc">Zeigt nur explizit gesetzte Werte. Default-Werte (z.B. <code class="inline">nat disable</code>) werden ausgeblendet.</p>
+        </div>
+        <div class="lesson-card">
+            <div class="lesson-number">03</div>
+            <div class="lesson-title">Distance-Werte</div>
+            <p class="lesson-desc">DHCP-Default-Route hat Distance <strong>5</strong>, statische Route <strong>10</strong> — ein häufiger NSE4-Prüfungsfall.</p>
+        </div>
+        <div class="lesson-card">
+            <div class="lesson-number">04</div>
+            <div class="lesson-title">Tunnel-Interfaces</div>
+            <p class="lesson-desc"><code class="inline">naf.root</code>, <code class="inline">l2t.root</code>, <code class="inline">ssl.root</code> sind Standard-Tunnel — aktiv auch ohne VPN-Config.</p>
+        </div>
+    </div>
+
+    <!-- EXERCISE 2 -->
+    <h2 id="ex2">Egzersiz 2 — Interface-Verwaltung & DHCP</h2>
+    <p>
+        FortiGate unterscheidet zwischen physischen Interfaces, Aggregations und Tunneln. Im Lab sind
+        <code class="inline">port1</code> (DHCP/WAN) und <code class="inline">port2</code> (statisch/LAN) aktiv.
+        Zusätzlich existiert <code class="inline">fortilink</code> für FortiSwitch-Auto-Discovery.
+    </p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">CLI</span>
+            <span class="code-desc">Interface-Config im Kontext</span>
+        </div>
+        <div class="code-body"><span class="cmd">config</span> system interface
+  <span class="cmd">edit</span> port1
+    <span class="cmd">show</span>            <span class="comment"># Config</span>
+    <span class="cmd">get</span>             <span class="comment"># Running State</span>
+  <span class="cmd">next</span>
+  <span class="cmd">edit</span> port2
+    <span class="cmd">show</span>
+  <span class="cmd">next</span>
+<span class="cmd">end</span>
+
+<span class="cmd">show</span> system dhcp server
+<span class="cmd">get</span> system dns</div>
+    </div>
+
+    <div class="callout callout-green">
+        <span class="callout-icon">✅</span>
+        <p class="callout-text">
+            <strong>Praktischer Nebeneffekt:</strong> <code class="inline">fortilink</code> hat die IP
+            <code class="inline">10.255.1.1/24</code> und ist standardmäßig aktiv. Damit können FortiSwitch-
+            Geräte per Plug-and-Play erkannt werden (VCI-Match auf <code class="inline">FortiSwitch</code> und
+            <code class="inline">FortiExtender</code>).
+        </p>
+    </div>
+
+    <h3>DHCP-Server am LAN-Interface</h3>
+    <p>
+        Der DHCP-Server ist an <code class="inline">port2</code> gebunden und verteilt IPs aus dem Bereich
+        <code class="inline">.100</code> bis <code class="inline">.200</code>. Als Default-Gateway fungiert
+        die FortiGate selbst (<code class="inline">192.168.x.x</code>).
+    </p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">DHCP-SERVER</span>
+            <span class="code-desc">Config auf port2</span>
+        </div>
+        <div class="code-body"><span class="cmd">config</span> system dhcp server
+    <span class="cmd">edit</span> <span class="number">1</span>
+        <span class="cmd">set</span> default-gateway <span class="number">192.168.x.x</span>
+        <span class="cmd">set</span> netmask <span class="number">255.255.255.0</span>
+        <span class="cmd">set</span> interface <span class="string">"port2"</span>
+        <span class="cmd">config</span> ip-range
+            <span class="cmd">edit</span> <span class="number">1</span>
+                <span class="cmd">set</span> start-ip <span class="number">192.168.x.100</span>
+                <span class="cmd">set</span> end-ip <span class="number">192.168.x.200</span>
+            <span class="cmd">next</span>
+        <span class="cmd">end</span>
+        <span class="cmd">set</span> vci-match <span class="keyword">enable</span>
+        <span class="cmd">set</span> vci-string <span class="string">"FortiSwitch"</span> <span class="string">"FortiExtender"</span>
+    <span class="cmd">next</span>
+<span class="cmd">end</span></div>
+    </div>
+
+    <!-- EXERCISE 3 -->
+    <h2 id="ex3">Egzersiz 3 — Firewall-Policies: NAT, Sequenz & Lizenz-Limits</h2>
+    <p>
+        Firewall-Policies werden <strong>top-down</strong> abgearbeitet. Die Evaluation-Lizenz erlaubt
+        maximal <strong>3 Policies</strong> — ein harter, aber realistischer Limit für das Lab.
+    </p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">POLICY</span>
+            <span class="code-desc">Bestehende Policy anzeigen und verstehen</span>
+        </div>
+        <div class="code-body"><span class="cmd">show</span> firewall policy
+
+<span class="comment"># Ausgabe (bereits konfiguriert)</span>
+config firewall policy
+    <span class="cmd">edit</span> <span class="number">1</span>
+        <span class="cmd">set</span> name <span class="string">"LAN-to-WAN"</span>
+        <span class="cmd">set</span> srcintf <span class="string">"port2"</span>
+        <span class="cmd">set</span> dstintf <span class="string">"port1"</span>
+        <span class="cmd">set</span> action <span class="keyword">accept</span>
+        <span class="cmd">set</span> srcaddr <span class="string">"all"</span>
+        <span class="cmd">set</span> dstaddr <span class="string">"all"</span>
+        <span class="cmd">set</span> schedule <span class="string">"always"</span>
+        <span class="cmd">set</span> service <span class="string">"ALL"</span>
+        <span class="cmd">set</span> nat <span class="keyword">enable</span>       <span class="comment"># Source NAT</span>
+    <span class="cmd">next</span>
+end</div>
+    </div>
+
+    <h3>Neue Policy hinzufügen (Evaluation: max 3)</h3>
+    <p>
+        Wir haben eine zweite Policy <code class="inline">Management-HTTPS</code> für WAN-Zugriff auf die GUI
+        erstellt und anschließend eine dritte <code class="inline">Test-Policy</code>.
+    </p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">CLI</span>
+            <span class="code-desc">2. Policy erstellen</span>
+        </div>
+        <div class="code-body"><span class="cmd">config</span> firewall policy
+    <span class="cmd">edit</span> <span class="number">0</span>                  <span class="comment"># 0 = auto ID</span>
+        <span class="cmd">set</span> name <span class="string">"Management-HTTPS"</span>
+        <span class="cmd">set</span> srcintf <span class="string">"port1"</span>
+        <span class="cmd">set</span> dstintf <span class="string">"port1"</span>
+        <span class="cmd">set</span> action <span class="keyword">accept</span>
+        <span class="cmd">set</span> service <span class="string">"HTTPS"</span>
+        <span class="cmd">set</span> nat <span class="keyword">disable</span>
+        <span class="cmd">set</span> comments <span class="string">"WAN management access"</span>
+    <span class="cmd">next</span>
+<span class="cmd">end</span></div>
+    </div>
+
+    <div class="callout callout-red">
+        <span class="callout-icon">🚫</span>
+        <p class="callout-text">
+            <strong>Der Lizenz-Limit-Test:</strong> Beim Versuch, eine 4. Policy zu erstellen, liefert die
+            CLI: <code class="inline">return code -4 (reached the maximum number of entries)</code>.
+            Genau das ist ein typischer NSE4-Prüfungsfall.
+        </p>
+    </div>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">FEHLER</span>
+            <span class="code-desc">Lizenz-Limit erreicht</span>
+        </div>
+        <div class="code-body"><span class="cmd">edit</span> <span class="number">0</span>
+<span class="error">Command fail. Return code -4</span>
+(reached the maximum number of entries)</div>
+    </div>
+
+    <h3>Policy-Sequenz ändern</h3>
+    <p>
+        Die Reihenfolge ist entscheidend: FortiGate arbeitet Policies von oben nach unten ab.
+        Um eine Policy zu verschieben:
+    </p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">CLI</span>
+            <span class="code-desc">Policy-Sequenz anpassen</span>
+        </div>
+        <div class="code-body"><span class="cmd">config</span> firewall policy
+    <span class="cmd">move</span> <span class="number">2</span> before <span class="number">1</span>   <span class="comment"># Policy 2 vor Policy 1</span>
+    <span class="cmd">move</span> <span class="number">1</span> after <span class="number">3</span>    <span class="comment"># Policy 1 nach Policy 3</span>
+<span class="cmd">end</span></div>
+    </div>
+
+    <!-- EXERCISE 4 -->
+    <h2 id="ex4">Egzersiz 4 — Routing-Tabelle & Statische Routen</h2>
+    <p>
+        Die Routing-Tabelle zeigt, wie FortiGate Entscheidungen trifft. Jede Route hat eine
+        <strong>Administrative Distance</strong> — je niedriger, desto vertrauenswürdiger.
+    </p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">ROUTING</span>
+            <span class="code-desc">Aktuelle Routing-Tabelle anzeigen</span>
+        </div>
+        <div class="code-body"><span class="cmd">get</span> router info routing-table all
+
+<span class="comment"># Ausgabe</span>
+Routing table for VRF=0
+S*      0.0.0.0/0 [<span class="number">5</span>/0] via <span class="number">192.168.x.x</span>, port1, [1/0]
+C       192.168.x.0/24 is directly connected, port2
+C       192.168.x.0/24 is directly connected, port1
+
+<span class="comment"># Legende</span>
+S* = Static (candidate default)
+C  = Connected</div>
+    </div>
+
+    <div class="callout callout-blue">
+        <span class="callout-icon">📊</span>
+        <p class="callout-text">
+            <strong>Administrative Distance (NSE4!):</strong>
+            <code class="inline">Connected = 0</code>,
+            <code class="inline">DHCP-Route = 5</code>,
+            <code class="inline">Static = 10</code>,
+            <code class="inline">BGP = 20</code>,
+            <code class="inline">OSPF = 110</code>.
+            Die DHCP-Default-Route mit Distance 5 übertrumpft eine statische Route mit 10.
+        </p>
+    </div>
+
+    <h3>Statische Route hinzufügen</h3>
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">CLI</span>
+            <span class="code-desc">Dummy-Route für 10.0.0.0/8</span>
+        </div>
+        <div class="code-body"><span class="cmd">config</span> router static
+    <span class="cmd">edit</span> <span class="number">0</span>
+        <span class="cmd">set</span> dst <span class="number">10.0.0.0</span> <span class="number">255.0.0.0</span>
+        <span class="cmd">set</span> device <span class="string">port1</span>
+        <span class="cmd">set</span> gateway <span class="number">192.168.x.x</span>
+        <span class="cmd">set</span> distance <span class="number">10</span>
+    <span class="cmd">next</span>
+<span class="cmd">end</span>
+
+<span class="cmd">get</span> router info routing-table all
+<span class="comment"># 10.0.0.0/8 [10/0] via ... erscheint als S</span></div>
+    </div>
+
+    <!-- EXERCISE 5 -->
+    <h2 id="ex5">Egzersiz 5 — Security Profiles: IPS, Flow vs. Proxy</h2>
+    <p>
+        Security Profiles sind das Herzstück der FortiGate-Security. Der entscheidende NSE4-Unterschied:
+        <strong>Flow-based</strong> vs. <strong>Proxy-based</strong> Inspection.
+    </p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">IPS</span>
+            <span class="code-desc">Sensor erstellen und zuweisen</span>
+        </div>
+        <div class="code-body"><span class="cmd">config</span> ips sensor
+    <span class="cmd">edit</span> <span class="string">"Basic-IPS"</span>
+        <span class="cmd">set</span> comment <span class="string">"NSE4 Practice"</span>
+        <span class="cmd">config</span> entries
+            <span class="cmd">edit</span> <span class="number">1</span>
+                <span class="cmd">set</span> severity medium high critical
+                <span class="cmd">set</span> action <span class="keyword">block</span>
+            <span class="cmd">next</span>
+        <span class="cmd">end</span>
+    <span class="cmd">next</span>
+<span class="cmd">end</span>
+
+<span class="comment"># Der Policy zuweisen</span>
+<span class="cmd">config</span> firewall policy
+    <span class="cmd">edit</span> <span class="number">1</span>
+        <span class="cmd">set</span> utm-status <span class="keyword">enable</span>
+        <span class="cmd">set</span> ips-sensor <span class="string">"Basic-IPS"</span>
+    <span class="cmd">next</span>
+<span class="cmd">end</span></div>
+    </div>
+
+    <div class="callout callout-green">
+        <span class="callout-icon">✅</span>
+        <p class="callout-text">
+            <strong>Erfolg:</strong> Nach <code class="inline">set utm-status enable</code> und
+            <code class="inline">set ips-sensor "Basic-IPS"</code> zeigt die Policy <code class="inline">utm-status: enable</code>.
+            Ein Warning "non-inspection profile doesn't perform SSL inspection" ist normal und kein Fehler.
+        </p>
+    </div>
+
+    <h3>Flow-based vs. Proxy-based Inspection</h3>
+    <table class="alert-table">
+        <thead>
+            <tr><th>PROFILE</th><th>MODE</th><th>NSE4-RELEVANZ</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>IPS</td><td class="severity-crit">Flow-based</td><td>Schnell, Paket-basiert, geringe Latenz</td></tr>
+            <tr><td>Application Control</td><td class="severity-crit">Flow-based</td><td>App-ID, QoS, Traffic Shaping</td></tr>
+            <tr><td>Antivirus</td><td style="color:#ffa502">Proxy-based</td><td>Datei-Rekonstruktion, tiefgehend</td></tr>
+            <tr><td>Web Filter</td><td style="color:#ffa502">Proxy-based</td><td>URL-Kategorisierung, SSL-Inspection</td></tr>
+            <tr><td>DLP</td><td style="color:#ffa502">Proxy-based</td><td>Data Fingerprinting, Content</td></tr>
+        </tbody>
+    </table>
+
+    <div class="callout callout-yellow">
+        <span class="callout-icon">📝</span>
+        <p class="callout-text">
+            <strong>NSE4 Merke:</strong> <code class="inline">inspection-mode: flow</code> in der Policy-Config
+            bedeutet, dass IPS und App Control im Flow-Mode arbeiten. AV und Web Filter würden
+            Proxy-Mode erfordern — erkennbar am <code class="inline">profile-type</code>.
+        </p>
+    </div>
+
+    <!-- EXERCISE 6 -->
+    <h2 id="ex6">Egzersiz 6 — Log & Debug: Troubleshooting</h2>
+    <p>
+        Debug ist die wichtigste Waffe für jeden NSE4-Kandidaten. Mit <code class="inline">diagnose debug</code>
+        lässt sich der Paketfluss live verfolgen — ideal, um NAT-, Routing- oder Session-Probleme zu finden.
+    </p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">DEBUG</span>
+            <span class="code-desc">Paket-Trace für einen bestimmten Host</span>
+        </div>
+        <div class="code-body"><span class="cmd">diagnose</span> debug <span class="keyword">enable</span>
+<span class="cmd">diagnose</span> debug flow filter addr <span class="number">192.168.x.x</span>
+<span class="cmd">diagnose</span> debug flow trace start <span class="number">10</span>
+
+<span class="comment"># Einen Ping auslösen</span>
+<span class="cmd">execute</span> ping <span class="number">192.168.x.x</span>
+
+<span class="cmd">diagnose</span> debug flow trace stop
+<span class="cmd">diagnose</span> debug <span class="keyword">disable</span>
+<span class="cmd">diagnose</span> debug reset</div>
+    </div>
+
+    <h3>Debug-Output lesen</h3>
+    <p>
+        Der Debug-Output zeigt pro Zeile einen Paket-Durchlauf:
+    </p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">DEBUG-LOG</span>
+            <span class="code-desc">Ausschnitt aus dem Paket-Trace</span>
+        </div>
+        <div class="code-body">id=xxxxx <span class="cmd">trace_id=1</span> <span class="cmd">func=print_pkt_detail</span>
+  msg="vd-root:0 received a packet(proto=<span class="number">6</span>, <span class="number">192.168.x.x:443</span>-><span class="number">192.168.x.x:xxxxx</span>)
+       tun_id=0.0.0.0 from <span class="keyword">port1</span>."
+
+id=xxxxx <span class="cmd">trace_id=1</span> <span class="cmd">func=resolve_ip_tuple_fast</span>
+  msg="Find an existing session, id-xxxxxx, <span class="keyword">original direction</span>"
+
+<span class="comment"># Analyse</span>
+- proto=<span class="number">6</span>  → TCP
+- from port1    → Eingehend auf WAN-Interface
+- session found → Session-basierte Firewall</div>
+    </div>
+
+    <div class="lessons">
+        <div class="lesson-card">
+            <div class="lesson-number">01</div>
+            <div class="lesson-title">Filter setzen</div>
+            <p class="lesson-desc">Ohne <code class="inline">filter addr</code> produziert Debug zu viel Output. Immer zuerst filtern.</p>
+        </div>
+        <div class="lesson-card">
+            <div class="lesson-number">02</div>
+            <div class="lesson-title">Session-ID merken</div>
+            <p class="lesson-desc"><code class="inline">session id-xxxxxx</code> identifiziert den Flow. Mit <code class="inline">diagnose sys session list</code> nachschlagen.</p>
+        </div>
+        <div class="lesson-card">
+            <div class="lesson-number">03</div>
+            <div class="lesson-title">Richtung erkennen</div>
+            <p class="lesson-desc"><code class="inline">original direction</code> = Client → Server, <code class="inline">reply direction</code> = Server → Client.</p>
+        </div>
+        <div class="lesson-card">
+            <div class="lesson-number">04</div>
+            <div class="lesson-title">Debug sauber beenden</div>
+            <p class="lesson-desc">Immer <code class="inline">disable</code> und <code class="inline">reset</code> am Ende. Aktives Debug belastet die CPU.</p>
+        </div>
+    </div>
+
+    <!-- EXERCISE 7 -->
+    <h2 id="ex7">Egzersiz 7 — VPN: IPsec Site-to-Site</h2>
+    <p>
+        VPN ist ein Pflichtthema in der NSE4. Die Konfiguration erfolgt in zwei Phasen:
+        <strong>Phase 1</strong> (IKE — Authentication & Key Exchange) und <strong>Phase 2</strong>
+        (IPsec — Datenverschlüsselung).
+    </p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">VPN PHASE 1</span>
+            <span class="code-desc">IKE-Interface konfigurieren</span>
+        </div>
+        <div class="code-body"><span class="cmd">config</span> vpn ipsec phase1-interface
+    <span class="cmd">edit</span> <span class="string">"VPN-to-Lab2"</span>
+        <span class="cmd">set</span> interface <span class="string">"port1"</span>
+        <span class="cmd">set</span> ike-version <span class="number">2</span>
+        <span class="cmd">set</span> dhgrp <span class="number">14</span>
+        <span class="cmd">set</span> remote-gw <span class="number">203.0.113.1</span>
+        <span class="cmd">set</span> psksecret <span class="string">"StrongPresharedKey123!"</span>
+    <span class="cmd">next</span>
+<span class="cmd">end</span></div>
+    </div>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">VPN PHASE 2</span>
+            <span class="code-desc">IPsec-Selector erstellen</span>
+        </div>
+        <div class="code-body"><span class="cmd">config</span> vpn ipsec phase2-interface
+    <span class="cmd">edit</span> <span class="string">"VPN-to-Lab2-p2"</span>
+        <span class="cmd">set</span> phase1name <span class="string">"VPN-to-Lab2"</span>
+        <span class="cmd">set</span> dhgrp <span class="number">14</span>
+        <span class="cmd">set</span> keylifeseconds <span class="number">3600</span>
+    <span class="cmd">next</span>
+<span class="cmd">end</span></div>
+    </div>
+
+    <h3>VPN-Tunnel überwachen</h3>
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">DIAGNOSE</span>
+            <span class="code-desc">Tunnel-Status prüfen</span>
+        </div>
+        <div class="code-body"><span class="cmd">diagnose</span> vpn tunnel list
+
+<span class="comment"># Ausgabe</span>
+name=VPN-to-Lab2 ver=<span class="number">2</span> serial=<span class="number">1</span> <span class="number">192.168.x.x:0</span>-><span class="number">203.0.113.1:0</span>
+  <span class="error">status=down</span> dst_mtu=0 weight=1
+  mode=auto/1 encap=none
+  <span class="cmd">dpd:</span> mode=on-demand status=fail
+
+<span class="comment"># status=down ist normal — remote GW ist nicht erreichbar</span>
+<span class="comment"># dpd: Dead Peer Detection versucht, den Peer zu erreichen</span></div>
+    </div>
+
+    <div class="callout callout-blue">
+        <span class="callout-icon">🔐</span>
+        <p class="callout-text">
+            <strong>NSE4 Merke:</strong> Phase 1 = IKE (Authentication, DH Group, Key Exchange).
+            Phase 2 = IPsec (ESP/AH, Traffic Selector, SA). <code class="inline">ike-version 2</code> ist
+            moderner und sicherer als IKEv1. <code class="inline">dhgrp 14</code> = 2048-bit MODP Group.
+        </p>
+    </div>
+
+    <!-- EXERCISE 8 -->
+    <h2 id="ex8">Egzersiz 8 — NSE4 Quiz & Prüfungs-Strategie</h2>
+    <p>
+        Die folgenden Fragen basieren auf den Erfahrungen aus den vorherigen 7 Übungen.
+        Sie decken die häufigsten NSE4-Themen ab.
+    </p>
+
+    <div class="quiz">
+        <div class="quiz-question">1. Welcher Unterschied besteht zwischen <code class="inline">get</code> und <code class="inline">show</code>?</div>
+        <div class="quiz-options">
+            <div class="quiz-option correct">A) <code class="inline">get</code> = running state/hardware, <code class="inline">show</code> = config (VDOM-basiert)</div>
+            <div class="quiz-option">B) <code class="inline">get</code> = hardware info, <code class="inline">show</code> = software config</div>
+            <div class="quiz-option">C) <code class="inline">get</code> = partial config, <code class="inline">show</code> = full config</div>
+            <div class="quiz-option">D) <code class="inline">get</code> = config only, <code class="inline">show</code> = statistics</div>
+        </div>
+        <div class="quiz-answer visible">
+            <strong>Antwort A.</strong> <code class="inline">get</code> zeigt den aktuellen Zustand inklusive DHCP-IPs, MAC-Adressen und Link-Status.
+            <code class="inline">show</code> zeigt nur die gespeicherte Konfiguration des aktuellen VDOM.
+        </div>
+    </div>
+
+    <div class="quiz">
+        <div class="quiz-question">2. Wie viele Firewall-Policies sind unter einer Evaluation-Lizenz maximal erlaubt?</div>
+        <div class="quiz-options">
+            <div class="quiz-option">A) 10</div>
+            <div class="quiz-option correct">B) 3</div>
+            <div class="quiz-option">C) Unbegrenzt</div>
+            <div class="quiz-option">D) 1</div>
+        </div>
+        <div class="quiz-answer visible">
+            <strong>Antwort B.</strong> Evaluation-Lizenz = 1 vCPU, 2 GB RAM, 3 Interfaces, 3 Policies, 3 Routen.
+            Der Fehler <code class="inline">return code -4</code> erscheint beim Überschreiten.
+        </div>
+    </div>
+
+    <div class="quiz">
+        <div class="quiz-question">3. In welchem Inspection-Modus läuft ein IPS-Sensor?</div>
+        <div class="quiz-options">
+            <div class="quiz-option">A) Proxy-based</div>
+            <div class="quiz-option correct">B) Flow-based</div>
+            <div class="quiz-option">C) Passive</div>
+            <div class="quiz-option">D) Inline</div>
+        </div>
+        <div class="quiz-answer visible">
+            <strong>Antwort B.</strong> IPS und Application Control arbeiten <strong>Flow-based</strong> (schnell, paket-basiert).
+            Antivirus, Web Filter und DLP arbeiten <strong>Proxy-based</strong> (tiefgehende Inspektion).
+        </div>
+    </div>
+
+    <div class="quiz">
+        <div class="quiz-question">4. Welches Kommando verschiebt Policy 2 vor Policy 1?</div>
+        <div class="quiz-options">
+            <div class="quiz-option correct">A) <code class="inline">move 2 before 1</code></div>
+            <div class="quiz-option">B) <code class="inline">move 1 after 2</code></div>
+            <div class="quiz-option">C) <code class="inline">set sequence 1</code></div>
+            <div class="quiz-option">D) <code class="inline">reorder 2 1</code></div>
+        </div>
+        <div class="quiz-answer visible">
+            <strong>Antwort A.</strong> <code class="inline">move 2 before 1</code> ist die korrekte Syntax.
+            Policies werden <strong>top-down</strong> abgearbeitet — die Reihenfolge ist entscheidend.
+        </div>
+    </div>
+
+    <div class="quiz">
+        <div class="quiz-question">5. Was ist der Default-Wert der Administrative Distance für eine statische Route?</div>
+        <div class="quiz-options">
+            <div class="quiz-option">A) 1</div>
+            <div class="quiz-option">B) 5</div>
+            <div class="quiz-option correct">C) 10</div>
+            <div class="quiz-option">D) 20</div>
+        </div>
+        <div class="quiz-answer visible">
+            <strong>Antwort C.</strong> Static = 10. Die DHCP-Default-Route hat Distance <strong>5</strong> und übertrumpft
+            somit eine statische Default-Route mit 10. BGP = 20, OSPF = 110.
+        </div>
+    </div>
+
+    <div class="quiz">
+        <div class="quiz-question">6. Was verwaltet VPN Phase 1 (IKE)?</div>
+        <div class="quiz-options">
+            <div class="quiz-option">A) Datenverschlüsselung</div>
+            <div class="quiz-option correct">B) IKE-Authentifizierung & Key Exchange</div>
+            <div class="quiz-option">C) Routing-Tabelle</div>
+            <div class="quiz-option">D) NAT</div>
+        </div>
+        <div class="quiz-answer visible">
+            <strong>Antwort B.</strong> Phase 1 = IKE (Authentication, DH Group, Preshared Key/RSA).
+            Phase 2 = IPsec (eigentliche Datenverschlüsselung über ESP/AH).
+        </div>
+    </div>
+
+    <div class="quiz">
+        <div class="quiz-question">7. Was ist der Hauptunterschied zwischen NAT Mode und Transparent Mode?</div>
+        <div class="quiz-options">
+            <div class="quiz-option">A) NAT Mode ist schneller</div>
+            <div class="quiz-option correct">B) Transparent Mode arbeitet als Layer-2-Bridge ohne IP</div>
+            <div class="quiz-option">C) Transparent Mode ist nur für Wireless</div>
+            <div class="quiz-option">D) NAT Mode unterstützt nur IPv6</div>
+        </div>
+        <div class="quiz-answer visible">
+            <strong>Antwort B.</strong> Transparent Mode = Layer-2-Bridge, keine eigene IP (außer Management-IP),
+            kein Routing, kein NAT. NAT Mode = Layer-3, Routing, NAT, Source/Destination NAT.
+        </div>
+    </div>
+
+    <!-- RESULTS -->
+    <h2>Quiz-Ergebnisse</h2>
+    <p>
+        Ein perfekter NSE4-Kandidat sollte mindestens <strong>6 von 7 Fragen</strong> richtig beantworten.
+        Die häufigsten Fehlerquellen: Administrative Distance (5 vs. 10) und der Unterschied
+        zwischen NAT und Transparent Mode.
+    </p>
+
+    <div class="stat-bar">
+        <div class="stat-item">
+            <span class="stat-number">7/7</span>
+            <span class="stat-label">Mögliche Punkte</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">6+</span>
+            <span class="stat-label">Empfohlenes Minimum</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">1</span>
+            <span class="stat-label">Woche bis zur Prüfung</span>
+        </div>
+    </div>
+
+    <!-- CONCLUSION -->
+    <h2>Abschluss & Empfehlungen für die NSE4</h2>
+    <p>
+        Diese 8 Übungen decken die Kernbereiche der NSE4 ab: CLI-Navigation, Interface-Management,
+        NAT, Firewall-Policies, Routing, Security Profiles, Troubleshooting und VPN. Die
+        Evaluation-Lizenz mit ihren Limits ist dabei kein Hindernis, sondern ein realistisches
+        Lernfeld — genau wie in der Prüfung.
+    </p>
+
+    <div class="timeline">
+        <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-title">Tag 1-2: CLI & Interface</div>
+            <p class="timeline-desc">Egzersiz 1-2 wiederholen. <code class="inline">get</code>, <code class="inline">show</code>, <code class="inline">diagnose</code> unterscheiden.</p>
+        </div>
+        <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-title">Tag 3-4: Policy & NAT</div>
+            <p class="timeline-desc">Egzersiz 3-4. Policy-Sequenz, NAT enable/disable, Static Routes.</p>
+        </div>
+        <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-title">Tag 5-6: Security & VPN</div>
+            <p class="timeline-desc">Egzersiz 5-7. Flow vs. Proxy, IPS, VPN Phase 1/2.</p>
+        </div>
+        <div class="timeline-item">
+            <div class="timeline-dot green"></div>
+            <div class="timeline-title">Tag 7: Quiz & Prüfung</div>
+            <p class="timeline-desc">Egzersiz 8. Offizielle NSE4 Practice Exam von Fortinet lösen.</p>
+        </div>
+    </div>
+
+    <div class="callout callout-green">
+        <span class="callout-icon">🎯</span>
+        <p class="callout-text">
+            <strong>Letzter Tipp:</strong> In der NSE4-Prüfung werden viele Szenarien mit der CLI abgefragt.
+            Es reicht nicht, die GUI zu kennen — man muss wissen, welches <code class="inline">get</code>-Kommando
+            welche Information liefert, und wie man Policies, Routes und VPNs über die serielle Konsole
+            konfiguriert.
+        </p>
+    </div>
+
+    <div class="callout callout-blue">
+        <span class="callout-icon">📚</span>
+        <p class="callout-text">
+            <strong>Weiterführende Links:</strong>
+            <a href="https://www.fortinet.com/training/nse4" target="_blank" style="color:var(--accent);text-decoration:none;">Fortinet NSE4 Offizielle Seite</a> ·
+            <a href="https://docs.fortinet.com/document/fortigate/7.4.12/cli-reference" target="_blank" style="color:var(--accent);text-decoration:none;">FortiOS 7.4.12 CLI Reference</a>
+        </p>
+    </div>
+
+</main>
+
+<footer>
+    <div class="footer-inner">
+        <div class="footer-links">
+            <a href="../index.html">← Zurück zum Portfolio</a>
+            <a href="https://github.com/yasinkilicma/fortigate-vm-lab-apple-silicon" target="_blank">GitHub: FortiGate Lab</a>
+            <a href="https://www.linkedin.com/in/yasin-kilic-cyber-security/" target="_blank">LinkedIn</a>
+        </div>
+        <p class="footer-copy">© 2026 Yasin Kilic — SOC Analyst in Training</p>
+    </div>
+</footer>
+
+</body>
+</html>
