@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPS testen mit einer Custom-Signatur (FortiGate) | Yasin Kilic</title>
+    <meta name="description" content="Eine deterministische IPS-Demo auf einer FortiGate: eine eigene F-SBID-Signatur fängt ein Muster im HTTP-Traffic eines Clients hinter der Firewall ab — Kontroll-Request 200, Angriffs-Request dropped, inklusive IPS-Log.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg:#0a0e1a; --bg2:#0f1525; --bg3:#161d30; --border:#1e2a42; --accent:#00d4ff; --accent2:#ff4757; --accent3:#2ed573; --text:#e0e6f0; --text-muted:#6b7a99; --code-bg:#0d1117; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { background:var(--bg); color:var(--text); font-family:'Sora',sans-serif; font-size:16px; line-height:1.8; }
+        header { position:sticky; top:0; z-index:100; background:rgba(10,14,26,0.9); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); padding:16px 0; }
+        .header-inner { max-width:860px; margin:0 auto; padding:0 24px; display:flex; align-items:center; justify-content:space-between; }
+        .logo { font-family:'JetBrains Mono',monospace; font-weight:600; color:var(--accent); text-decoration:none; font-size:18px; letter-spacing:-0.5px; }
+        .back-link { font-size:13px; color:var(--text-muted); text-decoration:none; transition:color 0.2s; }
+        .back-link:hover { color:var(--accent); }
+        .hero { max-width:860px; margin:0 auto; padding:64px 24px 48px; border-bottom:1px solid var(--border); }
+        .hero-meta { display:flex; align-items:center; gap:12px; margin-bottom:24px; flex-wrap:wrap; }
+        .badge { font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600; padding:4px 10px; border-radius:4px; letter-spacing:0.5px; }
+        .badge-red { background:rgba(255,71,87,0.15); color:var(--accent2); border:1px solid rgba(255,71,87,0.3); }
+        .badge-blue { background:rgba(0,212,255,0.1); color:var(--accent); border:1px solid rgba(0,212,255,0.2); }
+        .badge-green { background:rgba(46,213,115,0.1); color:var(--accent3); border:1px solid rgba(46,213,115,0.2); }
+        .meta-date { font-size:13px; color:var(--text-muted); font-family:'JetBrains Mono',monospace; }
+        h1 { font-size:clamp(28px,5vw,44px); font-weight:700; line-height:1.2; letter-spacing:-1px; margin-bottom:20px; }
+        h1 span { color:var(--accent); }
+        .hero-summary { font-size:17px; color:var(--text-muted); max-width:680px; line-height:1.7; }
+        .tags { display:flex; flex-wrap:wrap; gap:8px; margin-top:28px; }
+        .tag { font-family:'JetBrains Mono',monospace; font-size:12px; padding:5px 12px; background:var(--bg3); border:1px solid var(--border); border-radius:20px; color:var(--text-muted); }
+        .content { max-width:860px; margin:0 auto; padding:56px 24px; }
+        .stat-bar { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--border); border:1px solid var(--border); border-radius:12px; overflow:hidden; margin-bottom:56px; }
+        .stat-item { background:var(--bg2); padding:24px; text-align:center; }
+        .stat-number { font-family:'JetBrains Mono',monospace; font-size:26px; font-weight:600; color:var(--accent); display:block; }
+        .stat-label { font-size:12px; color:var(--text-muted); margin-top:4px; }
+        h2 { font-size:22px; font-weight:700; margin:48px 0 20px; padding-left:16px; border-left:3px solid var(--accent); letter-spacing:-0.3px; }
+        h3 { font-size:17px; font-weight:600; margin:32px 0 12px; color:var(--accent); font-family:'JetBrains Mono',monospace; }
+        p { margin-bottom:16px; color:var(--text); }
+        code.inline { background:var(--bg3); padding:2px 8px; border-radius:4px; font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--accent); }
+        .code-block { background:var(--code-bg); border:1px solid var(--border); border-radius:12px; overflow:hidden; margin:20px 0; }
+        .code-header { background:var(--bg3); border-bottom:1px solid var(--border); padding:10px 16px; display:flex; align-items:center; justify-content:space-between; }
+        .code-lang { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--accent); font-weight:600; letter-spacing:0.5px; }
+        .code-desc { font-size:12px; color:var(--text-muted); }
+        .code-body { padding:20px; font-family:'JetBrains Mono',monospace; font-size:13px; line-height:1.7; color:#a8b8d8; overflow-x:auto; white-space:pre; }
+        .code-body .comment { color:#4a5568; } .code-body .keyword { color:#ff79c6; } .code-body .string { color:#f1fa8c; } .code-body .number { color:var(--accent3); } .code-body .cmd { color:var(--accent); }
+        .callout { border-radius:12px; padding:20px 24px; margin:24px 0; display:flex; gap:16px; align-items:flex-start; }
+        .callout-blue { background:rgba(0,212,255,0.06); border:1px solid rgba(0,212,255,0.2); }
+        .callout-red { background:rgba(255,71,87,0.06); border:1px solid rgba(255,71,87,0.2); }
+        .callout-green { background:rgba(46,213,115,0.06); border:1px solid rgba(46,213,115,0.2); }
+        .callout-icon { font-size:20px; flex-shrink:0; margin-top:2px; }
+        .callout-text { font-size:14px; line-height:1.7; color:var(--text); margin:0; }
+        .callout-text strong { color:var(--accent); }
+        .callout-red .callout-text strong { color:var(--accent2); }
+        .callout-green .callout-text strong { color:var(--accent3); }
+        .alert-table { width:100%; border-collapse:collapse; margin:20px 0; font-size:13px; }
+        .alert-table th { background:var(--bg3); color:var(--text-muted); font-weight:600; padding:12px 16px; text-align:left; border-bottom:1px solid var(--border); font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.5px; }
+        .alert-table td { padding:12px 16px; border-bottom:1px solid rgba(30,42,66,0.5); font-family:'JetBrains Mono',monospace; }
+        .alert-table tr:hover td { background:var(--bg2); }
+        .sev-crit { color:var(--accent2); font-weight:600; }
+        .lessons { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; margin:24px 0; }
+        .lesson-card { background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:20px; }
+        .lesson-number { font-family:'JetBrains Mono',monospace; font-size:28px; font-weight:600; color:var(--border); line-height:1; margin-bottom:12px; }
+        .lesson-title { font-weight:600; font-size:14px; margin-bottom:6px; }
+        .lesson-desc { font-size:13px; color:var(--text-muted); line-height:1.6; margin:0; }
+        footer { border-top:1px solid var(--border); padding:40px 24px; text-align:center; }
+        .footer-inner { max-width:860px; margin:0 auto; }
+        .footer-links { display:flex; justify-content:center; gap:24px; margin-bottom:16px; flex-wrap:wrap; }
+        .footer-links a { font-size:13px; color:var(--text-muted); text-decoration:none; transition:color 0.2s; }
+        .footer-links a:hover { color:var(--accent); }
+        .footer-copy { font-size:12px; color:var(--text-muted); font-family:'JetBrains Mono',monospace; }
+        @media (max-width:600px) { .stat-bar { grid-template-columns:1fr; } .lessons { grid-template-columns:1fr; } h1 { font-size:28px; } }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+        .hero { animation:fadeUp 0.6s ease; } .content { animation:fadeUp 0.6s ease 0.1s both; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-inner">
+        <a href="../index.html" class="logo">YK</a>
+        <a href="../index.html#projects" class="back-link">← Zurück zu den Projekten</a>
+    </div>
+</header>
+
+<section class="hero">
+    <div class="hero-meta">
+        <span class="badge badge-red">🛡️ IPS</span>
+        <span class="badge badge-blue">NSE4</span>
+        <span class="meta-date">Juni 2026</span>
+    </div>
+    <h1>IPS testen mit einer <span>Custom-Signatur</span><br>— deterministisch statt Signatur-Lotterie</h1>
+    <p class="hero-summary">
+        Wie beweist man, dass das Intrusion Prevention System einer FortiGate wirklich greift — ohne sich auf
+        FortiGuard-Signaturen zu verlassen, die auf einer unlizenzierten Lab-VM fehlen können? Mit einer
+        <strong>eigenen F-SBID-Signatur</strong>: ein eindeutiges Muster im HTTP-Verkehr eines Clients hinter der
+        Firewall wird zuverlässig erkannt und geblockt. Kontroll-Request 200, Angriffs-Request <em>dropped</em> — inklusive IPS-Log.
+    </p>
+    <div class="tags">
+        <span class="tag">FortiGate</span>
+        <span class="tag">IPS</span>
+        <span class="tag">F-SBID</span>
+        <span class="tag">Custom Signature</span>
+        <span class="tag">Flow Inspection</span>
+        <span class="tag">NSE4</span>
+        <span class="tag">FortiOS 7.4</span>
+        <span class="tag">Security Profiles</span>
+    </div>
+</section>
+
+<main class="content">
+
+    <div class="stat-bar">
+        <div class="stat-item"><span class="stat-number">200</span><span class="stat-label">Kontroll-Request (sauber)</span></div>
+        <div class="stat-item"><span class="stat-number">dropped</span><span class="stat-label">Angriffs-Request (Muster)</span></div>
+        <div class="stat-item"><span class="stat-number">6004</span><span class="stat-label">Signatur-ID (eigene)</span></div>
+    </div>
+
+    <h2>Warum eine Custom-Signatur</h2>
+    <p>
+        Auf einer <a href="fortigate-vm-lab-apple-silicon.html" style="color:var(--accent);text-decoration:none;">unlizenzierten Lab-FortiGate</a>
+        ist die FortiGuard-IPS-Datenbank nur eingeschränkt aktuell — sich für eine Demo auf eine bestimmte echte
+        Signatur zu verlassen, ist eine Lotterie. Eine <strong>eigene Signatur</strong> ist deterministisch: sie
+        feuert garantiert auf ein selbst definiertes Muster. Und „Custom IPS Signatures" sind ohnehin NSE4-Stoff.
+    </p>
+
+    <div class="callout callout-blue">
+        <span class="callout-icon">🧪</span>
+        <p class="callout-text">
+            <strong>Aufbau:</strong> Der <a href="fortigate-lab-attacker-client-socket.html" style="color:var(--accent);text-decoration:none;">Client hängt hinter der FortiGate</a>
+            (LAN-Segment via QEMU Socket-Networking). Sein HTTP-Verkehr läuft durch die LAN→WAN-Policy — genau dort
+            greift die flow-basierte IPS-Inspektion.
+        </p>
+    </div>
+
+    <h2>1 — Die eigene Signatur</h2>
+    <p>
+        Eine F-SBID-Signatur, die das Muster <code class="inline">NSE4IPSTEST</code> in client-seitigem HTTP-Verkehr matcht:
+    </p>
+    <div class="code-block">
+        <div class="code-header"><span class="code-lang">FORTIOS CLI</span><span class="code-desc">config ips custom</span></div>
+        <div class="code-body"><span class="cmd">config</span> ips custom
+  <span class="cmd">edit</span> <span class="string">"NSE4-Test"</span>
+    <span class="cmd">set</span> signature <span class="string">"F-SBID( --name \"NSE4.IPS.Test\"; --protocol tcp;
+              --service HTTP; --flow from_client;
+              --pattern \"NSE4IPSTEST\"; --no_case; )"</span>
+  <span class="cmd">next</span>
+<span class="cmd">end</span>
+<span class="comment"># FortiOS vergibt automatisch eine attack-id (hier: 6004)</span></div>
+    </div>
+
+    <h2>2 — Signatur in einen Sensor, Sensor an die Policy</h2>
+    <div class="callout callout-red">
+        <span class="callout-icon">⚠️</span>
+        <p class="callout-text">
+            <strong>Eval-Limit:</strong> Die kostenlose Lizenz deckelt die IPS-Sensor-Tabelle bei <strong>10</strong> —
+            voll mit Default-Sensoren. Ein neuer Sensor scheitert mit <code class="inline" style="font-size:12px;">Return code -4 (reached the maximum number of entries)</code>.
+            Lösung: einen <em>bestehenden</em> Sensor wiederverwenden und einen Eintrag ergänzen.
+        </p>
+    </div>
+    <div class="code-block">
+        <div class="code-header"><span class="code-lang">FORTIOS CLI</span><span class="code-desc">Sensor-Eintrag + Policy</span></div>
+        <div class="code-body"><span class="comment"># Eintrag referenziert die Signatur über die ID (set rule = Integer!)</span>
+<span class="cmd">config</span> ips sensor
+  <span class="cmd">edit</span> <span class="string">"Basic-IPS"</span>
+    <span class="cmd">config</span> entries
+      <span class="cmd">edit</span> <span class="number">10</span>
+        <span class="cmd">set</span> rule <span class="number">6004</span>
+        <span class="cmd">set</span> status enable
+        <span class="cmd">set</span> action <span class="keyword">block</span>
+        <span class="cmd">set</span> log enable
+        <span class="cmd">set</span> log-packet enable
+      <span class="cmd">next</span>
+    <span class="cmd">end</span>
+  <span class="cmd">next</span>
+<span class="cmd">end</span>
+
+<span class="comment"># auf die LAN->WAN-Policy anwenden</span>
+<span class="cmd">config</span> firewall policy
+  <span class="cmd">edit</span> <span class="number">1</span>
+    <span class="cmd">set</span> utm-status <span class="keyword">enable</span>
+    <span class="cmd">set</span> ips-sensor <span class="string">"Basic-IPS"</span>
+    <span class="cmd">set</span> logtraffic all
+  <span class="cmd">next</span>
+<span class="cmd">end</span></div>
+    </div>
+
+    <h2>3 — Der Test vom Client</h2>
+    <p>
+        Zwei Requests an dieselbe (Klartext-)HTTP-Seite — einmal sauber, einmal mit dem Muster in der URL:
+    </p>
+    <div class="code-block">
+        <div class="code-header"><span class="code-lang">CLIENT (hinter der FW)</span><span class="code-desc">Kontrolle vs. Angriff</span></div>
+        <div class="code-body"><span class="comment"># Kontrolle — sauber</span>
+<span class="cmd">curl</span> -w <span class="string">'%{http_code}'</span> http://neverssl.com/
+<span class="comment">  -> 200</span>
+
+<span class="comment"># Angriff — enthält das Signatur-Muster</span>
+<span class="cmd">curl</span> -w <span class="string">'%{http_code}'</span> <span class="string">'http://neverssl.com/x?p=NSE4IPSTEST'</span>
+<span class="comment">  -> curl: (28) Connection timed out ... code=000   (von IPS verworfen)</span></div>
+    </div>
+    <p>
+        Gleiche Ziel-URL, einziger Unterschied das Muster — die saubere Anfrage passiert, die „bösartige" wird
+        verworfen. Da nur die IPS-Signatur das Muster inspiziert, ist der Block eindeutig ihr zuzuordnen.
+    </p>
+
+    <h2>4 — Der Beweis im IPS-Log</h2>
+    <p>
+        In <strong>Log &amp; Report → Security Events → Intrusion Prevention</strong> (Memory-Log) erscheint die Erkennung:
+    </p>
+    <table class="alert-table">
+        <thead><tr><th>FELD</th><th>WERT</th></tr></thead>
+        <tbody>
+            <tr><td>Attack Name</td><td>NSE4.IPS.Test</td></tr>
+            <tr><td>Severity</td><td class="sev-crit">Critical</td></tr>
+            <tr><td>Source</td><td>192.168.1.50 (Client)</td></tr>
+            <tr><td>Protocol</td><td>6 (TCP / HTTP)</td></tr>
+            <tr><td>Action</td><td class="sev-crit">dropped</td></tr>
+        </tbody>
+    </table>
+
+    <div class="callout callout-blue">
+        <span class="callout-icon">📝</span>
+        <p class="callout-text">
+            <strong>Logging-Detail:</strong> Auf einer disklosen FortiGate-VM landen Logs im RAM. Tauchte zunächst
+            kein IPS-Event auf, half <code class="inline" style="font-size:12px;">set log enable</code> am Sensor-Eintrag
+            plus <code class="inline" style="font-size:12px;">config log memory filter / set severity information</code>.
+            Der Block selbst funktioniert unabhängig davon — das Log ist die Sichtbarkeit.
+        </p>
+    </div>
+
+    <h2>Beweis-Kette</h2>
+    <p>Drei unabhängige Belege, dass die IPS greift:</p>
+    <div class="lessons">
+        <div class="lesson-card"><div class="lesson-number">01</div><div class="lesson-title">Client-Verhalten</div><p class="lesson-desc">Sauber = 200, Muster = Timeout/000. Reproduzierbar.</p></div>
+        <div class="lesson-card"><div class="lesson-number">02</div><div class="lesson-title">Forward-Traffic-Log</div><p class="lesson-desc">Der Client-Traffic läuft sichtbar durch die FortiGate (LAN→WAN).</p></div>
+        <div class="lesson-card"><div class="lesson-number">03</div><div class="lesson-title">IPS-Event-Log</div><p class="lesson-desc">NSE4.IPS.Test, dropped, Critical, src 192.168.1.50 — eindeutig.</p></div>
+    </div>
+
+    <h2>Erkenntnisse (NSE4)</h2>
+    <div class="lessons">
+        <div class="lesson-card"><div class="lesson-number">A</div><div class="lesson-title">F-SBID-Syntax</div><p class="lesson-desc"><code class="inline" style="font-size:11px;">--pattern</code>, <code class="inline" style="font-size:11px;">--service</code>, <code class="inline" style="font-size:11px;">--flow</code> definieren eine eigene Signatur — deterministisch testbar.</p></div>
+        <div class="lesson-card"><div class="lesson-number">B</div><div class="lesson-title">set rule = ID</div><p class="lesson-desc">Im Sensor-Eintrag referenziert <code class="inline" style="font-size:11px;">set rule</code> die <em>numerische</em> Signatur-ID, nicht den Namen.</p></div>
+        <div class="lesson-card"><div class="lesson-number">C</div><div class="lesson-title">Flow-based IPS</div><p class="lesson-desc">IPS und Application Control sind flow-based; aktiviert über <code class="inline" style="font-size:11px;">utm-status</code> in der Policy.</p></div>
+        <div class="lesson-card"><div class="lesson-number">D</div><div class="lesson-title">Eval-Limits kennen</div><p class="lesson-desc">10 Sensoren, 3 Policies/Routen — Limits beim Design einplanen, vorhandene Objekte wiederverwenden.</p></div>
+    </div>
+
+    <div class="callout callout-green">
+        <span class="callout-icon">✅</span>
+        <p class="callout-text">
+            <strong>Konfiguration auf GitHub:</strong> die Custom-Signatur, der Sensor-Eintrag und die Policy-Anbindung
+            sind dokumentiert.
+            <a href="https://github.com/yasinkilicma/fortigate-vm-lab-apple-silicon" target="_blank" style="color:var(--accent3);text-decoration:none;"> → fortigate-vm-lab-apple-silicon</a>
+        </p>
+    </div>
+
+</main>
+
+<footer>
+    <div class="footer-inner">
+        <div class="footer-links">
+            <a href="../index.html">← Zurück zum Portfolio</a>
+            <a href="https://github.com/yasinkilicma/fortigate-vm-lab-apple-silicon" target="_blank">GitHub</a>
+            <a href="https://www.linkedin.com/in/yasin-kilic-cyber-security/" target="_blank">LinkedIn</a>
+        </div>
+        <p class="footer-copy">© 2026 Yasin Kilic — SOC Analyst in Training</p>
+    </div>
+</footer>
+
+</body>
+</html>

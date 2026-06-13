@@ -314,6 +314,31 @@
                 </article>
 
                 <article class="project-card">
+                    <div class="project-image"><div class="project-placeholder"><span>IPS</span></div></div>
+                    <div class="project-info">
+                        <h3 class="project-title">FortiGate IPS Test with a Custom Signature</h3>
+                        <p class="project-description">
+                            A deterministic IPS demo: wrote an F-SBID custom signature that matches a unique pattern in
+                            the HTTP traffic of a client behind the FortiGate. Control request → 200, attack request
+                            (with the pattern) → dropped, confirmed in the IPS event log (NSE4.IPS.Test, Critical,
+                            src 192.168.1.50). Covers custom signatures, flow-based inspection and eval-license limits.
+                            <em>(Blog post in German.)</em>
+                        </p>
+                        <div class="project-tags">
+                            <span class="tag">IPS</span>
+                            <span class="tag">F-SBID</span>
+                            <span class="tag">FortiGate</span>
+                            <span class="tag">NSE4</span>
+                            <span class="tag">Security Profiles</span>
+                        </div>
+                        <div class="project-links">
+                            <a href="blog/fortigate-ips-custom-signature-test.html" class="project-link">Read Blog Post →</a>
+                            <a href="https://github.com/yasinkilicma/fortigate-vm-lab-apple-silicon" target="_blank" class="project-link">GitHub →</a>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="project-card">
                     <div class="project-image"><div class="project-placeholder"><span>IaC</span></div></div>
                     <div class="project-info">
                         <h3 class="project-title">AWS Infrastructure as Code — Terraform + LocalStack</h3>
