@@ -289,6 +289,31 @@
                 </article>
 
                 <article class="project-card">
+                    <div class="project-image"><div class="project-placeholder"><span>FW+C</span></div></div>
+                    <div class="project-info">
+                        <h3 class="project-title">Attacker-Client behind FortiGate — QEMU Socket Networking</h3>
+                        <p class="project-description">
+                            Hung a Linux client behind the FortiGate so all its traffic is inspected by the firewall.
+                            After the Kali installer failed at every layer, pivoted to a directly-bootable Debian ARM64
+                            cloud image (cloud-init) and bridged it to the UTM-hosted FortiGate over a real isolated L2
+                            segment via QEMU socket networking. Verified: client → internet through the firewall (NAT,
+                            inspected), nmap/DNS working. <em>(Blog post in German.)</em>
+                        </p>
+                        <div class="project-tags">
+                            <span class="tag">QEMU Socket Net</span>
+                            <span class="tag">cloud-init</span>
+                            <span class="tag">FortiGate</span>
+                            <span class="tag">UTM</span>
+                            <span class="tag">NSE4</span>
+                        </div>
+                        <div class="project-links">
+                            <a href="blog/fortigate-lab-attacker-client-socket.html" class="project-link">Read Blog Post →</a>
+                            <a href="https://github.com/yasinkilicma/fortigate-vm-lab-apple-silicon" target="_blank" class="project-link">GitHub →</a>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="project-card">
                     <div class="project-image"><div class="project-placeholder"><span>IaC</span></div></div>
                     <div class="project-info">
                         <h3 class="project-title">AWS Infrastructure as Code — Terraform + LocalStack</h3>

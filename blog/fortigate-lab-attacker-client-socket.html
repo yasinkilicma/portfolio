@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Einen Client hinter die FortiGate hängen — QEMU Socket-Networking | Yasin Kilic</title>
+    <meta name="description" content="Wie ich einen Linux-Client hinter eine FortiGate-VM gehängt habe, damit der gesamte Datenverkehr durch die Firewall inspiziert wird — nachdem der Kali-Installer an jeder Ebene scheiterte: Pivot auf ein Debian-Cloud-Image und QEMU Socket-Networking zwischen UTM und eigenständigem QEMU.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0e1a; --bg2: #0f1525; --bg3: #161d30; --border: #1e2a42;
+            --accent: #00d4ff; --accent2: #ff4757; --accent3: #2ed573;
+            --text: #e0e6f0; --text-muted: #6b7a99; --code-bg: #0d1117;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: var(--bg); color: var(--text); font-family: 'Sora', sans-serif; font-size: 16px; line-height: 1.8; }
+        header { position: sticky; top: 0; z-index: 100; background: rgba(10,14,26,0.9); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 16px 0; }
+        .header-inner { max-width: 860px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; }
+        .logo { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--accent); text-decoration: none; font-size: 18px; letter-spacing: -0.5px; }
+        .back-link { font-size: 13px; color: var(--text-muted); text-decoration: none; transition: color 0.2s; }
+        .back-link:hover { color: var(--accent); }
+        .hero { max-width: 860px; margin: 0 auto; padding: 64px 24px 48px; border-bottom: 1px solid var(--border); }
+        .hero-meta { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+        .badge { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 4px; letter-spacing: 0.5px; }
+        .badge-red { background: rgba(255,71,87,0.15); color: var(--accent2); border: 1px solid rgba(255,71,87,0.3); }
+        .badge-blue { background: rgba(0,212,255,0.1); color: var(--accent); border: 1px solid rgba(0,212,255,0.2); }
+        .badge-green { background: rgba(46,213,115,0.1); color: var(--accent3); border: 1px solid rgba(46,213,115,0.2); }
+        .meta-date { font-size: 13px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+        h1 { font-size: clamp(28px,5vw,44px); font-weight: 700; line-height: 1.2; letter-spacing: -1px; margin-bottom: 20px; }
+        h1 span { color: var(--accent); }
+        .hero-summary { font-size: 17px; color: var(--text-muted); max-width: 680px; line-height: 1.7; }
+        .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 28px; }
+        .tag { font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 5px 12px; background: var(--bg3); border: 1px solid var(--border); border-radius: 20px; color: var(--text-muted); }
+        .content { max-width: 860px; margin: 0 auto; padding: 56px 24px; }
+        .stat-bar { display: grid; grid-template-columns: repeat(3,1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 56px; }
+        .stat-item { background: var(--bg2); padding: 24px; text-align: center; }
+        .stat-number { font-family: 'JetBrains Mono', monospace; font-size: 26px; font-weight: 600; color: var(--accent); display: block; }
+        .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+        h2 { font-size: 22px; font-weight: 700; margin: 48px 0 20px; padding-left: 16px; border-left: 3px solid var(--accent); letter-spacing: -0.3px; }
+        h3 { font-size: 17px; font-weight: 600; margin: 32px 0 12px; color: var(--accent); font-family: 'JetBrains Mono', monospace; }
+        p { margin-bottom: 16px; color: var(--text); }
+        code.inline { background: var(--bg3); padding: 2px 8px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--accent); }
+        .arch-box { background: var(--code-bg); border: 1px solid var(--border); border-radius: 12px; padding: 28px; margin: 24px 0; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.8; color: #8b9ab8; overflow-x: auto; }
+        .arch-box .highlight { color: var(--accent); }
+        .arch-box .highlight2 { color: var(--accent3); }
+        .arch-box .highlight3 { color: var(--accent2); }
+        .code-block { background: var(--code-bg); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin: 20px 0; }
+        .code-header { background: var(--bg3); border-bottom: 1px solid var(--border); padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; }
+        .code-lang { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); font-weight: 600; letter-spacing: 0.5px; }
+        .code-desc { font-size: 12px; color: var(--text-muted); }
+        .code-body { padding: 20px; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.7; color: #a8b8d8; overflow-x: auto; white-space: pre; }
+        .code-body .comment { color: #4a5568; }
+        .code-body .keyword { color: #ff79c6; }
+        .code-body .string { color: #f1fa8c; }
+        .code-body .number { color: var(--accent3); }
+        .code-body .cmd { color: var(--accent); }
+        .callout { border-radius: 12px; padding: 20px 24px; margin: 24px 0; display: flex; gap: 16px; align-items: flex-start; }
+        .callout-blue { background: rgba(0,212,255,0.06); border: 1px solid rgba(0,212,255,0.2); }
+        .callout-red { background: rgba(255,71,87,0.06); border: 1px solid rgba(255,71,87,0.2); }
+        .callout-green { background: rgba(46,213,115,0.06); border: 1px solid rgba(46,213,115,0.2); }
+        .callout-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+        .callout-text { font-size: 14px; line-height: 1.7; color: var(--text); margin: 0; }
+        .callout-text strong { color: var(--accent); }
+        .callout-red .callout-text strong { color: var(--accent2); }
+        .callout-green .callout-text strong { color: var(--accent3); }
+        .timeline { position: relative; margin: 24px 0; padding-left: 32px; }
+        .timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: linear-gradient(to bottom, var(--accent2), var(--accent3)); }
+        .timeline-item { position: relative; margin-bottom: 28px; }
+        .timeline-dot { position: absolute; left: -28px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg); }
+        .timeline-dot.red { background: var(--accent2); }
+        .timeline-dot.green { background: var(--accent3); }
+        .timeline-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; font-family: 'JetBrains Mono', monospace; color: var(--accent); }
+        .timeline-desc { font-size: 14px; color: var(--text-muted); margin: 0; }
+        .alert-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13px; }
+        .alert-table th { background: var(--bg3); color: var(--text-muted); font-weight: 600; padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.5px; }
+        .alert-table td { padding: 12px 16px; border-bottom: 1px solid rgba(30,42,66,0.5); font-family: 'JetBrains Mono', monospace; }
+        .alert-table tr:hover td { background: var(--bg2); }
+        .lessons { display: grid; grid-template-columns: repeat(auto-fit,minmax(240px,1fr)); gap: 16px; margin: 24px 0; }
+        .lesson-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+        .lesson-number { font-family: 'JetBrains Mono', monospace; font-size: 28px; font-weight: 600; color: var(--border); line-height: 1; margin-bottom: 12px; }
+        .lesson-title { font-weight: 600; font-size: 14px; margin-bottom: 6px; }
+        .lesson-desc { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin: 0; }
+        footer { border-top: 1px solid var(--border); padding: 40px 24px; text-align: center; }
+        .footer-inner { max-width: 860px; margin: 0 auto; }
+        .footer-links { display: flex; justify-content: center; gap: 24px; margin-bottom: 16px; flex-wrap: wrap; }
+        .footer-links a { font-size: 13px; color: var(--text-muted); text-decoration: none; transition: color 0.2s; }
+        .footer-links a:hover { color: var(--accent); }
+        .footer-copy { font-size: 12px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+        @media (max-width: 600px) { .stat-bar { grid-template-columns: 1fr; } .lessons { grid-template-columns: 1fr; } h1 { font-size: 28px; } }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .hero { animation: fadeUp 0.6s ease; }
+        .content { animation: fadeUp 0.6s ease 0.1s both; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-inner">
+        <a href="../index.html" class="logo">YK</a>
+        <a href="../index.html#projects" class="back-link">← Zurück zu den Projekten</a>
+    </div>
+</header>
+
+<section class="hero">
+    <div class="hero-meta">
+        <span class="badge badge-green">🛡️ FIREWALL LAB</span>
+        <span class="badge badge-blue">QEMU NETWORKING</span>
+        <span class="meta-date">Juni 2026</span>
+    </div>
+    <h1>Einen Client <span>hinter die FortiGate</span> hängen<br>— mit QEMU Socket-Networking</h1>
+    <p class="hero-summary">
+        Eine Firewall ohne Datenverkehr ist nur Konfiguration. Um die FortiGate wirklich zu testen (IPS, AV,
+        Web Filter, NAT), muss ein Client <em>hinter</em> ihr hängen, sodass sein Traffic durch die Firewall
+        inspiziert wird. Der Weg dahin: der Kali-Installer scheiterte an jeder Ebene — also ein Pivot auf ein
+        Debian-Cloud-Image und ein echtes isoliertes L2-Segment über <strong>QEMU Socket-Networking</strong>
+        zwischen UTM und eigenständigem QEMU.
+    </p>
+    <div class="tags">
+        <span class="tag">FortiGate</span>
+        <span class="tag">UTM</span>
+        <span class="tag">QEMU</span>
+        <span class="tag">Socket-Networking</span>
+        <span class="tag">cloud-init</span>
+        <span class="tag">Debian ARM64</span>
+        <span class="tag">Apple Silicon</span>
+        <span class="tag">NSE4</span>
+        <span class="tag">Headless</span>
+    </div>
+</section>
+
+<main class="content">
+
+    <div class="stat-bar">
+        <div class="stat-item"><span class="stat-number">4</span><span class="stat-label">Installer-Blocker umgangen</span></div>
+        <div class="stat-item"><span class="stat-number">~36 s</span><span class="stat-label">Cloud-Image Boot (hvf)</span></div>
+        <div class="stat-item"><span class="stat-number">0%</span><span class="stat-label">Loss: Client→Internet durch die FW</span></div>
+    </div>
+
+    <h2>Das Ziel</h2>
+    <p>
+        Im <a href="fortigate-vm-lab-apple-silicon.html" style="color:var(--accent);text-decoration:none;">vorherigen Beitrag</a>
+        lief die FortiGate-VM nativ auf Apple Silicon. Jetzt fehlt der zweite Baustein: ein <strong>Client im LAN</strong>,
+        hinter der Firewall, dessen gesamter Verkehr durch die FortiGate geroutet, ge-NAT-et und inspiziert wird —
+        die Voraussetzung für IPS-, AV- und Web-Filter-Tests.
+    </p>
+
+    <div class="arch-box">
+<span class="highlight">UTM (QEMU)</span>                              <span class="highlight">eigenständiges QEMU</span>
+┌──────────────────────────┐              ┌──────────────────────────┐
+│ FortiGate-VM 7.4.12      │   QEMU       │ Client (Debian ARM64)    │
+│ port1 192.168.64.2 (WAN) │   socket     │ + nmap, hping3, tcpdump  │
+│ port3 192.168.1.99 (LAN) │◄════════════►│ 192.168.1.50             │
+│   DHCP · Policy · NAT    │  :4700 (L2)  │ Gateway: 192.168.1.99    │
+└────────────┬─────────────┘              └──────────────────────────┘
+             └─→ Internet (NAT, <span class="highlight3">inspiziert</span>)
+    </div>
+
+    <h2>Warum der Kali-Installer scheiterte</h2>
+    <p>
+        Der naheliegende Plan — Kali aus dem ARM64-Installer-ISO installieren — lief in einen Stolperstein nach
+        dem anderen. Lehrreich, aber eine Sackgasse:
+    </p>
+
+    <table class="alert-table">
+        <thead><tr><th>EBENE</th><th>PROBLEM</th></tr></thead>
+        <tbody>
+            <tr><td>Display</td><td>Der Installer-Kernel-Framebuffer rendert nie (weder unter hvf noch TCG) — nur GRUB erscheint, danach schwarz</td></tr>
+            <tr><td>Serielle GRUB</td><td>UTMs edk2 gibt seriell aus, nimmt aber keine GRUB-Tastatureingabe an</td></tr>
+            <tr><td>Direkter Kernel-Boot</td><td><code class="inline" style="font-size:12px;">-kernel</code> hat keine UEFI-Umgebung → <code class="inline" style="font-size:12px;">grub-installer</code> kann auf ARM64 keinen Bootloader setzen</td></tr>
+            <tr><td>macOS-Host</td><td>kann ext4 nicht mounten → Kernel/Initrd aus dem fertigen Image nicht extrahierbar</td></tr>
+        </tbody>
+    </table>
+
+    <div class="callout callout-blue">
+        <span class="callout-icon">💡</span>
+        <p class="callout-text">
+            <strong>Die Einsicht:</strong> Ein interaktiver OS-Installer ist in einer headless QEMU/UTM-Umgebung
+            auf Apple Silicon der schwierigste Weg. <strong>Cloud-Images</strong> dagegen sind genau dafür gebaut:
+            direkt bootbar, serielle Konsole an, Konfiguration via cloud-init. Und: <em>Kali = Debian + Security-Tools</em>
+            — die Tools liegen alle in den Debian-Repos.
+        </p>
+    </div>
+
+    <h2>Der Pivot: Debian-Cloud-Image + cloud-init</h2>
+    <p>
+        Statt zu installieren wird ein fertiges <strong>Debian-12-ARM64-Cloud-Image</strong> (qcow2) direkt gebootet.
+        Konfiguriert wird es über ein <strong>NoCloud-Seed-ISO</strong> (cloud-init): Benutzer, Passwort, SSH und die
+        gewünschten Tools — alles automatisch beim ersten Boot.
+    </p>
+
+    <div class="code-block">
+        <div class="code-header"><span class="code-lang">CLOUD-INIT</span><span class="code-desc">user-data (NoCloud seed)</span></div>
+        <div class="code-body"><span class="comment">#cloud-config</span>
+hostname: kali-client
+users:
+  - name: kali
+    plain_text_passwd: <span class="string">"&lt;lab-passwort&gt;"</span>
+    lock_passwd: false
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: [sudo]
+    shell: /bin/bash
+ssh_pwauth: true
+package_update: true
+packages: [ nmap, hping3, curl, tcpdump, net-tools, dnsutils ]
+runcmd:
+  - [ systemctl, enable, --now, ssh ]</div>
+    </div>
+
+    <p>
+        Das Seed-ISO entsteht auf dem Mac mit Bordmitteln (Label <code class="inline">cidata</code>, das cloud-init sucht):
+    </p>
+    <div class="code-block">
+        <div class="code-header"><span class="code-lang">SHELL (macOS)</span><span class="code-desc">Seed-ISO bauen</span></div>
+        <div class="code-body"><span class="cmd">hdiutil</span> makehybrid -iso -joliet -default-volume-name cidata \
+        -o seed.iso seed/</div>
+    </div>
+
+    <h2>Warum eigenständiges QEMU statt UTM</h2>
+    <p>
+        Der Client läuft bewusst in einem <strong>per Homebrew installierten QEMU</strong> (<code class="inline">brew install qemu</code>),
+        nicht in UTM. Zwei harte Gründe:
+    </p>
+    <div class="lessons">
+        <div class="lesson-card">
+            <div class="lesson-number">A</div>
+            <div class="lesson-title">UTM zerlegt Argumente</div>
+            <p class="lesson-desc">UTM splittet zusätzliche QEMU-Argumente an Leerzeichen — ein mehrwortiges <code class="inline" style="font-size:11px;">-append</code> oder <code class="inline" style="font-size:11px;">-kernel</code>-Pfad lässt sich nicht sauber übergeben.</p>
+        </div>
+        <div class="lesson-card">
+            <div class="lesson-number">B</div>
+            <div class="lesson-title">Sandbox &amp; Firmware</div>
+            <p class="lesson-desc">UTMs Sandbox blockiert Dateizugriff für eigene <code class="inline" style="font-size:11px;">-kernel</code>-Pfade, und seine edk2-Firmware bedient die serielle Konsole nicht. Homebrews edk2 (<code class="inline" style="font-size:11px;">edk2-aarch64-code.fd</code>) hingegen schon.</p>
+        </div>
+    </div>
+
+    <h2>Das fehlende Bindeglied: QEMU Socket-Networking</h2>
+    <p>
+        Jetzt die Kernfrage: Wie verbindet man zwei VMs zu einem <em>isolierten L2-Segment</em>, hinter dem die
+        FortiGate als alleiniger Router/DHCP agiert? UTMs „Emulated"-Modus ist intern QEMU <code class="inline">user</code>
+        (SLIRP) — pro VM isoliert, verbindet also <em>keine</em> zwei VMs. Die Lösung ist QEMUs
+        <strong>socket netdev</strong>: eine Seite lauscht, die andere verbindet — beide NICs hängen dann am selben
+        virtuellen Switch.
+    </p>
+
+    <div class="callout callout-green">
+        <span class="callout-icon">🔑</span>
+        <p class="callout-text">
+            <strong>Der Trick mit UTM:</strong> Socket-Argumente enthalten <em>keine Leerzeichen</em>
+            (<code class="inline" style="font-size:12px;">socket,id=lan,listen=127.0.0.1:4700</code>), überleben also UTMs
+            Whitespace-Split. Und ein TCP-Socket ist kein Dateizugriff — die Sandbox erlaubt ihn. So bekommt die
+            UTM-FortiGate eine dritte NIC, die auf einen lokalen Port lauscht.
+        </p>
+    </div>
+
+    <div class="code-block">
+        <div class="code-header"><span class="code-lang">UTM config.plist</span><span class="code-desc">FortiGate: socket-listen NIC als port3 (PlistBuddy)</span></div>
+        <div class="code-body"><span class="comment"># jeder Token einzeln, keine Leerzeichen im Wert</span>
+:QEMU:AdditionalArguments:0 = <span class="string">"-netdev"</span>
+:QEMU:AdditionalArguments:1 = <span class="string">"socket,id=lan,listen=127.0.0.1:4700"</span>
+:QEMU:AdditionalArguments:2 = <span class="string">"-device"</span>
+:QEMU:AdditionalArguments:3 = <span class="string">"virtio-net-pci,netdev=lan,mac=BC:24:11:5A:11:01"</span></div>
+    </div>
+
+    <div class="code-block">
+        <div class="code-header"><span class="code-lang">SHELL</span><span class="code-desc">Client-QEMU: socket-connect zur FortiGate</span></div>
+        <div class="code-body"><span class="cmd">qemu-system-aarch64</span> -machine virt -accel hvf -cpu host -smp 4 -m 3072 \
+  -drive if=pflash,format=raw,readonly=on,file=edk2-aarch64-code.fd \
+  -drive if=pflash,format=raw,file=edk2-vars.fd \
+  -drive if=virtio,format=qcow2,file=debian-arm64.qcow2 \
+  -drive if=virtio,format=raw,readonly=on,file=seed.iso \
+  <span class="keyword">-netdev socket,id=net0,connect=127.0.0.1:4700</span> \
+  -device virtio-net-pci,netdev=net0 \
+  -serial tcp:127.0.0.1:4600,server -display none</div>
+    </div>
+
+    <div class="callout callout-blue">
+        <span class="callout-icon">⏱️</span>
+        <p class="callout-text">
+            <strong>Reihenfolge zählt:</strong> Die FortiGate (UTM) muss laufen und auf <code class="inline" style="font-size:12px;">:4700</code>
+            lauschen, <em>bevor</em> der Client-QEMU startet — sonst schlägt <code class="inline" style="font-size:12px;">connect</code> fehl.
+        </p>
+    </div>
+
+    <h2>FortiGate-Seite: port3 als LAN</h2>
+    <p>
+        Die neue NIC erscheint als <code class="inline">port3</code>. Sie bekommt die LAN-Konfiguration (IP, DHCP-Server,
+        Policy) — verschoben vom ungenutzten SLIRP-<code class="inline">port2</code>:
+    </p>
+    <div class="code-block">
+        <div class="code-header"><span class="code-lang">FORTIOS CLI</span><span class="code-desc">LAN auf port3</span></div>
+        <div class="code-body"><span class="cmd">config</span> system interface
+  <span class="cmd">edit</span> port3
+    <span class="cmd">set</span> mode static
+    <span class="cmd">set</span> ip <span class="number">192.168.1.99 255.255.255.0</span>
+    <span class="cmd">set</span> allowaccess ping https ssh
+  <span class="cmd">next</span>
+<span class="cmd">end</span>
+<span class="comment"># DHCP-Server und Policy srcintf -> port3 umstellen</span>
+<span class="cmd">config</span> system dhcp server
+  <span class="cmd">edit</span> 1
+    <span class="cmd">set</span> interface port3
+  <span class="cmd">next</span>
+<span class="cmd">end</span></div>
+    </div>
+
+    <div class="callout callout-red">
+        <span class="callout-icon">⚠️</span>
+        <p class="callout-text">
+            <strong>Stolperstein:</strong> <code class="inline" style="font-size:12px;">Subnets overlap</code> — erst die alte
+            IP von port2 entfernen/ändern, <em>dann</em> 192.168.1.99 auf port3 setzen. Sonst lehnt FortiOS die doppelte IP ab.
+        </p>
+    </div>
+
+    <h2>Verifikation</h2>
+    <p>
+        Frames fließen (L2 funktioniert), der Client bekommt eine statische IP via netplan und sein Verkehr geht
+        durch die FortiGate ins Internet — inspiziert:
+    </p>
+    <div class="code-block">
+        <div class="code-header"><span class="code-lang">CLIENT (seriell)</span><span class="code-desc">Test durch die Firewall</span></div>
+        <div class="code-body"><span class="cmd">ping</span> -c3 192.168.1.99       <span class="comment"># FortiGate (port3)  -> 0% loss</span>
+<span class="cmd">ping</span> -c3 8.8.8.8            <span class="comment"># Internet via FortiGate-NAT -> 0% loss</span>
+<span class="cmd">nslookup</span> google.com 8.8.8.8 <span class="comment"># DNS durch die FW -> aufgelöst</span>
+<span class="cmd">nmap</span> -sn 192.168.1.99       <span class="comment"># Host is up</span></div>
+    </div>
+    <p>
+        Damit ist die Grundlage gelegt: jedes Paket des Clients passiert die LAN→WAN-Policy mit NAT — bereit für
+        IPS-, AV- und Web-Filter-Übungen.
+    </p>
+
+    <h2>Erkenntnisse</h2>
+    <div class="lessons">
+        <div class="lesson-card"><div class="lesson-number">01</div><div class="lesson-title">Cloud-Image statt Installer</div><p class="lesson-desc">Headless auf Apple Silicon: ein direkt bootbares Cloud-Image + cloud-init schlägt jeden interaktiven Installer.</p></div>
+        <div class="lesson-card"><div class="lesson-number">02</div><div class="lesson-title">UTM ≠ volle QEMU-Kontrolle</div><p class="lesson-desc">Für rohe QEMU-Argumente, eigene Firmware und Datei-Boot ist eigenständiges QEMU (brew) der saubere Weg.</p></div>
+        <div class="lesson-card"><div class="lesson-number">03</div><div class="lesson-title">Socket-netdev verbindet VMs</div><p class="lesson-desc">UTMs „Emulated" ist isoliertes SLIRP. Ein echtes VM-zu-VM-L2 entsteht nur über QEMU socket netdev (listen/connect).</p></div>
+        <div class="lesson-card"><div class="lesson-number">04</div><div class="lesson-title">Leerzeichen-freie Tricks</div><p class="lesson-desc">UTM splittet Argumente an Leerzeichen — socket-Argumente ohne Spaces passieren; ein TCP-Socket umgeht die Sandbox.</p></div>
+    </div>
+
+    <div class="callout callout-green">
+        <span class="callout-icon">✅</span>
+        <p class="callout-text">
+            <strong>Skripte &amp; Konfiguration auf GitHub:</strong> cloud-init-Seed, QEMU-Startskripte, FortiGate-CLI
+            und der Lab-Launcher sind dokumentiert.
+            <a href="https://github.com/yasinkilicma/fortigate-vm-lab-apple-silicon" target="_blank" style="color:var(--accent3);text-decoration:none;"> → fortigate-vm-lab-apple-silicon</a>
+        </p>
+    </div>
+
+</main>
+
+<footer>
+    <div class="footer-inner">
+        <div class="footer-links">
+            <a href="../index.html">← Zurück zum Portfolio</a>
+            <a href="https://github.com/yasinkilicma/fortigate-vm-lab-apple-silicon" target="_blank">GitHub</a>
+            <a href="https://www.linkedin.com/in/yasin-kilic-cyber-security/" target="_blank">LinkedIn</a>
+        </div>
+        <p class="footer-copy">© 2026 Yasin Kilic — SOC Analyst in Training</p>
+    </div>
+</footer>
+
+</body>
+</html>
