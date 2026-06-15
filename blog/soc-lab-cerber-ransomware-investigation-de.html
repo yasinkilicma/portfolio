@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cerber Ransomware in Splunk detektieren — SOC Investigation | Yasin Kilic</title>
+    <meta name="description" content="Schritt-für-Schritt SOC-Analyse: Nessus-Reconnaissance, Suricata-IDS-Alert-Triage und SMB-Lateral-Movement auf 955.807 Events aus dem BOTS v1 Datensatz.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0e1a;
+            --bg2: #0f1525;
+            --bg3: #161d30;
+            --border: #1e2a42;
+            --accent: #00d4ff;
+            --accent2: #ff4757;
+            --accent3: #2ed573;
+            --text: #e0e6f0;
+            --text-muted: #6b7a99;
+            --code-bg: #0d1117;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Sora', sans-serif;
+            font-size: 16px;
+            line-height: 1.8;
+        }
+
+        /* ── HEADER ── */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(10, 14, 26, 0.9);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 0;
+        }
+
+        .header-inner {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 18px;
+            letter-spacing: -0.5px;
+        }
+
+        .back-link {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: var(--accent); }
+
+        /* ── HERO ── */
+        .hero {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 64px 24px 48px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .hero-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 4px;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-red { background: rgba(255, 71, 87, 0.15); color: var(--accent2); border: 1px solid rgba(255, 71, 87, 0.3); }
+        .badge-blue { background: rgba(0, 212, 255, 0.1); color: var(--accent); border: 1px solid rgba(0, 212, 255, 0.2); }
+        .badge-green { background: rgba(46, 213, 115, 0.1); color: var(--accent3); border: 1px solid rgba(46, 213, 115, 0.2); }
+
+        .hero h1 {
+            font-size: clamp(32px, 5vw, 48px);
+            font-weight: 700;
+            letter-spacing: -1px;
+            line-height: 1.15;
+            margin-bottom: 20px;
+        }
+
+        .hero h1 span { color: var(--accent); }
+
+        .hero-summary {
+            font-size: 17px;
+            color: var(--text-muted);
+            max-width: 640px;
+            line-height: 1.7;
+        }
+
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 24px;
+        }
+
+        .tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 4px 10px;
+        }
+
+        /* ── CONTENT ── */
+        .content {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 48px 24px 80px;
+        }
+
+        h2 {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            margin: 48px 0 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h3 {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--accent);
+            margin: 32px 0 14px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        p { margin-bottom: 16px; color: var(--text); }
+
+        /* ── STAT BAR ── */
+        .stat-bar {
+            display: flex;
+            gap: 24px;
+            margin: 24px 0 40px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px 28px;
+            min-width: 140px;
+        }
+
+        .stat-number {
+            display: block;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* ── CODE BLOCK ── */
+        .code-block {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .code-header {
+            background: var(--bg3);
+            border-bottom: 1px solid var(--border);
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .code-lang {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--accent);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .code-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .code-body {
+            padding: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            line-height: 1.7;
+            color: #a8b8d8;
+            overflow-x: auto;
+        }
+
+        .code-body .comment { color: #4a5568; }
+        .code-body .cmd { color: var(--accent); }
+        .code-body .keyword { color: #ff79c6; }
+        .code-body .string { color: #f1fa8c; }
+        .code-body .number { color: var(--accent3); }
+
+        /* ── SCREENSHOT ── */
+        .screenshot {
+            width: 100%;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            margin: 20px 0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .screenshot-caption {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: -10px;
+            margin-bottom: 24px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* ── CALLOUT ── */
+        .callout {
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin: 20px 0;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .callout-blue {
+            background: rgba(0, 212, 255, 0.08);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+        }
+
+        .callout-red {
+            background: rgba(255, 71, 87, 0.08);
+            border: 1px solid rgba(255, 71, 87, 0.2);
+        }
+
+        .callout-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+            line-height: 1;
+        }
+
+        .callout-text {
+            font-size: 14px;
+            color: var(--text);
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        /* ── TABLE ── */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .data-table th {
+            background: var(--bg3);
+            padding: 12px 16px;
+            text-align: left;
+            color: var(--accent);
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .data-table td {
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .data-table tr:hover td {
+            background: var(--bg2);
+        }
+
+        /* ── FOOTER ── */
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 36px 24px;
+            text-align: center;
+        }
+
+        .footer-inner {
+            max-width: 860px;
+            margin: 0 auto;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            font-size: 13px;
+            color: var(--text-muted);
+            transition: color 0.2s;
+            text-decoration: none;
+        }
+
+        .footer-links a:hover { color: var(--accent); }
+
+        .footer-copy {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero, .content { animation: fadeUp 0.6s ease; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-inner">
+        <a href="../index.html" class="logo">YK</a>
+        <a href="index.html" class="back-link">← Blog</a>
+    </div>
+</header>
+
+<section class="hero">
+    <div class="hero-meta">
+        <span class="badge badge-red">🔴 SOC INVESTIGATION</span>
+        <span class="badge badge-blue">SPLUNK</span>
+        <span class="badge badge-green">BOTS v1</span>
+    </div>
+    <h1>Cerber Ransomware in <span>Splunk</span> detektieren</h1>
+    <p class="hero-summary">
+        Eine praktische Schritt-für-Schritt SOC-Analyse: Von der Reconnaissance über Nessus-Scans 
+        bis zur Suricata-IDS-Alert-Triage auf 955.807 echten Attack-Events aus dem BOTS v1 Datensatz.
+    </p>
+    <div class="tags">
+        <span class="tag">Splunk</span>
+        <span class="tag">SPL</span>
+        <span class="tag">SOC</span>
+        <span class="tag">Cerber</span>
+        <span class="tag">Ransomware</span>
+        <span class="tag">Suricata</span>
+        <span class="tag">Nessus</span>
+        <span class="tag">Incident Response</span>
+    </div>
+</section>
+
+<main class="content">
+
+    <!-- STATS -->
+    <div class="stat-bar">
+        <div class="stat-item">
+            <span class="stat-number">955.807</span>
+            <span class="stat-label">Analysierte Events</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">22</span>
+            <span class="stat-label">Log-Quellen</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">4</span>
+            <span class="stat-label">Attack-Phasen</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">37</span>
+            <span class="stat-label">Nessus-Scans</span>
+        </div>
+    </div>
+
+    <h2>Lab-Setup</h2>
+    <p>
+        Das SOC-Home-Lab besteht aus einem Splunk-Enterprise-Container, der per Terraform und Docker 
+        auf einem Mac mit Apple Silicon betrieben wird. Die gesamte Infrastruktur ist als Code 
+        versioniert und kann mit einem einzigen <code style="background:var(--bg3);padding:2px 8px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:13px;">terraform apply</code> 
+        neu aufgebaut werden.
+    </p>
+
+    <div class="callout callout-blue">
+        <span class="callout-icon">ℹ️</span>
+        <p class="callout-text">
+            <strong>Datenquelle:</strong> Der BOTS v1 (Boss of the SOC) Datensatz von Splunk enthält 
+            echte Angriffsdaten aus einer simulierten Unternehmensumgebung — 955.807 Events über 
+            22 verschiedene Sourcetypes.
+        </p>
+    </div>
+
+    <h2>Schritt 1 — Reconnaissance: Log-Quellen identifizieren</h2>
+    <p>
+        Als Erstes verschaffen wir uns einen Überblick über die verfügbaren Log-Quellen. 
+        Das ist die Grundlage jeder SOC-Investigation: Wissen, welche Daten wir haben und 
+        wie sie strukturiert sind.
+    </p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">SPL</span>
+            <span class="code-desc">Überblick über alle Sourcetypes und Event-Anzahlen</span>
+        </div>
+        <div class="code-body">
+<span class="cmd">index</span>=botsv1 <span class="cmd">earliest</span>=<span class="number">0</span>
+| <span class="cmd">stats</span> count <span class="keyword">by</span> sourcetype
+| <span class="cmd">sort</span> -count
+        </div>
+    </div>
+
+    <p>
+        Diese Query zeigt alle 22 Log-Quellen sortiert nach Event-Anzahl. 
+        Die Top-Quellen sind Sysmon (270.597 Events), SMB-Netzwerktraffic (151.568) 
+        und Suricata-IDS-Alerte (125.584).
+    </p>
+
+    <img src="images/soc-cerber-sourcetypes.png" alt="Splunk Sourcetype Übersicht — 22 Log-Quellen" class="screenshot">
+    <p class="screenshot-caption">Abb. 1 — Alle 22 Sourcetypes des BOTS v1 Datensatzes (Statistik: 22)</p>
+
+    <table class="data-table">
+        <tr>
+            <th>Sourcetype</th>
+            <th>Events</th>
+            <th>Bedeutung</th>
+        </tr>
+        <tr>
+            <td>XmlWinEventLog:Microsoft-Windows-Sysmon/Operational</td>
+            <td>270.597</td>
+            <td>Endpoint-Monitoring (Process, Network, File)</td>
+        </tr>
+        <tr>
+            <td>stream:smb</td>
+            <td>151.568</td>
+            <td>SMB-File-Sharing — Lateral Movement</td>
+        </tr>
+        <tr>
+            <td>suricata</td>
+            <td>125.584</td>
+            <td>IDS/IPS Alerte</td>
+        </tr>
+        <tr>
+            <td>WinEventLog:Security</td>
+            <td>87.430</td>
+            <td>Windows Security Events</td>
+        </tr>
+        <tr>
+            <td>WinRegistry</td>
+            <td>74.720</td>
+            <td>Registry-Änderungen</td>
+        </tr>
+        <tr>
+            <td>nessus:scan</td>
+            <td>65</td>
+            <td>Vulnerability-Scan Ergebnisse</td>
+        </tr>
+    </table>
+
+    <h2>Schritt 2 — Nessus-Scan: Das Angriffsziel identifizieren</h2>
+    <p>
+        Nessus-Scan-Logs sind ein starker Indikator für Reconnaissance. 
+        Ein Angreifer scannt das Netzwerk, um verwundbare Systeme zu finden.
+    </p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">SPL</span>
+            <span class="code-desc">Nessus-Scan-Targets nach Häufigkeit</span>
+        </div>
+        <div class="code-body">
+<span class="comment"># Erster Versuch: Field 'host_ip' existiert nicht → Stats = 0</span>
+<span class="cmd">index</span>=botsv1 <span class="cmd">earliest</span>=<span class="number">0</span> <span class="cmd">sourcetype</span>=nessus:scan
+| <span class="cmd">stats</span> count <span class="keyword">by</span> host_ip
+| <span class="cmd">sort</span> -count
+
+<span class="comment"># Korrektur: Field heißt 'host-ip' (mit Bindestrich)</span>
+<span class="cmd">index</span>=botsv1 <span class="cmd">earliest</span>=<span class="number">0</span> <span class="cmd">sourcetype</span>=nessus:scan
+| <span class="cmd">stats</span> count <span class="keyword">by</span> "host-ip"
+| <span class="cmd">sort</span> -count
+        </div>
+    </div>
+
+    <p>
+        Die Query zeigt: Vier verschiedene IP-Adressen wurden gescannt. 
+        <strong>192.168.250.20</strong> wurde mit 37 Scan-Einträgen am häufigsten getroffen — 
+        das ist das primäre Angriffsziel. Der <code>host_ip</code> Versuch liefert 0 Results, 
+        weil das korrekte Field <code>host-ip</code> (mit Bindestrich) heißt — 
+        ein typisches SPL-Lernmoment.
+    </p>
+
+    <img src="images/soc-cerber-nessus.png" alt="Nessus Scan Events — Rohdaten mit host_ip Field" class="screenshot">
+    <p class="screenshot-caption">Abb. 2 — Nessus Rohdaten: Das Field heißt hier 'host_ip', nicht 'host-ip'. Der Aggregation-Query muss 'host-ip' (mit Bindestrich) verwenden.</p>
+
+    <table class="data-table">
+        <tr>
+            <th>Taranan IP (host-ip)</th>
+            <th>Scan-Anzahl</th>
+            <th>Bewertung</th>
+        </tr>
+        <tr>
+            <td>192.168.250.20</td>
+            <td>37</td>
+            <td>🔴 Primäres Ziel</td>
+        </tr>
+        <tr>
+            <td>192.168.250.100</td>
+            <td>24</td>
+            <td>🟡 Sekundäres Ziel</td>
+        </tr>
+        <tr>
+            <td>192.168.250.40</td>
+            <td>2</td>
+            <td>🟢 Minimal</td>
+        </tr>
+        <tr>
+            <td>192.168.250.41</td>
+            <td>2</td>
+            <td>🟢 Minimal</td>
+        </tr>
+    </table>
+
+    <h2>Schritt 3 — Suricata-IDS: Cerber Ransomware detektieren</h2>
+    <p>
+        Mit dem primären Ziel <code>192.168.250.20</code> filtern wir die Suricata-IDS-Alerte. 
+        Suricata erkennt bekannte Attack-Patterns anhand von Signaturen.
+    </p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">SPL</span>
+            <span class="code-desc">Suricata-Alerte gegen das primäre Ziel</span>
+        </div>
+        <div class="code-body">
+<span class="cmd">index</span>=botsv1 <span class="cmd">earliest</span>=<span class="number">0</span> <span class="cmd">sourcetype</span>=suricata <span class="cmd">dest_ip</span>=<span class="string">192.168.250.20</span>
+| <span class="cmd">stats</span> count <span class="keyword">by</span> alert.signature
+| <span class="cmd">sort</span> -count
+        </div>
+    </div>
+
+    <p>
+        Das Ergebnis ist eindeutig: <strong>Cerber Ransomware</strong> wurde identifiziert! 
+        Die Suricata-Signatur <code>ETPRO TROJAN Ransomware/Cerber Onion Domain Lookup</code> 
+        zeigt, dass der infizierte Host versucht, mit einer .onion-Domain zu kommunizieren — 
+        typisch für Ransomware-C2 über das Tor-Netzwerk.
+    </p>
+
+    <img src="images/soc-cerber-suricata.png" alt="Suricata IDS Alerte — Cerber Ransomware Signature" class="screenshot">
+    <p class="screenshot-caption">Abb. 3 — Suricata-IDS detektiert Cerber Ransomware (ETPRO TROJAN Ransomware/Cerber)</p>
+
+    <table class="data-table">
+        <tr>
+            <th>Alert Signature</th>
+            <th>Count</th>
+            <th>Phase</th>
+        </tr>
+        <tr>
+            <td>ET SCAN Behavioral Unusual Port 445 traffic</td>
+            <td>2</td>
+            <td>Reconnaissance (SMB-Scan)</td>
+        </tr>
+        <tr>
+            <td>ETPRO TROJAN Ransomware/Cerber Onion Domain Lookup</td>
+            <td>2</td>
+            <td>C2 Communication</td>
+        </tr>
+        <tr>
+            <td>ET SCAN Behavioral Unusual Port 135 traffic</td>
+            <td>1</td>
+            <td>Reconnaissance (NetBIOS)</td>
+        </tr>
+        <tr>
+            <td>SURICATA DNS malformed response data</td>
+            <td>1</td>
+            <td>DNS-Anomalie</td>
+        </tr>
+    </table>
+
+    <div class="callout callout-red">
+        <span class="callout-icon">🚨</span>
+        <p class="callout-text">
+            <strong>Critical Finding:</strong> Die Suricata-Signatur "ETPRO TROJAN Ransomware/Cerber Onion Domain Lookup" 
+            ist ein eindeutiger Indikator für Cerber-Ransomware. Der verschlüsselte Tor-Traffic 
+            zeigt, dass der Angreifer bereits C2-Kommunikation aufgebaut hat.
+        </p>
+    </div>
+
+    <h2>Attack-Timeline</h2>
+    <p>
+        Die vier detektierten Suricata-Alerte ergeben eine klare Attack-Kette:
+    </p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">SPL</span>
+            <span class="code-desc">Chronologische Attack-Timeline</span>
+        </div>
+        <div class="code-body">
+<span class="cmd">index</span>=botsv1 <span class="cmd">earliest</span>=<span class="number">0</span> <span class="cmd">sourcetype</span>=suricata <span class="cmd">dest_ip</span>=<span class="string">192.168.250.20</span>
+| <span class="cmd">table</span> _time, alert.signature, src_ip, dest_ip
+| <span class="cmd">sort</span> _time
+        </div>
+    </div>
+
+    <p>
+        <strong>Phase 1 — Reconnaissance:</strong> Port-Scan auf SMB (445) und NetBIOS (135) → 
+        Netzwerk-Kartierung durch den Angreifer.<br><br>
+        <strong>Phase 2 — Exploitation:</strong> SMB-Exploit für Initial Access.<br><br>
+        <strong>Phase 3 — C2:</strong> Cerber installiert sich und kommuniziert über 
+        .onion-Domains via Tor.
+    </p>
+
+    <h2>Fazit</h2>
+    <p>
+        In dieser Investigation haben wir aus 955.807 Events eine klare Attack-Kette rekonstruiert:
+    </p>
+
+    <ol style="margin-left: 24px; margin-bottom: 20px; color: var(--text);">
+        <li><strong>Reconnaissance:</strong> Nessus-Scan zeigt 192.168.250.20 als primäres Ziel (37 Scans)</li>
+        <li><strong>Network Scan:</strong> Suricata detektiert SMB/NetBIOS-Port-Scans</li>
+        <li><strong>Malware:</strong> Suricata-Signatur identifiziert Cerber Ransomware</li>
+        <li><strong>C2:</strong> .onion-Domain-Lookup über Tor bestätigt Ransomware-Kommunikation</li>
+    </ol>
+
+    <p>
+        Diese Übung zeigt, wie ein SOC-Analyst mit Splunk und SPL aus rohen Log-Daten 
+        eine strukturierte Threat-Hunting-Investigation durchführt — von der Quellen-Analyse 
+        über die Ziel-Identifikation bis zur Malware-Detektion.
+    </p>
+
+    <div class="callout callout-blue">
+        <span class="callout-icon">📚</span>
+        <p class="callout-text">
+            <strong>Next Steps:</strong> SMB-Traffic-Analyse für Lateral Movement, 
+            DNS-Query-Analyse für C2-Domains, und Windows-EventLog-Analyse für 
+            Privilege Escalation.
+        </p>
+    </div>
+
+    <h2>Verwendete SPL-Queries</h2>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">SPL</span>
+            <span class="code-desc">Alle Queries der Investigation</span>
+        </div>
+        <div class="code-body">
+<span class="comment"># 1. Log-Quellen überblicken</span>
+<span class="cmd">index</span>=botsv1 <span class="cmd">earliest</span>=<span class="number">0</span>
+| <span class="cmd">stats</span> count <span class="keyword">by</span> sourcetype
+| <span class="cmd">sort</span> -count
+
+<span class="comment"># 2. Nessus-Scan-Targets</span>
+<span class="cmd">index</span>=botsv1 <span class="cmd">earliest</span>=<span class="number">0</span> <span class="cmd">sourcetype</span>=nessus:scan
+| <span class="cmd">stats</span> count <span class="keyword">by</span> "host-ip"
+| <span class="cmd">sort</span> -count
+
+<span class="comment"># 3. Suricata-Alerte gegen Ziel</span>
+<span class="cmd">index</span>=botsv1 <span class="cmd">earliest</span>=<span class="number">0</span> <span class="cmd">sourcetype</span>=suricata <span class="cmd">dest_ip</span>=<span class="string">192.168.250.20</span>
+| <span class="cmd">stats</span> count <span class="keyword">by</span> alert.signature
+| <span class="cmd">sort</span> -count
+
+<span class="comment"># 4. Chronologische Timeline</span>
+<span class="cmd">index</span>=botsv1 <span class="cmd">earliest</span>=<span class="number">0</span> <span class="cmd">sourcetype</span>=suricata <span class="cmd">dest_ip</span>=<span class="string">192.168.250.20</span>
+| <span class="cmd">table</span> _time, alert.signature, src_ip, dest_ip
+| <span class="cmd">sort</span> _time
+        </div>
+    </div>
+
+</main>
+
+<footer>
+    <div class="footer-inner">
+        <div class="footer-links">
+            <a href="index.html">← Blog</a>
+            <a href="https://github.com/yasinkilicma" target="_blank">GitHub</a>
+            <a href="https://www.linkedin.com/in/yasin-kilic-cyber-security/" target="_blank">LinkedIn</a>
+        </div>
+        <p class="footer-copy">© 2026 Yasin Kilic — SOC Analyst in Training</p>
+    </div>
+</footer>
+
+</body>
+</html>
