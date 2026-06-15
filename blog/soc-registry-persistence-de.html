@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registry Persistence Analyse — Cerber Ransomware | Yasin Kilic</title>
+    <meta name="description" content="WinRegistry Persistence Analyse: Wie Cerber Ransomware mit Run-Keys und RunOnce für Auto-Start sorgt — 74.720 Registry-Events analysiert.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0e1a;
+            --bg2: #0f1525;
+            --bg3: #161d30;
+            --border: #1e2a42;
+            --accent: #00d4ff;
+            --accent2: #ff4757;
+            --accent3: #2ed573;
+            --text: #e0e6f0;
+            --text-muted: #6b7a99;
+            --code-bg: #0d1117;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Sora', sans-serif;
+            font-size: 16px;
+            line-height: 1.8;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(10, 14, 26, 0.9);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 0;
+        }
+
+        .header-inner {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 18px;
+            letter-spacing: -0.5px;
+        }
+
+        .back-link {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: var(--accent); }
+
+        .hero {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 64px 24px 48px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .hero-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 4px;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-red { background: rgba(255, 71, 87, 0.15); color: var(--accent2); border: 1px solid rgba(255, 71, 87, 0.3); }
+        .badge-blue { background: rgba(0, 212, 255, 0.1); color: var(--accent); border: 1px solid rgba(0, 212, 255, 0.2); }
+        .badge-green { background: rgba(46, 213, 115, 0.1); color: var(--accent3); border: 1px solid rgba(46, 213, 115, 0.2); }
+
+        .hero h1 {
+            font-size: clamp(32px, 5vw, 48px);
+            font-weight: 700;
+            letter-spacing: -1px;
+            line-height: 1.15;
+            margin-bottom: 20px;
+        }
+
+        .hero h1 span { color: var(--accent); }
+
+        .hero-summary {
+            font-size: 17px;
+            color: var(--text-muted);
+            max-width: 640px;
+            line-height: 1.7;
+        }
+
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 24px;
+        }
+
+        .tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 4px 10px;
+        }
+
+        .content {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 48px 24px 80px;
+        }
+
+        h2 {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            margin: 48px 0 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h3 {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--accent);
+            margin: 32px 0 14px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        p { margin-bottom: 16px; color: var(--text); }
+
+        .stat-bar {
+            display: flex;
+            gap: 24px;
+            margin: 24px 0 40px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px 28px;
+            min-width: 140px;
+        }
+
+        .stat-number {
+            display: block;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .code-block {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .code-header {
+            background: var(--bg3);
+            border-bottom: 1px solid var(--border);
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .code-lang {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--accent);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .code-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .code-body {
+            padding: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            line-height: 1.7;
+            color: #a8b8d8;
+            overflow-x: auto;
+        }
+
+        .code-body .comment { color: #4a5568; }
+        .code-body .cmd { color: var(--accent); }
+        .code-body .keyword { color: #ff79c6; }
+        .code-body .string { color: #f1fa8c; }
+        .code-body .number { color: var(--accent3); }
+
+        .screenshot {
+            width: 100%;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            margin: 20px 0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .screenshot-caption {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: -10px;
+            margin-bottom: 24px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .callout {
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin: 20px 0;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .callout-blue {
+            background: rgba(0, 212, 255, 0.08);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+        }
+
+        .callout-red {
+            background: rgba(255, 71, 87, 0.08);
+            border: 1px solid rgba(255, 71, 87, 0.2);
+        }
+
+        .callout-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+            line-height: 1;
+        }
+
+        .callout-text {
+            font-size: 14px;
+            color: var(--text);
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .data-table th {
+            background: var(--bg3);
+            padding: 12px 16px;
+            text-align: left;
+            color: var(--accent);
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .data-table td {
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .data-table tr:hover td {
+            background: var(--bg2);
+        }
+
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 36px 24px;
+            text-align: center;
+        }
+
+        .footer-inner {
+            max-width: 860px;
+            margin: 0 auto;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            font-size: 13px;
+            color: var(--text-muted);
+            transition: color 0.2s;
+            text-decoration: none;
+        }
+
+        .footer-links a:hover { color: var(--accent); }
+
+        .footer-copy {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero, .content { animation: fadeUp 0.6s ease; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-inner">
+        <a href="../index.html" class="logo">YK</a>
+        <a href="index.html" class="back-link">← Blog</a>
+    </div>
+</header>
+
+<section class="hero">
+    <div class="hero-meta">
+        <span class="badge badge-red">🔴 PERSISTENCE</span>
+        <span class="badge badge-blue">REGISTRY</span>
+        <span class="badge badge-green">RUN KEYS</span>
+    </div>
+    <h1>Registry <span>Persistence</span> Analyse</h1>
+    <p class="hero-summary">
+        Wie Cerber Ransomware mit Windows-Registry-Run-Keys für Auto-Start sorgt: 
+        Eine Persistence-Analyse auf 74.720 Registry-Events aus dem BOTS v1 Datensatz.
+    </p>
+    <div class="tags">
+        <span class="tag">Registry</span>
+        <span class="tag">Run Keys</span>
+        <span class="tag">Persistence</span>
+        <span class="tag">Cerber</span>
+        <span class="tag">Ransomware</span>
+        <span class="tag">Splunk</span>
+        <span class="tag">SPL</span>
+    </div>
+</section>
+
+<main class="content">
+
+    <div class="stat-bar">
+        <div class="stat-item">
+            <span class="stat-number">74.720</span>
+            <span class="stat-label">Registry Events</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">24</span>
+            <span class="stat-label">Run-Key Events</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">4</span>
+            <span class="stat-label">Unique Run Keys</span>
+        </div>
+    </div>
+
+    <h2>Kontext</h2>
+    <p>
+        In der Sysmon-Analyse haben wir <code>osk.exe</code> als Masquerading-Malware identifiziert. 
+        Die Frage: <strong>Wie stellt die Malware sicher, dass sie bei jedem Systemstart 
+        automatisch läuft?</strong>
+    </p>
+
+    <h3>Windows Registry Persistence</h3>
+    <p>
+        Die Windows-Registry enthält spezielle <strong>Run-Keys</strong>, die Programme bei jedem 
+        Login oder Systemstart automatisch ausführen. Malware nutzt diese Keys, um 
+        <strong>Persistence</strong> (Beständigkeit) zu erreichen.
+    </p>
+
+    <p>
+        <strong>Die wichtigsten Run-Keys:</strong>
+    </p>
+
+    <ul style="margin-left: 24px; margin-bottom: 20px; color: var(--text);">
+        <li><strong>HKLM\Software\Microsoft\Windows\CurrentVersion\Run</strong> → Für alle Benutzer (Systemweit)</li>
+        <li><strong>HKCU\Software\Microsoft\Windows\CurrentVersion\Run</strong> → Nur für aktuellen Benutzer</li>
+        <li><strong>HKCU\Software\Microsoft\Windows\CurrentVersion\RunOnce</strong> → Einmalig beim nächsten Login</li>
+        <li><strong>HKLM\Software\Microsoft\Command Processor\AutoRun</strong> → Bei jedem CMD-Start</li>
+    </ul>
+
+    <div class="callout callout-blue">
+        <span class="callout-icon">ℹ️</span>
+        <p class="callout-text">
+            <strong>Warum Run-Keys?</strong> Einmal in die Registry geschrieben, läuft die Malware 
+            bei jedem Systemstart automatisch — ohne dass der Benutzer etwas bemerkt. 
+            Das ist die <strong>am häufigsten verwendete Persistence-Methode</strong> für Windows-Malware.
+        </p>
+    </div>
+
+    <h2>Die Analyse</h2>
+    <p>
+        Wir filtern alle Registry-Events, die Run-Keys betreffen, und gruppieren nach Key-Pfad und Wert.
+    </p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">SPL</span>
+            <span class="code-desc">Registry-Run-Keys filtern und aggregieren</span>
+        </div>
+        <div class="code-body">
+<span class="cmd">index</span>=botsv1 <span class="cmd">earliest</span>=<span class="number">0</span> <span class="cmd">sourcetype</span>=WinRegistry
+<span class="comment"># Nur Run-Keys (Auto-Start)</span>
+| <span class="cmd">search</span> key_path=<span class="string">"*Run*"</span>
+<span class="comment"># Nach Key-Pfad und Daten aggregieren</span>
+| <span class="cmd">stats</span> count <span class="keyword">by</span> key_path, data
+| <span class="cmd">sort</span> -count
+| <span class="cmd">head</span> <span class="number">20</span>
+        </div>
+    </div>
+
+    <p>
+        Das Ergebnis zeigt 14 unique Run-Key-Einträge aus 24 total Events. 
+        Die Top-Einträge sind eindeutig schädlich.
+    </p>
+
+    <img src="images/soc-registry-persistence.png" alt="Registry Run Keys — osk.exe und internat.exe persistence" class="screenshot">
+    <p class="screenshot-caption">Abb. 1 — Registry-Run-Keys: osk.exe in Run und RunOnce, internat.exe als System-Weit-Persistence</p>
+
+    <h2>Die Erkenntnisse</h2>
+
+    <h3>🔴 Kritisch: osk.exe in Run-Keys</h3>
+    <p>
+        <strong>Was wir sehen:</strong>
+    </p>
+
+    <ul style="margin-left: 24px; margin-bottom: 20px; color: var(--text);">
+        <li><strong>HKCU\...\Run\osk</strong> (2 Events) → <code>osk.exe</code> wird bei jedem Login gestartet</li>
+        <li><strong>HKCU\...\RunOnce\osk</strong> (2 Events) → <code>osk.exe</code> läuft einmalig beim nächsten Login</li>
+    </ul>
+
+    <p>
+        Das ist die <strong>Persistence-Methode</strong> der Cerber-Ransomware! Die Malware nutzt 
+        den gleichen Namen <code>osk.exe</code> (On-Screen Keyboard), den wir bereits in der Sysmon-Analyse 
+        als Masquerading identifiziert haben. Jetzt sehen wir auch, <strong>wie sie persistiert</strong>.
+    </p>
+
+    <div class="callout callout-red">
+        <span class="callout-icon">🚨</span>
+        <p class="callout-text">
+            <strong>Persistence erkannt:</strong> <code>osk.exe</code> ist in die Registry-Run-Keys eingetragen. 
+            Das bedeutet: Selbst wenn der Benutzer die Malware-Prozesse killt, wird sie beim nächsten 
+            Login automatisch neu gestartet. <strong>Die einzige Lösung ist die Registry-Bereinigung 
+            oder eine Isolation des Hosts.</strong>
+        </p>
+    </div>
+
+    <h3>🟡 internat.exe — System-Weite Persistence</h3>
+    <p>
+        <strong>HKCU\...\Run\internat.exe</strong> (5 Events) ist ein weiterer Indikator. 
+        <code>internat.exe</code> (International Settings) ist ein legitimer Windows-Prozess, 
+        aber in diesem Kontext — als Registry-Eintrag mit hoher Event-Anzahl — ist er verdächtig.
+    </p>
+
+    <p>
+        <strong>Warum ist das verdächtig?</strong> Ein legitimer <code>internat.exe</code> würde nicht 
+        manuell in die Run-Keys eingetragen werden. Der Registry-Eintrag deutet darauf hin, 
+        dass die Malware einen weiteren legitimen Prozessnamen für Persistence missbraucht.
+    </p>
+
+    <h3>🟡 Command Processor AutoRun</h3>
+    <p>
+        <strong>HKCU\...\Command Processor\AutoRun</strong> (2 Events) ist besonders gefährlich. 
+        Dieser Key führt automatisch einen Befehl aus, sobald der Benutzer eine CMD-Konsole öffnet.
+    </p>
+
+    <p>
+        <strong>Typischer AutoRun-Angriff:</strong>
+    </p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">CMD</span>
+            <span class="code-desc">Beispiel eines schädlichen AutoRun-Befehls</span>
+        </div>
+        <div class="code-body">
+<span class="comment"># In HKCU\Software\Microsoft\Command Processor\AutoRun gespeichert:</span>
+<span class="cmd">powershell.exe -WindowStyle Hidden -enc UwB0AGEAcgB0AC0AUwBsAGUAZQBwACAALQBzACAAMQAwADsAIABJAG4AdgBvAGsAZQAtAEUAeABwAHIAZQBzAHMAaQBvAG4A</span>
+
+<span class="comment"># Dieser Befehl wird ausgeführt, sobald CMD geöffnet wird!</span>
+        </div>
+    </div>
+
+    <h2>Attack-Chain</h2>
+    <p>
+        Basierend auf den drei Analysen (Suricata, SMB, Sysmon, Registry) lässt sich die 
+        komplette Attack-Chain rekonstruieren:
+    </p>
+
+    <ol style="margin-left: 24px; margin-bottom: 20px; color: var(--text);">
+        <li><strong>Reconnaissance:</strong> Nessus-Scan kartiert das Netzwerk (192.168.250.20 primäres Ziel)</li>
+        <li><strong>Initial Access:</strong> Exploit/SMB-Lateral-Movement bringt Malware auf 192.168.250.100</li>
+        <li><strong>Execution:</strong> <code>osk.exe</code> (Masquerading) wird ausgeführt</li>
+        <li><strong>Persistence:</strong> Registry-Run-Keys (Run, RunOnce) sorgen für Auto-Start</li>
+        <li><strong>Lateral Movement:</strong> SMB-Verbindung 192.168.250.100 → 192.168.250.20</li>
+        <li><strong>C2 Communication:</strong> Suricata detektiert .onion-Domain-Lookup (Cerber)</li>
+        <li><strong>Impact:</strong> File Encryption auf 192.168.250.20</li>
+    </ol>
+
+    <h2>Defensive Maßnahmen</h2>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">IOC</span>
+            <span class="code-desc">Registry-Indikatoren für Detection</span>
+        </div>
+        <div class="code-body">
+<span class="comment"># 1. Run-Keys mit ungewöhnlichen Prozessnamen</span>
+<span class="cmd">key_path</span>=<span class="string">"*\Run\*"</span> <span class="cmd">AND</span> (
+    data=<span class="string">"*osk.exe*"</span> <span class="cmd">OR</span> 
+    data=<span class="string">"*internat.exe*"</span> <span class="cmd">OR</span>
+    data=<span class="string">"*AppData*"</span> <span class="cmd">OR</span>
+    data=<span class="string">"*Temp*"</span>
+)
+
+<span class="comment"># 2. RunOnce-Keys (einmalige Ausführung)</span>
+<span class="cmd">key_path</span>=<span class="string">"*RunOnce*"</span>
+
+<span class="comment"># 3. Command Processor AutoRun (CMD-Hijacking)</span>
+<span class="cmd">key_path</span>=<span class="string">"*Command Processor*"</span> <span class="cmd">AND</span> key_path=<span class="string">"*AutoRun*"</span>
+
+<span class="comment"># 4. Registry-Changes aus Benutzer-Verzeichnissen</span>
+<span class="cmd">data</span>=<span class="string">"*Users\*"</span> <span class="cmd">AND</span> data=<span class="string">"*.exe*"</span>
+        </div>
+    </div>
+
+    <h2>SPL-Queries</h2>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">SPL</span>
+            <span class="code-desc">Komplette Registry-Persistence-Analyse</span>
+        </div>
+        <div class="code-body">
+<span class="comment"># 1. Alle Run-Keys mit Prozessnamen</span>
+<span class="cmd">index</span>=botsv1 <span class="cmd">earliest</span>=<span class="number">0</span> <span class="cmd">sourcetype</span>=WinRegistry
+| <span class="cmd">search</span> key_path=<span class="string">"*Run*"</span>
+| <span class="cmd">stats</span> count <span class="keyword">by</span> key_path, data
+| <span class="cmd">sort</span> -count
+
+<span class="comment"># 2. Nur schädliche / verdächtige Einträge</span>
+<span class="cmd">index</span>=botsv1 <span class="cmd">earliest</span>=<span class="number">0</span> <span class="cmd">sourcetype</span>=WinRegistry
+| <span class="cmd">search</span> key_path=<span class="string">"*Run*"</span>
+| <span class="cmd">search</span> data=<span class="string">"*osk.exe*"</span> <span class="cmd">OR</span> data=<span class="string">"*internat.exe*"</span> <span class="cmd">OR</span> data=<span class="string">"*AppData*"</span>
+| <span class="cmd">table</span> _time, key_path, data, process_image
+
+<span class="comment"># 3. Command Processor AutoRun (CMD-Hijacking)</span>
+<span class="cmd">index</span>=botsv1 <span class="cmd">earliest</span>=<span class="number">0</span> <span class="cmd">sourcetype</span>=WinRegistry
+| <span class="cmd">search</span> key_path=<span class="string">"*Command Processor*"</span> <span class="cmd">AND</span> key_path=<span class="string">"*AutoRun*"</span>
+| <span class="cmd">table</span> _time, key_path, data, process_image
+        </div>
+    </div>
+
+    <h2>Fazit</h2>
+    <p>
+        Diese Registry-Analyse vervollständigt das Bild der Cerber-Ransomware-Attacke:
+    </p>
+
+    <ol style="margin-left: 24px; margin-bottom: 20px; color: var(--text);">
+        <li><strong>Suricata:</strong> Cerber-Ransomware auf 192.168.250.20 detektiert</li>
+        <li><strong>SMB:</strong> Lateral Movement von 192.168.250.100 → 192.168.250.20</li>
+        <li><strong>Sysmon:</strong> <code>osk.exe</code> Masquerading identifiziert</li>
+        <li><strong>Registry:</strong> <code>osk.exe</code> in Run-Keys für Persistence eingetragen</li>
+    </ol>
+
+    <p>
+        Die Registry ist der <strong>"Schlüssel"</strong> zur Malware-Persistence. 
+        Ohne diese Analyse hätten wir nicht verstanden, warum die Ransomware nach einem 
+        Reboot wieder erscheint. Sysmon und Registry-Monitoring sind daher 
+        <strong>unverzichtbare SOC-Tools</strong>.
+    </p>
+
+    <div class="callout callout-blue">
+        <span class="callout-icon">📚</span>
+        <p class="callout-text">
+            <strong>Next Steps:</strong> File-Integrity-Monitoring (Sysmon EventID 11/12) und 
+            Scheduled-Task-Analyse für weitere Persistence-Mechanismen.
+        </p>
+    </div>
+
+</main>
+
+<footer>
+    <div class="footer-inner">
+        <div class="footer-links">
+            <a href="index.html">← Blog</a>
+            <a href="https://github.com/yasinkilicma" target="_blank">GitHub</a>
+            <a href="https://www.linkedin.com/in/yasin-kilic-cyber-security/" target="_blank">LinkedIn</a>
+        </div>
+        <p class="footer-copy">© 2026 Yasin Kilic — SOC Analyst in Training</p>
+    </div>
+</footer>
+
+</body>
+</html>
