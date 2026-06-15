@@ -546,16 +546,16 @@
     </p>
 
     <div class="arch-box">
-<span class="highlight">Mac mini M4</span>  (Host, 192.168.64.1)
+<span class="highlight">Mac mini M4</span>  (Host, 198.51.100.1)
     │
     └─ <span class="highlight">UTM 4.7.5</span>  (QEMU-Backend + Apple hvf)
          │
          └─ <span class="highlight2">FortiGate-VM 7.4.12 ARM64</span>  (1 vCPU / 2 GB)
               │
-              ├─ port1  <span class="highlight">Shared / NAT</span>   192.168.64.2   →  WAN + Mgmt + Internet
-              │           (GUI: https://192.168.64.2)
+              ├─ port1  <span class="highlight">Shared / NAT</span>   198.51.100.2   →  WAN + Mgmt + Internet
+              │           (GUI: https://198.51.100.2)
               │
-              └─ port2  <span class="highlight2">LAN</span>            192.168.1.99/24
+              └─ port2  <span class="highlight2">LAN</span>            192.0.2.99/24
                           DHCP-Server: .100–.200
                           Policy: LAN → WAN  (NAT enable)
     </div>
@@ -724,7 +724,7 @@ $PB -c <span class="string">"Add :Serial:0:TcpPort integer 4555"</span> config.p
   <span class="cmd">next</span>
   <span class="cmd">edit</span> port2                                  <span class="comment"># internes LAN</span>
     <span class="cmd">set</span> mode static
-    <span class="cmd">set</span> ip <span class="number">192.168.1.99 255.255.255.0</span>
+    <span class="cmd">set</span> ip <span class="number">192.0.2.99 255.255.255.0</span>
     <span class="cmd">set</span> allowaccess ping https ssh
   <span class="cmd">next</span>
 <span class="cmd">end</span>
@@ -733,12 +733,12 @@ $PB -c <span class="string">"Add :Serial:0:TcpPort integer 4555"</span> config.p
 <span class="cmd">config</span> system dhcp server
   <span class="cmd">edit</span> <span class="number">1</span>
     <span class="cmd">set</span> interface port2
-    <span class="cmd">set</span> default-gateway <span class="number">192.168.1.99</span>
+    <span class="cmd">set</span> default-gateway <span class="number">192.0.2.99</span>
     <span class="cmd">set</span> netmask <span class="number">255.255.255.0</span>
     <span class="cmd">config</span> ip-range
       <span class="cmd">edit</span> <span class="number">1</span>
-        <span class="cmd">set</span> start-ip <span class="number">192.168.1.100</span>
-        <span class="cmd">set</span> end-ip <span class="number">192.168.1.200</span>
+        <span class="cmd">set</span> start-ip <span class="number">192.0.2.100</span>
+        <span class="cmd">set</span> end-ip <span class="number">192.0.2.200</span>
       <span class="cmd">next</span>
     <span class="cmd">end</span>
   <span class="cmd">next</span>
@@ -773,11 +773,11 @@ $PB -c <span class="string">"Add :Serial:0:TcpPort integer 4555"</span> config.p
 <span class="comment">  → 3 packets transmitted, 3 received, 0% loss, time 10 ms</span>
 
 <span class="comment"># Routing: Default-Route über port1, LAN connected über port2</span>
-S*  0.0.0.0/0 [5/0] via <span class="number">192.168.64.1</span>, port1
-C   192.168.1.0/24 is directly connected, port2
+S*  0.0.0.0/0 [5/0] via <span class="number">198.51.100.1</span>, port1
+C   192.0.2.0/24 is directly connected, port2
 
 <span class="comment"># Mac -> FortiGate-GUI</span>
-$ curl -k -o /dev/null -w <span class="string">"%{http_code}\n"</span> https://192.168.64.2
+$ curl -k -o /dev/null -w <span class="string">"%{http_code}\n"</span> https://198.51.100.2
 <span class="comment">  → 200</span></div>
     </div>
 

@@ -321,7 +321,7 @@
                             A deterministic IPS demo: wrote an F-SBID custom signature that matches a unique pattern in
                             the HTTP traffic of a client behind the FortiGate. Control request → 200, attack request
                             (with the pattern) → dropped, confirmed in the IPS event log (NSE4.IPS.Test, Critical,
-                            src 192.168.1.50). Covers custom signatures, flow-based inspection and eval-license limits.
+                            src 192.0.2.50). Covers custom signatures, flow-based inspection and eval-license limits.
                             <em>(Blog post in German.)</em>
                         </p>
                         <div class="project-tags">
@@ -333,6 +333,31 @@
                         </div>
                         <div class="project-links">
                             <a href="blog/fortigate-ips-custom-signature-test.html" class="project-link">Read Blog Post →</a>
+                            <a href="https://github.com/yasinkilicma/fortigate-vm-lab-apple-silicon" target="_blank" class="project-link">GitHub →</a>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="project-card">
+                    <div class="project-image"><div class="project-placeholder"><span>AV</span></div></div>
+                    <div class="project-info">
+                        <h3 class="project-title">FortiGate AntiVirus Test with EICAR</h3>
+                        <p class="project-description">
+                            Proved the AntiVirus scan on the FortiGate using the EICAR test file: a client behind the
+                            firewall downloads it over plaintext HTTP — the clean file passes (200), EICAR is blocked
+                            mid-transfer (connection reset, 0 bytes), confirmed in the AV event log (EICAR_TEST_FILE,
+                            blocked). Covers flow-based AV, plaintext vs. HTTPS, and eval-license limits.
+                            <em>(Blog post in German.)</em>
+                        </p>
+                        <div class="project-tags">
+                            <span class="tag">AntiVirus</span>
+                            <span class="tag">EICAR</span>
+                            <span class="tag">FortiGate</span>
+                            <span class="tag">NSE4</span>
+                            <span class="tag">Security Profiles</span>
+                        </div>
+                        <div class="project-links">
+                            <a href="blog/fortigate-antivirus-eicar-test.html" class="project-link">Read Blog Post →</a>
                             <a href="https://github.com/yasinkilicma/fortigate-vm-lab-apple-silicon" target="_blank" class="project-link">GitHub →</a>
                         </div>
                     </div>

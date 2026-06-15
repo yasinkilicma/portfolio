@@ -150,9 +150,9 @@
 <span class="highlight">UTM (QEMU)</span>                              <span class="highlight">eigenständiges QEMU</span>
 ┌──────────────────────────┐              ┌──────────────────────────┐
 │ FortiGate-VM 7.4.12      │   QEMU       │ Client (Debian ARM64)    │
-│ port1 192.168.64.2 (WAN) │   socket     │ + nmap, hping3, tcpdump  │
-│ port3 192.168.1.99 (LAN) │◄════════════►│ 192.168.1.50             │
-│   DHCP · Policy · NAT    │  :4700 (L2)  │ Gateway: 192.168.1.99    │
+│ port1 198.51.100.2 (WAN) │   socket     │ + nmap, hping3, tcpdump  │
+│ port3 192.0.2.99 (LAN) │◄════════════►│ 192.0.2.50             │
+│   DHCP · Policy · NAT    │  :4700 (L2)  │ Gateway: 192.0.2.99    │
 └────────────┬─────────────┘              └──────────────────────────┘
              └─→ Internet (NAT, <span class="highlight3">inspiziert</span>)
     </div>
@@ -293,7 +293,7 @@ runcmd:
         <div class="code-body"><span class="cmd">config</span> system interface
   <span class="cmd">edit</span> port3
     <span class="cmd">set</span> mode static
-    <span class="cmd">set</span> ip <span class="number">192.168.1.99 255.255.255.0</span>
+    <span class="cmd">set</span> ip <span class="number">192.0.2.99 255.255.255.0</span>
     <span class="cmd">set</span> allowaccess ping https ssh
   <span class="cmd">next</span>
 <span class="cmd">end</span>
@@ -309,7 +309,7 @@ runcmd:
         <span class="callout-icon">⚠️</span>
         <p class="callout-text">
             <strong>Stolperstein:</strong> <code class="inline" style="font-size:12px;">Subnets overlap</code> — erst die alte
-            IP von port2 entfernen/ändern, <em>dann</em> 192.168.1.99 auf port3 setzen. Sonst lehnt FortiOS die doppelte IP ab.
+            IP von port2 entfernen/ändern, <em>dann</em> 192.0.2.99 auf port3 setzen. Sonst lehnt FortiOS die doppelte IP ab.
         </p>
     </div>
 
@@ -320,10 +320,10 @@ runcmd:
     </p>
     <div class="code-block">
         <div class="code-header"><span class="code-lang">CLIENT (seriell)</span><span class="code-desc">Test durch die Firewall</span></div>
-        <div class="code-body"><span class="cmd">ping</span> -c3 192.168.1.99       <span class="comment"># FortiGate (port3)  -> 0% loss</span>
+        <div class="code-body"><span class="cmd">ping</span> -c3 192.0.2.99       <span class="comment"># FortiGate (port3)  -> 0% loss</span>
 <span class="cmd">ping</span> -c3 8.8.8.8            <span class="comment"># Internet via FortiGate-NAT -> 0% loss</span>
 <span class="cmd">nslookup</span> google.com 8.8.8.8 <span class="comment"># DNS durch die FW -> aufgelöst</span>
-<span class="cmd">nmap</span> -sn 192.168.1.99       <span class="comment"># Host is up</span></div>
+<span class="cmd">nmap</span> -sn 192.0.2.99       <span class="comment"># Host is up</span></div>
     </div>
     <p>
         Damit ist die Grundlage gelegt: jedes Paket des Clients passiert die LAN→WAN-Policy mit NAT — bereit für

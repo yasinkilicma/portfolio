@@ -945,10 +945,10 @@ C  = Connected</div>
         <div class="code-body"><span class="cmd">FGT-LAB # get router info routing-table all</span>
 ...
 Routing table for VRF=0
-S*      0.0.0.0/0 <span class="number">[5/0]</span> via 192.168.64.1, port1     <span class="comment"># DHCP-Default → Distance 5</span>
-S       10.0.0.0/8 <span class="number">[10/0]</span> via 192.168.64.1, port1   <span class="comment"># statisch → Distance 10</span>
-C       192.168.1.0/24 is directly connected, port2
-C       192.168.64.0/24 is directly connected, port1</div>
+S*      0.0.0.0/0 <span class="number">[5/0]</span> via 198.51.100.1, port1     <span class="comment"># DHCP-Default → Distance 5</span>
+S       10.0.0.0/8 <span class="number">[10/0]</span> via 198.51.100.1, port1   <span class="comment"># statisch → Distance 10</span>
+C       192.0.2.0/24 is directly connected, port2
+C       198.51.100.0/24 is directly connected, port1</div>
     </div>
 
     <h2 id="ex5">Übung 5 — Security Profiles: IPS, Flow vs. Proxy</h2>
@@ -1108,22 +1108,22 @@ id=xxxxx <span class="cmd">trace_id=1</span> <span class="cmd">func=resolve_ip_t
 
     <!-- EXERCISE 7 -->
     <h3>Echte Lab-Ausgabe — Paket-Trace des Management-Traffics</h3>
-    <p>Ein realer Flow-Trace des HTTPS-Zugriffs vom Mac (<code class="inline">192.168.64.1</code>) auf die FortiGate-GUI (<code class="inline">192.168.64.2:443</code>):</p>
+    <p>Ein realer Flow-Trace des HTTPS-Zugriffs vom Mac (<code class="inline">198.51.100.1</code>) auf die FortiGate-GUI (<code class="inline">198.51.100.2:443</code>):</p>
     <div class="code-block">
         <div class="code-header">
             <span class="code-lang">ECHTE LAB-AUSGABE</span>
             <span class="code-desc">diagnose debug flow trace start 10</span>
         </div>
         <div class="code-body"><span class="cmd">FGT-LAB # diagnose debug enable</span>
-<span class="cmd">FGT-LAB # diagnose debug flow filter addr 192.168.64.1</span>
+<span class="cmd">FGT-LAB # diagnose debug flow filter addr 198.51.100.1</span>
 <span class="cmd">FGT-LAB # diagnose debug flow trace start 10</span>
 
 id=65308 trace_id=1 func=print_pkt_detail msg="vd-root:0 received a packet
-  (proto=6, 192.168.64.2:443->192.168.64.1:64634) from local ..."
+  (proto=6, 198.51.100.2:443->198.51.100.1:64634) from local ..."
 id=65308 trace_id=1 func=resolve_ip_tuple_fast msg="Find an existing session,
   id-0000077b, reply direction"
 id=65308 trace_id=2 func=print_pkt_detail msg="vd-root:0 received a packet
-  (proto=6, 192.168.64.1:64634->192.168.64.2:443) from port1 ..."</div>
+  (proto=6, 198.51.100.1:64634->198.51.100.2:443) from port1 ..."</div>
     </div>
 
     <h2 id="ex7">Übung 7 — VPN: IPsec Site-to-Site</h2>
@@ -1201,7 +1201,7 @@ name=VPN-to-Lab2 ver=<span class="number">2</span> serial=<span class="number">1
         <div class="code-body"><span class="cmd">FGT-LAB # diagnose vpn tunnel list</span>
 list all ipsec tunnel in vd 0
 ------------------------------------------------------
-name=VPN-to-Lab2 ver=2 serial=1 192.168.64.2:0->203.0.113.1:0 nexthop=192.168.64.1
+name=VPN-to-Lab2 ver=2 serial=1 198.51.100.2:0->203.0.113.1:0 nexthop=198.51.100.1
   <span class="comment">status=down</span>  role=primary  accept_traffic=1
   proxyid=VPN-to-Lab2-p2 proto=0 sa=0 ref=1 serial=1
   stat: rxp=0 txp=0 rxb=0 txb=0

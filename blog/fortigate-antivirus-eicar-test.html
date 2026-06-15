@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IPS testen mit einer Custom-Signatur (FortiGate) | Yasin Kilic</title>
-    <meta name="description" content="Eine deterministische IPS-Demo auf einer FortiGate: eine eigene F-SBID-Signatur fängt ein Muster im HTTP-Traffic eines Clients hinter der Firewall ab — Kontroll-Request 200, Angriffs-Request dropped, inklusive IPS-Log.">
+    <title>AntiVirus testen mit EICAR (FortiGate) | Yasin Kilic</title>
+    <meta name="description" content="AntiVirus auf einer FortiGate beweisen: die EICAR-Testdatei über Klartext-HTTP von einem Client hinter der Firewall herunterladen — saubere Datei 200, EICAR per Connection-Reset geblockt, inklusive AV-Log.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -22,7 +22,6 @@
         .badge { font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600; padding:4px 10px; border-radius:4px; letter-spacing:0.5px; }
         .badge-red { background:rgba(255,71,87,0.15); color:var(--accent2); border:1px solid rgba(255,71,87,0.3); }
         .badge-blue { background:rgba(0,212,255,0.1); color:var(--accent); border:1px solid rgba(0,212,255,0.2); }
-        .badge-green { background:rgba(46,213,115,0.1); color:var(--accent3); border:1px solid rgba(46,213,115,0.2); }
         .meta-date { font-size:13px; color:var(--text-muted); font-family:'JetBrains Mono',monospace; }
         h1 { font-size:clamp(28px,5vw,44px); font-weight:700; line-height:1.2; letter-spacing:-1px; margin-bottom:20px; }
         h1 span { color:var(--accent); }
@@ -38,6 +37,8 @@
         h3 { font-size:17px; font-weight:600; margin:32px 0 12px; color:var(--accent); font-family:'JetBrains Mono',monospace; }
         p { margin-bottom:16px; color:var(--text); }
         code.inline { background:var(--bg3); padding:2px 8px; border-radius:4px; font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--accent); }
+        .arch-box { background:var(--code-bg); border:1px solid var(--border); border-radius:12px; padding:28px; margin:24px 0; font-family:'JetBrains Mono',monospace; font-size:13px; line-height:1.8; color:#8b9ab8; overflow-x:auto; }
+        .arch-box .highlight { color:var(--accent); } .arch-box .highlight2 { color:var(--accent3); } .arch-box .highlight3 { color:var(--accent2); }
         .code-block { background:var(--code-bg); border:1px solid var(--border); border-radius:12px; overflow:hidden; margin:20px 0; }
         .code-header { background:var(--bg3); border-bottom:1px solid var(--border); padding:10px 16px; display:flex; align-items:center; justify-content:space-between; }
         .code-lang { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--accent); font-weight:600; letter-spacing:0.5px; }
@@ -57,7 +58,7 @@
         .alert-table th { background:var(--bg3); color:var(--text-muted); font-weight:600; padding:12px 16px; text-align:left; border-bottom:1px solid var(--border); font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.5px; }
         .alert-table td { padding:12px 16px; border-bottom:1px solid rgba(30,42,66,0.5); font-family:'JetBrains Mono',monospace; }
         .alert-table tr:hover td { background:var(--bg2); }
-        .sev-crit { color:var(--accent2); font-weight:600; }
+        .ok { color:var(--accent3); font-weight:600; } .bad { color:var(--accent2); font-weight:600; }
         .lessons { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; margin:24px 0; }
         .lesson-card { background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:20px; }
         .lesson-number { font-family:'JetBrains Mono',monospace; font-size:28px; font-weight:600; color:var(--border); line-height:1; margin-bottom:12px; }
@@ -85,171 +86,149 @@
 
 <section class="hero">
     <div class="hero-meta">
-        <span class="badge badge-red">🛡️ IPS</span>
+        <span class="badge badge-red">🦠 ANTIVIRUS</span>
         <span class="badge badge-blue">NSE4</span>
         <span class="meta-date">Juni 2026</span>
     </div>
-    <h1>IPS testen mit einer <span>Custom-Signatur</span><br>— deterministisch statt Signatur-Lotterie</h1>
+    <h1>AntiVirus testen mit <span>EICAR</span><br>— sauber durch, Malware geblockt</h1>
     <p class="hero-summary">
-        Wie beweist man, dass das Intrusion Prevention System einer FortiGate wirklich greift — ohne sich auf
-        FortiGuard-Signaturen zu verlassen, die auf einer unlizenzierten Lab-VM fehlen können? Mit einer
-        <strong>eigenen F-SBID-Signatur</strong>: ein eindeutiges Muster im HTTP-Verkehr eines Clients hinter der
-        Firewall wird zuverlässig erkannt und geblockt. Kontroll-Request 200, Angriffs-Request <em>dropped</em> — inklusive IPS-Log.
+        Nach dem IPS-Test der logische nächste Security-Profile-Test: greift der AntiVirus-Scan der FortiGate?
+        Beweis mit der <strong>EICAR-Testdatei</strong> — dem harmlosen, aber von jeder AV-Engine erkannten
+        Standard-Testmuster. Ein Client hinter der Firewall lädt sie über Klartext-HTTP: saubere Datei kommt durch,
+        EICAR wird mitten im Transfer per Connection-Reset geblockt — inklusive AV-Log.
     </p>
     <div class="tags">
         <span class="tag">FortiGate</span>
-        <span class="tag">IPS</span>
-        <span class="tag">F-SBID</span>
-        <span class="tag">Custom Signature</span>
+        <span class="tag">AntiVirus</span>
+        <span class="tag">EICAR</span>
         <span class="tag">Flow Inspection</span>
+        <span class="tag">Security Profiles</span>
         <span class="tag">NSE4</span>
         <span class="tag">FortiOS 7.4</span>
-        <span class="tag">Security Profiles</span>
     </div>
 </section>
 
 <main class="content">
 
     <div class="stat-bar">
-        <div class="stat-item"><span class="stat-number">200</span><span class="stat-label">Kontroll-Request (sauber)</span></div>
-        <div class="stat-item"><span class="stat-number">dropped</span><span class="stat-label">Angriffs-Request (Muster)</span></div>
-        <div class="stat-item"><span class="stat-number">6004</span><span class="stat-label">Signatur-ID (eigene)</span></div>
+        <div class="stat-item"><span class="stat-number">200</span><span class="stat-label">Saubere Datei (durch)</span></div>
+        <div class="stat-item"><span class="stat-number">reset</span><span class="stat-label">EICAR (geblockt, 0 Byte)</span></div>
+        <div class="stat-item"><span class="stat-number">68 B</span><span class="stat-label">EICAR-Testdatei</span></div>
     </div>
 
-    <h2>Warum eine Custom-Signatur</h2>
+    <h2>Aufbau</h2>
     <p>
-        Auf einer <a href="fortigate-vm-lab-apple-silicon.html" style="color:var(--accent);text-decoration:none;">unlizenzierten Lab-FortiGate</a>
-        ist die FortiGuard-IPS-Datenbank nur eingeschränkt aktuell — sich für eine Demo auf eine bestimmte echte
-        Signatur zu verlassen, ist eine Lotterie. Eine <strong>eigene Signatur</strong> ist deterministisch: sie
-        feuert garantiert auf ein selbst definiertes Muster. Und „Custom IPS Signatures" sind ohnehin NSE4-Stoff.
+        Der <a href="fortigate-lab-attacker-client-socket.html" style="color:var(--accent);text-decoration:none;">Client hängt hinter der FortiGate</a>;
+        sein HTTP-Verkehr läuft durch die LAN→WAN-Policy. Damit die AV-Engine den Inhalt sieht, muss es
+        <strong>Klartext-HTTP</strong> sein (HTTPS bräuchte SSL-Inspektion). Die EICAR-Datei wird daher von einem
+        kleinen HTTP-Server auf dem Lab-Host bereitgestellt.
     </p>
+    <div class="arch-box">
+<span class="highlight">Client</span> (192.0.2.50, hinter der FW)
+   │  GET http://&lt;lab-host&gt;/eicar.com
+   ▼
+<span class="highlight2">FortiGate</span>  port3 (LAN 192.0.2.99) ──▶ Policy 1 (LAN→WAN, <span class="highlight3">AntiVirus</span>) ──▶ port1
+   │
+   ▼  AV scannt die HTTP-Antwort → EICAR erkannt → <span class="highlight3">Connection Reset</span>
+    </div>
 
     <div class="callout callout-blue">
-        <span class="callout-icon">🧪</span>
+        <span class="callout-icon">💡</span>
         <p class="callout-text">
-            <strong>Aufbau:</strong> Der <a href="fortigate-lab-attacker-client-socket.html" style="color:var(--accent);text-decoration:none;">Client hängt hinter der FortiGate</a>
-            (LAN-Segment via QEMU Socket-Networking). Sein HTTP-Verkehr läuft durch die LAN→WAN-Policy — genau dort
-            greift die flow-basierte IPS-Inspektion.
+            <strong>Warum EICAR:</strong> die EICAR-Datei ist <em>kein</em> echter Virus, sondern ein 68-Byte-Textmuster,
+            das per Konvention von jeder AV-Engine als Treffer gemeldet wird. Sie steckt in der mitgelieferten
+            AV-Datenbank — funktioniert also auch auf einer unlizenzierten Lab-VM, deterministisch.
         </p>
     </div>
 
-    <h2>1 — Die eigene Signatur</h2>
+    <h2>1 — EICAR über HTTP bereitstellen</h2>
+    <div class="code-block">
+        <div class="code-header"><span class="code-lang">SHELL (Lab-Host)</span><span class="code-desc">EICAR-Datei + HTTP-Server</span></div>
+        <div class="code-body"><span class="comment"># EICAR-Standardmuster (68 Byte)</span>
+printf '%s' 'X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*' > www/eicar.com
+echo 'clean' > www/clean.txt
+<span class="cmd">python3</span> -m http.server 8000 --bind 0.0.0.0   <span class="comment"># Klartext-HTTP</span></div>
+    </div>
+
+    <h2>2 — AntiVirus an die Policy</h2>
     <p>
-        Eine F-SBID-Signatur, die das Muster <code class="inline">NSE4IPSTEST</code> in client-seitigem HTTP-Verkehr matcht:
+        Das eingebaute Profil <code class="inline">default</code> reicht — kein neues Objekt nötig (und schont das
+        Eval-Lizenz-Limit). In der GUI: <strong>Policy &amp; Objects → Firewall Policy → LAN-to-WAN → Security Profiles
+        → AntiVirus = default</strong>. Per CLI:
     </p>
     <div class="code-block">
-        <div class="code-header"><span class="code-lang">FORTIOS CLI</span><span class="code-desc">config ips custom</span></div>
-        <div class="code-body"><span class="cmd">config</span> ips custom
-  <span class="cmd">edit</span> <span class="string">"NSE4-Test"</span>
-    <span class="cmd">set</span> signature <span class="string">"F-SBID( --name \"NSE4.IPS.Test\"; --protocol tcp;
-              --service HTTP; --flow from_client;
-              --pattern \"NSE4IPSTEST\"; --no_case; )"</span>
-  <span class="cmd">next</span>
-<span class="cmd">end</span>
-<span class="comment"># FortiOS vergibt automatisch eine attack-id (hier: 6004)</span></div>
-    </div>
-
-    <h2>2 — Signatur in einen Sensor, Sensor an die Policy</h2>
-    <div class="callout callout-red">
-        <span class="callout-icon">⚠️</span>
-        <p class="callout-text">
-            <strong>Eval-Limit:</strong> Die kostenlose Lizenz deckelt die IPS-Sensor-Tabelle bei <strong>10</strong> —
-            voll mit Default-Sensoren. Ein neuer Sensor scheitert mit <code class="inline" style="font-size:12px;">Return code -4 (reached the maximum number of entries)</code>.
-            Lösung: einen <em>bestehenden</em> Sensor wiederverwenden und einen Eintrag ergänzen.
-        </p>
-    </div>
-    <div class="code-block">
-        <div class="code-header"><span class="code-lang">FORTIOS CLI</span><span class="code-desc">Sensor-Eintrag + Policy</span></div>
-        <div class="code-body"><span class="comment"># Eintrag referenziert die Signatur über die ID (set rule = Integer!)</span>
-<span class="cmd">config</span> ips sensor
-  <span class="cmd">edit</span> <span class="string">"Basic-IPS"</span>
-    <span class="cmd">config</span> entries
-      <span class="cmd">edit</span> <span class="number">10</span>
-        <span class="cmd">set</span> rule <span class="number">6004</span>
-        <span class="cmd">set</span> status enable
-        <span class="cmd">set</span> action <span class="keyword">block</span>
-        <span class="cmd">set</span> log enable
-        <span class="cmd">set</span> log-packet enable
-      <span class="cmd">next</span>
-    <span class="cmd">end</span>
-  <span class="cmd">next</span>
-<span class="cmd">end</span>
-
-<span class="comment"># auf die LAN->WAN-Policy anwenden</span>
-<span class="cmd">config</span> firewall policy
+        <div class="code-header"><span class="code-lang">FORTIOS CLI</span><span class="code-desc">AV-Profil auf Policy 1</span></div>
+        <div class="code-body"><span class="cmd">config</span> firewall policy
   <span class="cmd">edit</span> <span class="number">1</span>
     <span class="cmd">set</span> utm-status <span class="keyword">enable</span>
-    <span class="cmd">set</span> ips-sensor <span class="string">"Basic-IPS"</span>
-    <span class="cmd">set</span> logtraffic all
+    <span class="cmd">set</span> av-profile <span class="string">"default"</span>
+    <span class="cmd">set</span> ssl-ssh-profile <span class="string">"certificate-inspection"</span>
   <span class="cmd">next</span>
 <span class="cmd">end</span></div>
     </div>
 
-    <h2>3 — Der Test vom Client</h2>
-    <p>
-        Zwei Requests an dieselbe (Klartext-)HTTP-Seite — einmal sauber, einmal mit dem Muster in der URL:
-    </p>
-    <div class="code-block">
-        <div class="code-header"><span class="code-lang">CLIENT (hinter der FW)</span><span class="code-desc">Kontrolle vs. Angriff</span></div>
-        <div class="code-body"><span class="comment"># Kontrolle — sauber</span>
-<span class="cmd">curl</span> -w <span class="string">'%{http_code}'</span> http://neverssl.com/
-<span class="comment">  -> 200</span>
-
-<span class="comment"># Angriff — enthält das Signatur-Muster</span>
-<span class="cmd">curl</span> -w <span class="string">'%{http_code}'</span> <span class="string">'http://neverssl.com/x?p=NSE4IPSTEST'</span>
-<span class="comment">  -> curl: (28) Connection timed out ... code=000   (von IPS verworfen)</span></div>
-    </div>
-    <p>
-        Gleiche Ziel-URL, einziger Unterschied das Muster — die saubere Anfrage passiert, die „bösartige" wird
-        verworfen. Da nur die IPS-Signatur das Muster inspiziert, ist der Block eindeutig ihr zuzuordnen.
-    </p>
-
-    <h2>4 — Der Beweis im IPS-Log</h2>
-    <p>
-        In <strong>Log &amp; Report → Security Events → Intrusion Prevention</strong> (Memory-Log) erscheint die Erkennung:
-    </p>
-    <table class="alert-table">
-        <thead><tr><th>FELD</th><th>WERT</th></tr></thead>
-        <tbody>
-            <tr><td>Attack Name</td><td>NSE4.IPS.Test</td></tr>
-            <tr><td>Severity</td><td class="sev-crit">Critical</td></tr>
-            <tr><td>Source</td><td>192.0.2.50 (Client)</td></tr>
-            <tr><td>Protocol</td><td>6 (TCP / HTTP)</td></tr>
-            <tr><td>Action</td><td class="sev-crit">dropped</td></tr>
-        </tbody>
-    </table>
-
     <div class="callout callout-blue">
-        <span class="callout-icon">📝</span>
+        <span class="callout-icon">🖱️</span>
         <p class="callout-text">
-            <strong>Logging-Detail:</strong> Auf einer disklosen FortiGate-VM landen Logs im RAM. Tauchte zunächst
-            kein IPS-Event auf, half <code class="inline" style="font-size:12px;">set log enable</code> am Sensor-Eintrag
-            plus <code class="inline" style="font-size:12px;">config log memory filter / set severity information</code>.
-            Der Block selbst funktioniert unabhängig davon — das Log ist die Sichtbarkeit.
+            <strong>GUI statt flakiger CLI:</strong> Die serielle FortiGate-Konsole war bei längeren Sessions
+            unzuverlässig — die Profilbindung per GUI vorzunehmen war robuster. Eine gute Erinnerung: das richtige
+            Werkzeug für den Moment wählen.
         </p>
     </div>
 
-    <h2>Beweis-Kette</h2>
-    <p>Drei unabhängige Belege, dass die IPS greift:</p>
-    <div class="lessons">
-        <div class="lesson-card"><div class="lesson-number">01</div><div class="lesson-title">Client-Verhalten</div><p class="lesson-desc">Sauber = 200, Muster = Timeout/000. Reproduzierbar.</p></div>
-        <div class="lesson-card"><div class="lesson-number">02</div><div class="lesson-title">Forward-Traffic-Log</div><p class="lesson-desc">Der Client-Traffic läuft sichtbar durch die FortiGate (LAN→WAN).</p></div>
-        <div class="lesson-card"><div class="lesson-number">03</div><div class="lesson-title">IPS-Event-Log</div><p class="lesson-desc">NSE4.IPS.Test, dropped, Critical, src 192.0.2.50 — eindeutig.</p></div>
+    <h2>3 — Der Test vom Client</h2>
+    <div class="code-block">
+        <div class="code-header"><span class="code-lang">CLIENT (hinter der FW)</span><span class="code-desc">Saubere Datei vs. EICAR</span></div>
+        <div class="code-body"><span class="comment"># Kontrolle — saubere Datei</span>
+<span class="cmd">curl</span> -w <span class="string">'%{http_code}'</span> http://&lt;lab-host&gt;/clean.txt
+<span class="comment">  -> 200  (kommt durch)</span>
+
+<span class="comment"># EICAR — wird gescannt</span>
+<span class="cmd">curl</span> http://&lt;lab-host&gt;/eicar.com -o /tmp/e \
+     -w <span class="string">'code=%{http_code} size=%{size_download} exit=%{exitcode}'</span>
+<span class="comment">  -> code=200 size=0 exit=56   (Recv failure: Connection reset by peer)</span></div>
     </div>
+    <p>
+        Der HTTP-Header (200) beginnt noch, doch sobald die AV-Engine im Body das EICAR-Muster erkennt, wird die
+        Verbindung <strong>zurückgesetzt</strong> — der Client erhält <strong>0 Byte</strong>. Die saubere Datei
+        passiert unverändert. Klassisches Verhalten der flow-basierten AV.
+    </p>
+
+    <h2>4 — Der Beweis im AV-Log</h2>
+    <p><strong>Log &amp; Report → Security Events → AntiVirus</strong>:</p>
+    <table class="alert-table">
+        <thead><tr><th>FELD</th><th>WERT</th></tr></thead>
+        <tbody>
+            <tr><td>Virus/Threat</td><td>EICAR_TEST_FILE</td></tr>
+            <tr><td>Action</td><td class="bad">blocked</td></tr>
+            <tr><td>Source</td><td>192.0.2.50 (Client)</td></tr>
+            <tr><td>Service</td><td>HTTP</td></tr>
+            <tr><td>Datei</td><td>eicar.com</td></tr>
+        </tbody>
+    </table>
+
+    <h2>Ergebnis</h2>
+    <table class="alert-table">
+        <thead><tr><th>DOWNLOAD</th><th>ERGEBNIS</th></tr></thead>
+        <tbody>
+            <tr><td>clean.txt</td><td class="ok">200 — durchgelassen</td></tr>
+            <tr><td>eicar.com</td><td class="bad">geblockt — 0 Byte, Connection Reset</td></tr>
+        </tbody>
+    </table>
 
     <h2>Erkenntnisse (NSE4)</h2>
     <div class="lessons">
-        <div class="lesson-card"><div class="lesson-number">A</div><div class="lesson-title">F-SBID-Syntax</div><p class="lesson-desc"><code class="inline" style="font-size:11px;">--pattern</code>, <code class="inline" style="font-size:11px;">--service</code>, <code class="inline" style="font-size:11px;">--flow</code> definieren eine eigene Signatur — deterministisch testbar.</p></div>
-        <div class="lesson-card"><div class="lesson-number">B</div><div class="lesson-title">set rule = ID</div><p class="lesson-desc">Im Sensor-Eintrag referenziert <code class="inline" style="font-size:11px;">set rule</code> die <em>numerische</em> Signatur-ID, nicht den Namen.</p></div>
-        <div class="lesson-card"><div class="lesson-number">C</div><div class="lesson-title">Flow-based IPS</div><p class="lesson-desc">IPS und Application Control sind flow-based; aktiviert über <code class="inline" style="font-size:11px;">utm-status</code> in der Policy.</p></div>
-        <div class="lesson-card"><div class="lesson-number">D</div><div class="lesson-title">Eval-Limits kennen</div><p class="lesson-desc">10 Sensoren, 3 Policies/Routen — Limits beim Design einplanen, vorhandene Objekte wiederverwenden.</p></div>
+        <div class="lesson-card"><div class="lesson-number">01</div><div class="lesson-title">EICAR ist deterministisch</div><p class="lesson-desc">Der 68-Byte-Standard liegt in der mitgelieferten AV-DB — testet AV ohne echte Malware und ohne FortiGuard-Abo.</p></div>
+        <div class="lesson-card"><div class="lesson-number">02</div><div class="lesson-title">Klartext vs. HTTPS</div><p class="lesson-desc">Flow-AV sieht nur unverschlüsselten Inhalt. Für HTTPS bräuchte es SSL-Deep-Inspection (eigener Test).</p></div>
+        <div class="lesson-card"><div class="lesson-number">03</div><div class="lesson-title">Block = Connection Reset</div><p class="lesson-desc">Flow-basierte AV setzt bei einem Treffer die Verbindung zurück → Client bekommt 0 Byte (curl exit 56).</p></div>
+        <div class="lesson-card"><div class="lesson-number">04</div><div class="lesson-title">Eingebaute Profile nutzen</div><p class="lesson-desc">Das <code class="inline" style="font-size:11px;">default</code>-AV-Profil reicht und schont das Eval-Limit für eigene Objekte.</p></div>
     </div>
 
     <div class="callout callout-green">
         <span class="callout-icon">✅</span>
         <p class="callout-text">
-            <strong>Konfiguration auf GitHub:</strong> die Custom-Signatur, der Sensor-Eintrag und die Policy-Anbindung
-            sind dokumentiert.
+            <strong>Teil der Lab-Serie auf GitHub:</strong> FortiGate-Setup, Client-Anbindung, IPS- und AV-Test sind
+            dokumentiert.
             <a href="https://github.com/yasinkilicma/fortigate-vm-lab-apple-silicon" target="_blank" style="color:var(--accent3);text-decoration:none;"> → fortigate-vm-lab-apple-silicon</a>
         </p>
     </div>
