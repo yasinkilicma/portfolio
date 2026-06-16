@@ -63,7 +63,7 @@
 
 <main class="content">
 
-    <h2>// Lab Architektur — Übersicht</h2>
+    <h2>// 1 — Kurulum &amp; Lab Architektur</h2>
     <div class="posts">
         <a class="post" href="lab-architektur-uebersicht-de.html">
             <div class="post-meta"><span class="badge b-green">LAB ARCHITEKTUR</span><span class="badge b-blue">FORTIGATE + SPLUNK</span><span class="lang">DE</span></div>
@@ -71,20 +71,10 @@
             <div class="post-desc">Komplette Lab-Übersicht mit ASCII-Diyagrammen: FortiGate-VM in UTM, Debian-Client via QEMU Socket-Networking und Splunk SOC mit BOTS v1 — alles auf einem einzigen Mac mini M4, einfach erklärt.</div>
             <span class="read">Read →</span>
         </a>
-    </div>
-
-    <h2>// FortiGate &amp; NSE4 Lab Series</h2>
-    <div class="posts">
         <a class="post" href="fortigate-vm-lab-apple-silicon.html">
             <div class="post-meta"><span class="badge b-green">FIREWALL</span><span class="badge b-blue">UTM · ARM64</span><span class="lang">DE</span></div>
             <div class="post-title">FortiGate-VM nativ auf Apple Silicon mit UTM</div>
             <div class="post-desc">FortiGate-VM 7.4.12 (ARM64) nativ auf einem Mac mini M4 — inklusive der Stolpersteine, die kein Tutorial erwähnt: UTM lädt keine handgebauten VMs, die serielle Konsole läuft über TCP, und eine unlizenzierte FortiOS sperrt die GUI.</div>
-            <span class="read">Read →</span>
-        </a>
-        <a class="post" href="nse4-fortigate-lab-practice-guide.html">
-            <div class="post-meta"><span class="badge b-blue">NSE4</span><span class="badge b-blue">FORTIOS CLI</span><span class="lang">DE</span></div>
-            <div class="post-title">FortiGate NSE4: Hands-On vom ersten CLI-Befehl bis zum VPN-Tunnel</div>
-            <div class="post-desc">8 praktische Übungen — CLI-Grundlagen, Firewall-Policies, NAT, Routing, Security Profiles, Debug und VPN — mit echten Lab-Ausgaben und einem abschließenden Quiz.</div>
             <span class="read">Read →</span>
         </a>
         <a class="post" href="fortigate-lab-attacker-client-socket.html">
@@ -93,6 +83,10 @@
             <div class="post-desc">Einen Linux-Client so hinter die Firewall hängen, dass sein gesamter Verkehr inspiziert wird: Pivot auf ein Debian-Cloud-Image und ein echtes isoliertes L2-Segment über QEMU socket netdev.</div>
             <span class="read">Read →</span>
         </a>
+    </div>
+
+    <h2>// 2 — Saldırı Simülasyonu &amp; Detection</h2>
+    <div class="posts">
         <a class="post" href="fortigate-ips-custom-signature-test.html">
             <div class="post-meta"><span class="badge b-red">IPS</span><span class="badge b-blue">F-SBID</span><span class="lang">DE</span></div>
             <div class="post-title">IPS testen mit einer Custom-Signatur</div>
@@ -105,20 +99,20 @@
             <div class="post-desc">Den AV-Scan der FortiGate beweisen: ein Client hinter der Firewall lädt die EICAR-Testdatei über Klartext-HTTP — saubere Datei kommt durch, EICAR wird per Connection-Reset geblockt, inklusive AV-Log.</div>
             <span class="read">Read →</span>
         </a>
-        <a class="post" href="fortigate-splunk-soc-pipeline-de.html">
-            <div class="post-meta"><span class="badge b-red">SOC / SIEM</span><span class="badge b-blue">SPLUNK</span><span class="badge b-blue">FORTIGATE</span><span class="lang">DE</span></div>
-            <div class="post-title">FortiGate-Logs live in Splunk — Echtzeit-SOC-Dashboard</div>
-            <div class="post-desc">FortiGate-Syslog per Python-HEC-Bridge in Splunk einspeisen, ein sechsreihiges SOC-Dashboard bauen und mit EICAR + nmap echten Angriffsverkehr erzeugen — 999 Events, 34 geblockt, 9 Virus-Funde live im Dashboard.</div>
+        <a class="post" href="soc-port-scan-detection-de.html">
+            <div class="post-meta"><span class="badge b-red">NETWORK FORENSICS</span><span class="badge b-blue">FORTIGATE</span><span class="lang">DE</span></div>
+            <div class="post-title">Port-Scan-Erkennung mit FortiGate &amp; Splunk</div>
+            <div class="post-desc">nmap SYN-Scan-Erkennung anhand des TCP-RST-Fingerabdrucks (sentbyte=164/rcvdbyte=60) in FortiGate-Traffic-Logs — Echtzeit-Dashboard in Splunk ohne IPS-Modul.</div>
             <span class="read">Read →</span>
         </a>
     </div>
 
-    <h2>// Network · Security · SOC</h2>
+    <h2>// 3 — SOC Pipeline &amp; Log Analizi</h2>
     <div class="posts">
-        <a class="post" href="soc-fortigate-security-assessment-de.html">
-            <div class="post-meta"><span class="badge b-red">SECURITY ASSESSMENT</span><span class="badge b-orange">FIREWALL GAPS</span><span class="lang">DE</span></div>
-            <div class="post-title">Fortigate Security Assessment — Wo die Firewall versagte</div>
-            <div class="post-desc">Kritische Analyse: C2-DNS-Bypass, SMB-Blind-Spot und fehlende East-West-Segmentierung — nur 20% Firewall-Effektivität.</div>
+        <a class="post" href="fortigate-splunk-soc-pipeline-de.html">
+            <div class="post-meta"><span class="badge b-red">SOC / SIEM</span><span class="badge b-blue">SPLUNK</span><span class="badge b-blue">FORTIGATE</span><span class="lang">DE</span></div>
+            <div class="post-title">FortiGate-Logs live in Splunk — Echtzeit-SOC-Dashboard</div>
+            <div class="post-desc">FortiGate-Syslog per Python-HEC-Bridge in Splunk einspeisen, ein sechsreihiges SOC-Dashboard bauen und mit EICAR + nmap echten Angriffsverkehr erzeugen — 999 Events, 34 geblockt, 9 Virus-Funde live im Dashboard.</div>
             <span class="read">Read →</span>
         </a>
         <a class="post" href="soc-fortigate-firewall-de.html">
@@ -127,24 +121,16 @@
             <div class="post-desc">Fortigate-Firewall-Traffic-Analyse: C2-Kommunikation (192.168.250.20 → 8.8.8.8), externe IPs und DNS-Exfiltration auf 55.279 Events.</div>
             <span class="read">Read →</span>
         </a>
-        <a class="post" href="soc-port-scan-detection-de.html">
-            <div class="post-meta"><span class="badge b-red">NETWORK FORENSICS</span><span class="badge b-blue">FORTIGATE</span><span class="lang">DE</span></div>
-            <div class="post-title">Port-Scan-Erkennung mit FortiGate &amp; Splunk</div>
-            <div class="post-desc">nmap SYN-Scan-Erkennung anhand des TCP-RST-Fingerabdrucks (sentbyte=164/rcvdbyte=60) in FortiGate-Traffic-Logs — Echtzeit-Dashboard in Splunk ohne IPS-Modul.</div>
+        <a class="post" href="soc-fortigate-security-assessment-de.html">
+            <div class="post-meta"><span class="badge b-red">SECURITY ASSESSMENT</span><span class="badge b-orange">FIREWALL GAPS</span><span class="lang">DE</span></div>
+            <div class="post-title">Fortigate Security Assessment — Wo die Firewall versagte</div>
+            <div class="post-desc">Kritische Analyse: C2-DNS-Bypass, SMB-Blind-Spot und fehlende East-West-Segmentierung — nur 20% Firewall-Effektivität.</div>
             <span class="read">Read →</span>
         </a>
-        <a class="post" href="soc-registry-persistence-de.html">
-            <div class="post-meta"><span class="badge b-red">PERSISTENCE</span><span class="badge b-blue">REGISTRY</span><span class="lang">DE</span></div>
-            <div class="post-title">Registry Persistence Analyse — Cerber Ransomware</div>
-            <div class="post-desc">WinRegistry-Run-Key-Analyse: Wie Cerber mit osk.exe und internat.exe Registry-Auto-Start für Persistence nutzt — 74.720 Events analysiert.</div>
-            <span class="read">Read →</span>
-        </a>
-        <a class="post" href="soc-sysmon-process-creation-de.html">
-            <div class="post-meta"><span class="badge b-red">ENDPOINT</span><span class="badge b-blue">SYSMON</span><span class="lang">DE</span></div>
-            <div class="post-title">Sysmon Process Creation Analyse — Masquerading Detection</div>
-            <div class="post-desc">Endpoint-Forensik mit Sysmon EventID 1: XML-Parsing mit rex, Masquerading-Erkennung (osk.exe) und Hash-Validierung auf 767 Process Creation Events.</div>
-            <span class="read">Read →</span>
-        </a>
+    </div>
+
+    <h2>// 4 — Cerber Kill Chain (BOTS v1)</h2>
+    <div class="posts">
         <a class="post" href="soc-suricata-ids-de.html">
             <div class="post-meta"><span class="badge b-red">NETWORK IDS</span><span class="badge b-blue">SURICATA</span><span class="lang">DE</span></div>
             <div class="post-title">Suricata IDS — Web-Angriffe &amp; Cerber Ransomware</div>
@@ -157,6 +143,18 @@
             <div class="post-desc">Netzwerk-Forensik auf 151.568 SMB-Events: Wie Cerber Ransomware über das Netzwerk verbreitet wurde — von 192.168.250.100 zu 192.168.250.20.</div>
             <span class="read">Read →</span>
         </a>
+        <a class="post" href="soc-sysmon-process-creation-de.html">
+            <div class="post-meta"><span class="badge b-red">ENDPOINT</span><span class="badge b-blue">SYSMON</span><span class="lang">DE</span></div>
+            <div class="post-title">Sysmon Process Creation Analyse — Masquerading Detection</div>
+            <div class="post-desc">Endpoint-Forensik mit Sysmon EventID 1: XML-Parsing mit rex, Masquerading-Erkennung (osk.exe) und Hash-Validierung auf 767 Process Creation Events.</div>
+            <span class="read">Read →</span>
+        </a>
+        <a class="post" href="soc-registry-persistence-de.html">
+            <div class="post-meta"><span class="badge b-red">PERSISTENCE</span><span class="badge b-blue">REGISTRY</span><span class="lang">DE</span></div>
+            <div class="post-title">Registry Persistence Analyse — Cerber Ransomware</div>
+            <div class="post-desc">WinRegistry-Run-Key-Analyse: Wie Cerber mit osk.exe und internat.exe Registry-Auto-Start für Persistence nutzt — 74.720 Events analysiert.</div>
+            <span class="read">Read →</span>
+        </a>
         <a class="post" href="soc-lab-cerber-ransomware-investigation-de.html">
             <div class="post-meta"><span class="badge b-red">SOC / SIEM</span><span class="badge b-blue">SPLUNK</span><span class="lang">DE</span></div>
             <div class="post-title">Cerber Ransomware in Splunk detektieren — Schritt-für-Schritt Investigation</div>
@@ -167,6 +165,16 @@
             <div class="post-meta"><span class="badge b-red">SOC / SIEM</span><span class="badge b-blue">SPLUNK</span><span class="lang">EN</span></div>
             <div class="post-title">Detecting Cerber Ransomware in a Home SOC Lab</div>
             <div class="post-desc">Built a SOC lab with Terraform, Docker and Splunk, then investigated a real Cerber ransomware attack across 955,807 events from the BOTS v1 dataset — attacker IPs, lateral movement and C2.</div>
+            <span class="read">Read →</span>
+        </a>
+    </div>
+
+    <h2>// 5 — Diğer Projeler</h2>
+    <div class="posts">
+        <a class="post" href="nse4-fortigate-lab-practice-guide.html">
+            <div class="post-meta"><span class="badge b-blue">NSE4</span><span class="badge b-blue">FORTIOS CLI</span><span class="lang">DE</span></div>
+            <div class="post-title">FortiGate NSE4: Hands-On vom ersten CLI-Befehl bis zum VPN-Tunnel</div>
+            <div class="post-desc">8 praktische Übungen — CLI-Grundlagen, Firewall-Policies, NAT, Routing, Security Profiles, Debug und VPN — mit echten Lab-Ausgaben und einem abschließenden Quiz.</div>
             <span class="read">Read →</span>
         </a>
         <a class="post" href="network-topology-mapper.html">
