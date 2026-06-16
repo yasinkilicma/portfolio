@@ -97,7 +97,7 @@
                         <span class="stat-label">CompTIA Certs</span>
                     </div>
                     <div class="stat">
-                        <span class="stat-number">8+</span>
+                        <span class="stat-number">12+</span>
                         <span class="stat-label">Completed Projects</span>
                     </div>
                 </div>
@@ -285,22 +285,77 @@
                 <article class="project-card">
                     <div class="project-image"><div class="project-placeholder"><span>SOC</span></div></div>
                     <div class="project-info">
-                        <h3 class="project-title">SOC Home Lab — Terraform + Docker + Splunk</h3>
+                        <h3 class="project-title">SOC Home Lab — Splunk SIEM &amp; Full Cerber Kill Chain</h3>
                         <p class="project-description">
-                            Built a fully functional SOC lab using Terraform and Docker. Deployed Splunk Enterprise,
-                            loaded the BOTS v1 dataset (955,807 real attack events), and investigated a Cerber
-                            ransomware incident — identifying attacker IPs, lateral movement, and C2 communication.
+                            End-to-end SOC lab: Splunk Enterprise in Docker (Terraform), real-time FortiGate log
+                            forwarding via Python UDP→HEC bridge, and deep-dive analysis of the BOTS v1 dataset
+                            (955,807 events). Built 8 custom dashboards — SOC Home, FortiGate SOC, Port-Scan-Erkennung,
+                            BOTS v1 Cerber Overview, Suricata IDS, SMB Lateral Movement, Sysmon Process Creation,
+                            Registry Persistence. Full Cerber ransomware kill chain reconstructed: Acunetix scanner
+                            → XSS/SQLi/XXE/Shellshock → infection → osk.exe masquerading → SMB lateral movement
+                            (250.100→250.20) → Run-Key persistence → DNS C2.
+                            <em>(Blog posts in German.)</em>
                         </p>
                         <div class="project-tags">
+                            <span class="tag">Splunk</span>
                             <span class="tag">Terraform</span>
                             <span class="tag">Docker</span>
-                            <span class="tag">Splunk</span>
-                            <span class="tag">SIEM</span>
+                            <span class="tag">Suricata IDS</span>
+                            <span class="tag">BOTS v1</span>
                             <span class="tag">Incident Response</span>
                         </div>
                         <div class="project-links">
-                            <a href="blog/soc-lab-splunk-ransomware-analysis.html" class="project-link">Read Blog Post →</a>
+                            <a href="blog/soc-lab-splunk-ransomware-analysis.html" class="project-link">Cerber-Analyse →</a>
+                            <a href="blog/soc-suricata-ids-de.html" class="project-link">Suricata IDS →</a>
                             <a href="https://github.com/yasinkilicma/terraform-splunk-demo" target="_blank" class="project-link">GitHub →</a>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="project-card">
+                    <div class="project-image"><div class="project-placeholder"><span>PScan</span></div></div>
+                    <div class="project-info">
+                        <h3 class="project-title">Port-Scan-Erkennung mit FortiGate &amp; Splunk</h3>
+                        <p class="project-description">
+                            Detected nmap SYN-scans using FortiGate traffic logs forwarded to Splunk in real time.
+                            Identified the nmap fingerprint (action=client-rst, sentbyte=164, rcvdbyte=60) and built
+                            a German-language Splunk dashboard with scanner profiling, port timelines, and
+                            tool-detection logic for SYN/FIN/NULL/Xmas scans.
+                            <em>(Blog post in German.)</em>
+                        </p>
+                        <div class="project-tags">
+                            <span class="tag">nmap</span>
+                            <span class="tag">FortiGate</span>
+                            <span class="tag">Splunk</span>
+                            <span class="tag">Port Scan Detection</span>
+                            <span class="tag">Network Security</span>
+                        </div>
+                        <div class="project-links">
+                            <a href="blog/soc-port-scan-detection-de.html" class="project-link">Read Blog Post →</a>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="project-card">
+                    <div class="project-image"><div class="project-placeholder"><span>IDS</span></div></div>
+                    <div class="project-info">
+                        <h3 class="project-title">Suricata IDS — Web-Angriffs-Analyse (BOTS v1)</h3>
+                        <p class="project-description">
+                            Analyzed 125,584 Suricata events from the BOTS v1 dataset: 1,360 IDS alerts across
+                            15+ signatures, 741 DNS anomalies (Cerber C2 beacon), Acunetix web scanner fingerprinting,
+                            and XSS/SQLi/XXE/Shellshock detection. Full attacker profile reconstructed and mapped
+                            to the Cerber ransomware kill chain.
+                            <em>(Blog post in German.)</em>
+                        </p>
+                        <div class="project-tags">
+                            <span class="tag">Suricata</span>
+                            <span class="tag">IDS</span>
+                            <span class="tag">BOTS v1</span>
+                            <span class="tag">Splunk</span>
+                            <span class="tag">Web Attack Analysis</span>
+                        </div>
+                        <div class="project-links">
+                            <a href="blog/soc-suricata-ids-de.html" class="project-link">Read Blog Post →</a>
                         </div>
                     </div>
                 </article>
