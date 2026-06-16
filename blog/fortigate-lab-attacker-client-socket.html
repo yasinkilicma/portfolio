@@ -46,6 +46,8 @@
         .arch-box .highlight { color: var(--accent); }
         .arch-box .highlight2 { color: var(--accent3); }
         .arch-box .highlight3 { color: var(--accent2); }
+        .screenshot { width: 100%; border-radius: 12px; border: 1px solid var(--border); margin: 20px 0; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+        .screenshot-caption { font-size: 13px; color: var(--text-muted); text-align: center; margin: -12px 0 24px; }
         .code-block { background: var(--code-bg); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin: 20px 0; }
         .code-header { background: var(--bg3); border-bottom: 1px solid var(--border); padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; }
         .code-lang { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); font-weight: 600; letter-spacing: 0.5px; }
@@ -329,6 +331,9 @@ runcmd:
         Damit ist die Grundlage gelegt: jedes Paket des Clients passiert die LAN→WAN-Policy mit NAT — bereit für
         IPS-, AV- und Web-Filter-Übungen.
     </p>
+
+    <img src="images/fgt-interfaces.png" alt="FortiGate Network Interfaces — port1 WAN, port2, port3 LAN mit QEMU-Socket-Verbindung" class="screenshot">
+    <p class="screenshot-caption">Abb. 1 — FortiGate Interfaces: port1 (WAN/Mgmt, UTM Shared), port3 (LAN, QEMU-Socket zu Debian-Client) — Traffic fließt durch die Firewall inspiziert</p>
 
     <h2>Erkenntnisse</h2>
     <div class="lessons">

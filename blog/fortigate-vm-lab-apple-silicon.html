@@ -229,6 +229,8 @@
         .arch-box .highlight3 { color: var(--accent2); }
 
         /* ── CODE BLOCK ── */
+        .screenshot { width: 100%; border-radius: 12px; border: 1px solid var(--border); margin: 20px 0; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+        .screenshot-caption { font-size: 13px; color: var(--text-muted); text-align: center; margin: -12px 0 24px; }
         .code-block {
             background: var(--code-bg);
             border: 1px solid var(--border);
@@ -778,6 +780,9 @@ C   192.0.2.0/24 is directly connected, port2
 $ curl -k -o /dev/null -w <span class="string">"%{http_code}\n"</span> https://198.51.100.2
 <span class="comment">  → 200</span></div>
     </div>
+
+    <img src="images/fgt-dashboard.png" alt="FortiGate-VM 7.4.12 Dashboard — System Information, Lizenzen, Virtual Machine Status" class="screenshot">
+    <p class="screenshot-caption">Abb. 1 — FortiGate-VM 7.4.12 Dashboard: FGVMEVIJFXCOFND1, Evaluation License, 1 vCPU / 2 GB RAM — läuft nativ (hvf) in UTM auf dem Mac mini M4</p>
 
     <!-- LIZENZ -->
     <h2>Stolperstein 4 — ohne Lizenz keine GUI</h2>
