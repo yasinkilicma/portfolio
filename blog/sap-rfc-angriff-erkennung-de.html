@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Externer SAP RFC-Angriff erkennen mit Splunk | Yasin Kilic</title>
+    <meta name="description" content="Eine externe IP (185.220.101.5) testet systematisch SAP RFC-Schnittstellen mit RFC_READ_TABLE, RFCPING und SAPMSSY1 — klassisches SAP-Reconnaissance-Tool-Muster. AU4-Analyse mit Splunk SPL.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0e1a; --bg2: #0f1525; --bg3: #161d30; --border: #1e2a42;
+            --accent: #00d4ff; --accent2: #ff4757; --accent3: #2ed573;
+            --text: #e0e6f0; --text-muted: #6b7a99; --code-bg: #0d1117;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: var(--bg); color: var(--text); font-family: 'Sora', sans-serif; font-size: 16px; line-height: 1.8; }
+        header { position: sticky; top: 0; z-index: 100; background: rgba(10,14,26,0.9); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 16px 0; }
+        .header-inner { max-width: 860px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; }
+        .logo { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--accent); text-decoration: none; font-size: 18px; }
+        .back-link { font-size: 13px; color: var(--text-muted); text-decoration: none; display: flex; align-items: center; gap: 6px; transition: color 0.2s; }
+        .back-link:hover { color: var(--accent); }
+        .hero { max-width: 860px; margin: 0 auto; padding: 64px 24px 48px; border-bottom: 1px solid var(--border); }
+        .hero-meta { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+        .badge { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 4px; letter-spacing: 0.5px; }
+        .badge-red   { background: rgba(255,71,87,0.15);  color: var(--accent2); border: 1px solid rgba(255,71,87,0.3); }
+        .badge-blue  { background: rgba(0,212,255,0.10);  color: var(--accent);  border: 1px solid rgba(0,212,255,0.2); }
+        .badge-green { background: rgba(46,213,115,0.10); color: var(--accent3); border: 1px solid rgba(46,213,115,0.2); }
+        .meta-date { font-size: 13px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+        h1 { font-size: clamp(28px, 5vw, 44px); font-weight: 700; line-height: 1.2; letter-spacing: -1px; margin-bottom: 20px; }
+        h1 span { color: var(--accent2); }
+        .hero-summary { font-size: 17px; color: var(--text-muted); max-width: 680px; line-height: 1.7; }
+        .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 28px; }
+        .tag { font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 5px 12px; background: var(--bg3); border: 1px solid var(--border); border-radius: 20px; color: var(--text-muted); }
+        .content { max-width: 860px; margin: 0 auto; padding: 56px 24px; }
+        .stat-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 56px; }
+        .stat-item { background: var(--bg2); padding: 24px; text-align: center; }
+        .stat-number { font-family: 'JetBrains Mono', monospace; font-size: 28px; font-weight: 600; color: var(--accent); display: block; }
+        .stat-number.red { color: var(--accent2); }
+        .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+        h2 { font-size: 22px; font-weight: 700; margin: 48px 0 20px; padding-left: 16px; border-left: 3px solid var(--accent); letter-spacing: -0.3px; }
+        h3 { font-size: 17px; font-weight: 600; margin: 32px 0 12px; color: var(--accent); font-family: 'JetBrains Mono', monospace; }
+        p { margin-bottom: 16px; color: var(--text); }
+        .code-block { background: var(--code-bg); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin: 20px 0; }
+        .code-header { background: var(--bg3); border-bottom: 1px solid var(--border); padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; }
+        .code-lang { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); font-weight: 600; letter-spacing: 0.5px; }
+        .code-desc { font-size: 12px; color: var(--text-muted); }
+        .code-body { padding: 20px; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.7; color: #a8b8d8; overflow-x: auto; }
+        .code-body .comment { color: #4a5568; }
+        .code-body .keyword { color: #ff79c6; }
+        .code-body .number  { color: var(--accent3); }
+        .code-body .cmd     { color: var(--accent); }
+        .findings { display: grid; gap: 16px; margin: 24px 0; }
+        .finding-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: start; transition: border-color 0.2s; }
+        .finding-card:hover { border-color: var(--accent); }
+        .finding-icon { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+        .icon-red    { background: rgba(255,71,87,0.15); }
+        .icon-blue   { background: rgba(0,212,255,0.10); }
+        .icon-green  { background: rgba(46,213,115,0.10); }
+        .icon-yellow { background: rgba(255,200,0,0.10); }
+        .finding-title { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+        .finding-desc  { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin: 0; }
+        .alert-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13px; }
+        .alert-table th { background: var(--bg3); color: var(--text-muted); font-weight: 600; padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.5px; }
+        .alert-table td { padding: 12px 16px; border-bottom: 1px solid rgba(30,42,66,0.5); font-family: 'JetBrains Mono', monospace; }
+        .alert-table tr:hover td { background: var(--bg2); }
+        .severity-high { color: var(--accent2); font-weight: 600; }
+        .severity-med  { color: #ffa502; }
+        .severity-low  { color: var(--accent3); }
+        .callout { border-radius: 12px; padding: 20px 24px; margin: 24px 0; display: flex; gap: 16px; align-items: flex-start; }
+        .callout-blue  { background: rgba(0,212,255,0.06);  border: 1px solid rgba(0,212,255,0.2); }
+        .callout-red   { background: rgba(255,71,87,0.06);  border: 1px solid rgba(255,71,87,0.2); }
+        .callout-green { background: rgba(46,213,115,0.06); border: 1px solid rgba(46,213,115,0.2); }
+        .callout-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+        .callout-text { font-size: 14px; line-height: 1.7; color: var(--text); margin: 0; }
+        .callout-text strong { color: var(--accent); }
+        .lessons { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin: 24px 0; }
+        .lesson-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+        .lesson-number { font-family: 'JetBrains Mono', monospace; font-size: 28px; font-weight: 600; color: var(--border); line-height: 1; margin-bottom: 12px; }
+        .lesson-title { font-weight: 600; font-size: 14px; margin-bottom: 6px; }
+        .lesson-desc  { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin: 0; }
+        img.screenshot { width: 100%; border-radius: 12px; border: 1px solid var(--border); margin: 20px 0; }
+        .screenshot-caption { font-size: 12px; color: var(--text-muted); text-align: center; margin-top: -12px; margin-bottom: 24px; font-family: 'JetBrains Mono', monospace; }
+        footer { border-top: 1px solid var(--border); padding: 40px 24px; text-align: center; }
+        .footer-inner { max-width: 860px; margin: 0 auto; }
+        .footer-links { display: flex; justify-content: center; gap: 24px; margin-bottom: 16px; }
+        .footer-links a { font-size: 13px; color: var(--text-muted); text-decoration: none; transition: color 0.2s; }
+        .footer-links a:hover { color: var(--accent); }
+        .footer-copy { font-size: 12px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+        @media (max-width: 600px) { .stat-bar { grid-template-columns: repeat(2,1fr); } .lessons { grid-template-columns: 1fr; } h1 { font-size: 28px; } }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+        .hero    { animation: fadeUp 0.6s ease; }
+        .content { animation: fadeUp 0.6s ease 0.1s both; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-inner">
+        <a href="../index.html" class="logo">YK</a>
+        <a href="index.html" class="back-link">← Blog</a>
+    </div>
+</header>
+
+<section class="hero">
+    <div class="hero-meta">
+        <span class="badge badge-red">🔴 EXTERNER ANGRIFF</span>
+        <span class="badge badge-blue">SOC LAB</span>
+        <span class="badge badge-green">SAP SECURITY</span>
+        <span class="meta-date">Juni 2026</span>
+    </div>
+    <h1>Externer <span>SAP RFC-Angriff</span><br>mit Splunk erkennen</h1>
+    <p class="hero-summary">
+        Eine externe IP-Adresse (185.220.101.5) testet systematisch die RFC-Schnittstelle des
+        SAP-Produktivsystems — mit bekannten Default-Benutzernamen und Standard-RFC-Funktionsbausteinen.
+        8 AU4-Events in Sekunden: das Fingerabdruckmuster spezialisierter SAP-Angriffs-Tools.
+    </p>
+    <div class="tags">
+        <span class="tag">SAP Security</span>
+        <span class="tag">Splunk</span>
+        <span class="tag">SIEM</span>
+        <span class="tag">RFC Attack</span>
+        <span class="tag">AU4</span>
+        <span class="tag">SAP Audit Log</span>
+        <span class="tag">SPL</span>
+        <span class="tag">Reconnaissance</span>
+    </div>
+</section>
+
+<main class="content">
+
+    <div class="stat-bar">
+        <div class="stat-item">
+            <span class="stat-number red">8</span>
+            <span class="stat-label">AU4-Events (RFC-Fehler)</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number red">1</span>
+            <span class="stat-label">Angreifer-IP</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">3</span>
+            <span class="stat-label">Getestete Benutzernamen</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">4</span>
+            <span class="stat-label">RFC-Programme</span>
+        </div>
+    </div>
+
+    <h2>Die SAP RFC-Schnittstelle als Angriffsfläche</h2>
+    <p>
+        Das <strong>Remote Function Call (RFC)</strong>-Protokoll ist die Kernkommunikationsschnittstelle
+        in SAP-Landschaften. Über RFC kommunizieren SAP-Systeme untereinander, externe Anwendungen
+        greifen auf SAP-Daten zu, und Integrationsplattformen übertragen Geschäftsdaten.
+    </p>
+    <p>
+        Genau deshalb ist RFC auch ein bevorzugtes Angriffsziel: Ein Angreifer, der sich erfolgreich
+        über RFC authentifiziert, hat direkten Zugang zu Funktionsbausteinen wie
+        <code style="background:var(--bg3);padding:2px 8px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:13px;">RFC_READ_TABLE</code>
+        — und kann damit beliebige SAP-Tabellen auslesen, ohne die SAP-GUI zu öffnen.
+    </p>
+
+    <div class="callout callout-red">
+        <span class="callout-icon">🚨</span>
+        <p class="callout-text">
+            <strong>Angreifer-IP 185.220.101.5</strong> ist ein bekannter Tor-Exit-Node.
+            Der Angreifer verschleiert seinen echten Standort über das Tor-Netzwerk —
+            ein starkes Indiz für einen gezielten, professionellen Angriff.
+        </p>
+    </div>
+
+    <h2>Angriffs-Fingerabdruck — Was wurde getestet?</h2>
+    <p>
+        Die Kombination aus Benutzernamen und RFC-Programmen ist kein Zufall —
+        sie entspricht exakt den Default-Konfigurationen spezialisierter SAP-Angriffs-Tools
+        wie <strong>SAP RFC Scanner</strong> oder <strong>Bizploit</strong>:
+    </p>
+
+    <table class="alert-table">
+        <thead>
+            <tr>
+                <th>RFC-PROGRAMM</th>
+                <th>ZWECK DES ANGREIFERS</th>
+                <th>RISIKO BEI ERFOLG</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="severity-high">RFC_READ_TABLE</td>
+                <td>Beliebige SAP-Tabellen auslesen</td>
+                <td class="severity-high">KRITISCH — vollständige Datenexfiltration</td>
+            </tr>
+            <tr>
+                <td class="severity-med">RFCPING</td>
+                <td>Konnektivität testen, System-Info erhalten</td>
+                <td class="severity-med">MITTEL — Reconnaissance, System-Fingerprinting</td>
+            </tr>
+            <tr>
+                <td class="severity-med">SAPMSSY1</td>
+                <td>System-Informationen abrufen</td>
+                <td class="severity-med">MITTEL — SAP-Version, Patch-Level ermitteln</td>
+            </tr>
+            <tr>
+                <td class="severity-high">/sap/bc/gui/sap/its/webgui</td>
+                <td>SAP Web GUI Zugang</td>
+                <td class="severity-high">HOCH — Browser-basierter SAP-Zugang ohne SAP GUI</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="callout callout-blue">
+        <span class="callout-icon">ℹ️</span>
+        <p class="callout-text">
+            <strong>RFC_READ_TABLE</strong> ist der gefährlichste Funktionsbaustein in dieser Liste.
+            Mit einem einzigen RFC-Aufruf kann ein Angreifer die gesamte Tabelle
+            <code>USR02</code> (Passwort-Hashes aller SAP-Benutzer) oder
+            <code>PA0002</code> (HR-Stammdaten aller Mitarbeiter) extrahieren —
+            ohne eine einzige SAP-Transaktion zu öffnen.
+        </p>
+    </div>
+
+    <h2>Erkennung — Splunk SPL-Query</h2>
+    <h3>Fehlgeschlagene RFC-Logins von externer IP</h3>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">SPL</span>
+            <span class="code-desc">AU4 — fehlgeschlagene RFC-Logins chronologisch</span>
+        </div>
+        <div class="code-body">
+<span class="comment"># Alle fehlgeschlagenen RFC-Authentifizierungen mit Details</span>
+<span class="cmd">index</span>=sap_audit <span class="cmd">event_id</span>=AU4
+| <span class="cmd">table</span> _time, user, terminal, server, rfc_program, message
+| <span class="cmd">sort</span> _time
+        </div>
+    </div>
+
+    <img src="images/sap-rfc-attack-query1.png" alt="Splunk: 8 AU4-Events von 185.220.101.5 gegen SAPPRD01" class="screenshot">
+    <p class="screenshot-caption">Abb. 1 — 8 fehlgeschlagene RFC-Login-Versuche von 185.220.101.5 gegen SAPPRD01 — Benutzer RFC*, ADMIN, SAPUSER — Programme RFC_READ_TABLE, RFCPING, SAPMSSY1, /sap/bc/gui/sap/its/webgui</p>
+
+    <p>
+        Alle 8 Events kommen von <strong>derselben externen IP</strong>, treffen <strong>denselben Server</strong>
+        und verwenden eine systematische Kombination aus Standard-Benutzernamen und bekannten
+        RFC-Programmen. Das ist kein manueller Test — das ist ein automatisiertes Scan-Tool.
+    </p>
+
+    <h2>Wichtige Erkenntnisse</h2>
+
+    <div class="findings">
+        <div class="finding-card">
+            <div class="finding-icon icon-red">🔴</div>
+            <div>
+                <div class="finding-title">SAP RFC-Port direkt aus dem Internet erreichbar</div>
+                <p class="finding-desc">Der SAP Message Server (Port 3600) und der Application Server (Port 33xx) dürfen niemals direkt aus dem Internet erreichbar sein. Hier ist das offensichtlich der Fall — ein kritischer Konfigurationsfehler.</p>
+            </div>
+        </div>
+        <div class="finding-card">
+            <div class="finding-icon icon-red">🛠️</div>
+            <div>
+                <div class="finding-title">Spezialisiertes SAP-Angriffs-Tool erkannt</div>
+                <p class="finding-desc">Die Kombination RFC_READ_TABLE + RFCPING + SAPMSSY1 ist das typische Scan-Muster von Tools wie Bizploit oder metasploit-SAP-Modulen. Der Angreifer verfügt über SAP-spezifisches Fachwissen.</p>
+            </div>
+        </div>
+        <div class="finding-card">
+            <div class="finding-icon icon-yellow">⚠️</div>
+            <div>
+                <div class="finding-title">Default-Benutzernamen noch aktiv?</div>
+                <p class="finding-desc">Der Angreifer testet RFC*, ADMIN und SAPUSER — SAP-Standard-Benutzernamen. Wenn diese Konten noch existieren und aktiv sind, ist ein erfolgreicher Login bei einem weiteren Versuch realistisch.</p>
+            </div>
+        </div>
+        <div class="finding-card">
+            <div class="finding-icon icon-green">✅</div>
+            <div>
+                <div class="finding-title">AU4 als zuverlässiger Frühindikator</div>
+                <p class="finding-desc">AU4-Events sind in normalen SAP-Betrieb selten — RFC-Authentifizierungsfehler von externen IPs sollten in Echtzeit alarmieren. Kein False-Positive-Risiko bei externer Quell-IP.</p>
+            </div>
+        </div>
+    </div>
+
+    <h2>Empfehlungen</h2>
+
+    <div class="lessons">
+        <div class="lesson-card">
+            <div class="lesson-number">01</div>
+            <div class="lesson-title">RFC-Port sofort schließen</div>
+            <p class="lesson-desc">SAP-Ports (3200-3299, 3600-3699, 4800) dürfen nicht aus dem Internet erreichbar sein. Firewall-Regeln prüfen und korrigieren — RFC-Zugang nur über VPN oder SAP Cloud Connector.</p>
+        </div>
+        <div class="lesson-card">
+            <div class="lesson-number">02</div>
+            <div class="lesson-title">Default-User sperren</div>
+            <p class="lesson-desc">RFC*, ADMIN, SAPUSER, SAP*, DDIC — alle nicht benötigten Standard-User sofort sperren. Diese Benutzernamen sind in jedem SAP-Angriffs-Tool hardcodiert.</p>
+        </div>
+        <div class="lesson-card">
+            <div class="lesson-number">03</div>
+            <div class="lesson-title">RFC_READ_TABLE einschränken</div>
+            <p class="lesson-desc">Den Zugriff auf RFC_READ_TABLE über Berechtigungsobjekt S_RFC auf autorisierte RFC-Benutzer beschränken. Alternativ: Tabellenpuffer und alternative Schnittstellen nutzen.</p>
+        </div>
+        <div class="lesson-card">
+            <div class="lesson-number">04</div>
+            <div class="lesson-title">IP 185.220.101.5 sofort blockieren</div>
+            <p class="lesson-desc">Bekannter Tor-Exit-Node — auf Firewall- und WAF-Ebene blockieren. Alle weiteren Aktivitäten dieser IP in allen Logs (Firewall, IDS, Web) prüfen.</p>
+        </div>
+    </div>
+
+    <div class="callout callout-blue">
+        <span class="callout-icon">🔗</span>
+        <p class="callout-text">
+            <strong>Letzter Teil dieser Serie:</strong> Sensitive Tabellenzugriffe —
+            ein interner Benutzer liest in kurzer Zeit mehrere hochsensible SAP-Tabellen
+            (USR02, AGR_USERS) mit tausenden Datensätzen. EU1-Analyse als
+            Datenexfiltrations-Indikator.
+        </p>
+    </div>
+
+</main>
+
+<footer>
+    <div class="footer-inner">
+        <div class="footer-links">
+            <a href="index.html">← Blog</a>
+            <a href="https://github.com/yasinkilicma" target="_blank">GitHub</a>
+            <a href="https://www.linkedin.com/in/yasin-kilic-cyber-security/" target="_blank">LinkedIn</a>
+        </div>
+        <p class="footer-copy">© 2026 Yasin Kilic — SOC Analyst in Training</p>
+    </div>
+</footer>
+
+</body>
+</html>
