@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAP Datenexfiltration erkennen mit Splunk | Yasin Kilic</title>
+    <meta name="description" content="Benutzer SDEMIR liest USR02, USR04, AGR_USERS, RFCDES, ABAP_SOURCE und T000 — tausende Datensätze in Sekunden. EU1-Analyse mit Splunk SPL als Datenexfiltrations-Indikator.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0e1a; --bg2: #0f1525; --bg3: #161d30; --border: #1e2a42;
+            --accent: #00d4ff; --accent2: #ff4757; --accent3: #2ed573;
+            --text: #e0e6f0; --text-muted: #6b7a99; --code-bg: #0d1117;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: var(--bg); color: var(--text); font-family: 'Sora', sans-serif; font-size: 16px; line-height: 1.8; }
+        header { position: sticky; top: 0; z-index: 100; background: rgba(10,14,26,0.9); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 16px 0; }
+        .header-inner { max-width: 860px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; }
+        .logo { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--accent); text-decoration: none; font-size: 18px; }
+        .back-link { font-size: 13px; color: var(--text-muted); text-decoration: none; display: flex; align-items: center; gap: 6px; transition: color 0.2s; }
+        .back-link:hover { color: var(--accent); }
+        .hero { max-width: 860px; margin: 0 auto; padding: 64px 24px 48px; border-bottom: 1px solid var(--border); }
+        .hero-meta { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+        .badge { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 4px; letter-spacing: 0.5px; }
+        .badge-red   { background: rgba(255,71,87,0.15);  color: var(--accent2); border: 1px solid rgba(255,71,87,0.3); }
+        .badge-blue  { background: rgba(0,212,255,0.10);  color: var(--accent);  border: 1px solid rgba(0,212,255,0.2); }
+        .badge-green { background: rgba(46,213,115,0.10); color: var(--accent3); border: 1px solid rgba(46,213,115,0.2); }
+        .meta-date { font-size: 13px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+        h1 { font-size: clamp(28px, 5vw, 44px); font-weight: 700; line-height: 1.2; letter-spacing: -1px; margin-bottom: 20px; }
+        h1 span { color: var(--accent2); }
+        .hero-summary { font-size: 17px; color: var(--text-muted); max-width: 680px; line-height: 1.7; }
+        .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 28px; }
+        .tag { font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 5px 12px; background: var(--bg3); border: 1px solid var(--border); border-radius: 20px; color: var(--text-muted); }
+        .content { max-width: 860px; margin: 0 auto; padding: 56px 24px; }
+        .stat-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 56px; }
+        .stat-item { background: var(--bg2); padding: 24px; text-align: center; }
+        .stat-number { font-family: 'JetBrains Mono', monospace; font-size: 28px; font-weight: 600; color: var(--accent); display: block; }
+        .stat-number.red { color: var(--accent2); }
+        .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+        h2 { font-size: 22px; font-weight: 700; margin: 48px 0 20px; padding-left: 16px; border-left: 3px solid var(--accent); letter-spacing: -0.3px; }
+        h3 { font-size: 17px; font-weight: 600; margin: 32px 0 12px; color: var(--accent); font-family: 'JetBrains Mono', monospace; }
+        p { margin-bottom: 16px; color: var(--text); }
+        .code-block { background: var(--code-bg); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin: 20px 0; }
+        .code-header { background: var(--bg3); border-bottom: 1px solid var(--border); padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; }
+        .code-lang { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); font-weight: 600; letter-spacing: 0.5px; }
+        .code-desc { font-size: 12px; color: var(--text-muted); }
+        .code-body { padding: 20px; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.7; color: #a8b8d8; overflow-x: auto; }
+        .code-body .comment { color: #4a5568; }
+        .code-body .keyword { color: #ff79c6; }
+        .code-body .number  { color: var(--accent3); }
+        .code-body .cmd     { color: var(--accent); }
+        .findings { display: grid; gap: 16px; margin: 24px 0; }
+        .finding-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: start; transition: border-color 0.2s; }
+        .finding-card:hover { border-color: var(--accent); }
+        .finding-icon { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+        .icon-red    { background: rgba(255,71,87,0.15); }
+        .icon-blue   { background: rgba(0,212,255,0.10); }
+        .icon-green  { background: rgba(46,213,115,0.10); }
+        .icon-yellow { background: rgba(255,200,0,0.10); }
+        .finding-title { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+        .finding-desc  { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin: 0; }
+        .alert-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13px; }
+        .alert-table th { background: var(--bg3); color: var(--text-muted); font-weight: 600; padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.5px; }
+        .alert-table td { padding: 12px 16px; border-bottom: 1px solid rgba(30,42,66,0.5); font-family: 'JetBrains Mono', monospace; }
+        .alert-table tr:hover td { background: var(--bg2); }
+        .severity-high { color: var(--accent2); font-weight: 600; }
+        .severity-med  { color: #ffa502; }
+        .severity-low  { color: var(--accent3); }
+        .callout { border-radius: 12px; padding: 20px 24px; margin: 24px 0; display: flex; gap: 16px; align-items: flex-start; }
+        .callout-blue  { background: rgba(0,212,255,0.06);  border: 1px solid rgba(0,212,255,0.2); }
+        .callout-red   { background: rgba(255,71,87,0.06);  border: 1px solid rgba(255,71,87,0.2); }
+        .callout-green { background: rgba(46,213,115,0.06); border: 1px solid rgba(46,213,115,0.2); }
+        .callout-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+        .callout-text { font-size: 14px; line-height: 1.7; color: var(--text); margin: 0; }
+        .callout-text strong { color: var(--accent); }
+        .lessons { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin: 24px 0; }
+        .lesson-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+        .lesson-number { font-family: 'JetBrains Mono', monospace; font-size: 28px; font-weight: 600; color: var(--border); line-height: 1; margin-bottom: 12px; }
+        .lesson-title { font-weight: 600; font-size: 14px; margin-bottom: 6px; }
+        .lesson-desc  { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin: 0; }
+        img.screenshot { width: 100%; border-radius: 12px; border: 1px solid var(--border); margin: 20px 0; }
+        .screenshot-caption { font-size: 12px; color: var(--text-muted); text-align: center; margin-top: -12px; margin-bottom: 24px; font-family: 'JetBrains Mono', monospace; }
+        footer { border-top: 1px solid var(--border); padding: 40px 24px; text-align: center; }
+        .footer-inner { max-width: 860px; margin: 0 auto; }
+        .footer-links { display: flex; justify-content: center; gap: 24px; margin-bottom: 16px; }
+        .footer-links a { font-size: 13px; color: var(--text-muted); text-decoration: none; transition: color 0.2s; }
+        .footer-links a:hover { color: var(--accent); }
+        .footer-copy { font-size: 12px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+        @media (max-width: 600px) { .stat-bar { grid-template-columns: repeat(2,1fr); } .lessons { grid-template-columns: 1fr; } h1 { font-size: 28px; } }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+        .hero    { animation: fadeUp 0.6s ease; }
+        .content { animation: fadeUp 0.6s ease 0.1s both; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-inner">
+        <a href="../index.html" class="logo">YK</a>
+        <a href="index.html" class="back-link">← Blog</a>
+    </div>
+</header>
+
+<section class="hero">
+    <div class="hero-meta">
+        <span class="badge badge-red">🔴 DATENEXFILTRATION</span>
+        <span class="badge badge-blue">SOC LAB</span>
+        <span class="badge badge-green">SAP SECURITY</span>
+        <span class="meta-date">Juni 2026</span>
+    </div>
+    <h1>SAP <span>Datenexfiltration</span><br>mit Splunk erkennen</h1>
+    <p class="hero-summary">
+        Benutzer SDEMIR liest in wenigen Sekunden sechs der sensibelsten SAP-Tabellen aus —
+        USR02 (Passwort-Hashes), USR04 (Berechtigungen), AGR_USERS (Rollen), RFCDES (RFC-Credentials),
+        ABAP_SOURCE (Quellcode) und T000 (Systemkonfiguration). Insgesamt über 20.000 Datensätze.
+    </p>
+    <div class="tags">
+        <span class="tag">SAP Security</span>
+        <span class="tag">Splunk</span>
+        <span class="tag">SIEM</span>
+        <span class="tag">Datenexfiltration</span>
+        <span class="tag">EU1</span>
+        <span class="tag">SAP Audit Log</span>
+        <span class="tag">SPL</span>
+        <span class="tag">Insider Threat</span>
+        <span class="tag">USR02</span>
+    </div>
+</section>
+
+<main class="content">
+
+    <div class="stat-bar">
+        <div class="stat-item">
+            <span class="stat-number red">6</span>
+            <span class="stat-label">Sensible Tabellen gelesen</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number red">20.000+</span>
+            <span class="stat-label">Datensätze extrahiert</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">1</span>
+            <span class="stat-label">Benutzer (SDEMIR)</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number red">&lt;1s</span>
+            <span class="stat-label">Zeitfenster</span>
+        </div>
+    </div>
+
+    <h2>Das EU1-Event — Generischer Tabellenzugriff</h2>
+    <p>
+        Das SAP Security Audit Log Event <strong>EU1</strong> (Generic Table Access — Read) wird
+        protokolliert, wenn ein Benutzer über SE16, SE16N, SM30 oder direkte RFC-Aufrufe
+        auf Datenbanktabellen zugreift. Im normalen Betrieb ist EU1 selten — die meisten
+        SAP-Benutzer arbeiten über Transaktionen und sehen niemals rohe Tabellendaten.
+    </p>
+    <p>
+        Ein Benutzer, der in kurzer Zeit <em>mehrere</em> sensible Tabellen mit
+        <em>tausenden Datensätzen</em> liest, ist ein starkes Indiz für eine gezielte
+        Datenexfiltration — manuell oder über ein automatisiertes Tool.
+    </p>
+
+    <div class="callout callout-red">
+        <span class="callout-icon">🚨</span>
+        <p class="callout-text">
+            <strong>Warum USR02 der schlimmste Fund ist:</strong> Die Tabelle USR02 enthält
+            die Passwort-Hashes <em>aller</em> SAP-Benutzer des Systems. Wer diese Tabelle
+            ausliest, kann die Hashes offline cracken — und erhält danach Zugang zu jedem
+            SAP-Konto, einschließlich aller Admin-Benutzer. Das ist der vollständige
+            Schlüsselbund zum gesamten SAP-System.
+        </p>
+    </div>
+
+    <h2>Die exfiltrierten Tabellen</h2>
+
+    <table class="alert-table">
+        <thead>
+            <tr>
+                <th>TABELLE</th>
+                <th>INHALT</th>
+                <th>DATENSÄTZE</th>
+                <th>RISIKO</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="severity-high">USR02</td>
+                <td>Passwort-Hashes aller SAP-Benutzer</td>
+                <td>787</td>
+                <td class="severity-high">KRITISCH — Offline-Cracking möglich</td>
+            </tr>
+            <tr>
+                <td class="severity-high">USR04</td>
+                <td>Berechtigungsprofile aller Benutzer</td>
+                <td>3.312</td>
+                <td class="severity-high">KRITISCH — Vollständige Rechtestruktur</td>
+            </tr>
+            <tr>
+                <td class="severity-high">AGR_USERS</td>
+                <td>Rollen-Benutzer-Zuordnungen</td>
+                <td>2.026</td>
+                <td class="severity-high">HOCH — Org-Struktur und Zugriffskarte</td>
+            </tr>
+            <tr>
+                <td class="severity-high">RFCDES</td>
+                <td>RFC-Verbindungsdefinitionen inkl. Credentials</td>
+                <td>529</td>
+                <td class="severity-high">KRITISCH — Zugangsdaten zu Fremdsystemen</td>
+            </tr>
+            <tr>
+                <td class="severity-med">ABAP_SOURCE</td>
+                <td>ABAP-Quellcode aller Programme</td>
+                <td>1.951</td>
+                <td class="severity-med">HOCH — Intellectual Property, Backdoor-Suche</td>
+            </tr>
+            <tr>
+                <td class="severity-med">T000</td>
+                <td>Mandanten-/Systemkonfiguration</td>
+                <td>4.973</td>
+                <td class="severity-med">MITTEL — Systemlandschaft und Konfiguration</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="callout callout-blue">
+        <span class="callout-icon">ℹ️</span>
+        <p class="callout-text">
+            <strong>RFCDES ist oft unterschätzt:</strong> Diese Tabelle enthält die gespeicherten
+            Passwörter für alle RFC-Verbindungen zu anderen SAP-Systemen, Datenbanken und
+            externen Services. Wer RFCDES ausliest, bekommt nicht nur Zugang zu diesem System —
+            sondern zu allen verbundenen Systemen der gesamten SAP-Landschaft.
+        </p>
+    </div>
+
+    <h2>Erkennung — Splunk SPL-Query</h2>
+    <h3>Sensitive Tabellenzugriffe identifizieren</h3>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">SPL</span>
+            <span class="code-desc">EU1 — Tabellenzugriffe mit Datensatz-Anzahl</span>
+        </div>
+        <div class="code-body">
+<span class="comment"># Wer liest welche Tabellen — und wie viele Datensätze?</span>
+<span class="cmd">index</span>=sap_audit <span class="cmd">event_id</span>=EU1
+| <span class="cmd">table</span> _time, user, terminal, server, table, rows_read, message
+| <span class="cmd">sort</span> _time
+        </div>
+    </div>
+
+    <img src="images/sap-data-exfiltration-query1.png" alt="Splunk: SDEMIR liest USR02, USR04, AGR_USERS, RFCDES, ABAP_SOURCE, T000" class="screenshot">
+    <p class="screenshot-caption">Abb. 1 — SDEMIR liest 6 kritische Tabellen von 10.10.2.100 aus — USR02 (787 Datensätze), AGR_USERS (2.026), USR04 (3.312), RFCDES (529), ABAP_SOURCE (1.951), T000 (4.973)</p>
+
+    <p>
+        Alle 6 Events haben denselben Zeitstempel — <strong>15:44:52</strong>. Das bedeutet:
+        SDEMIR hat diese Tabellen nicht manuell über SE16 aufgerufen, sondern über ein
+        automatisiertes Tool oder einen RFC-Funktionsbaustein, der alle Abfragen parallel
+        abfeuert. Das ist Datenexfiltration mit Werkzeugunterstützung.
+    </p>
+
+    <h2>Wichtige Erkenntnisse</h2>
+
+    <div class="findings">
+        <div class="finding-card">
+            <div class="finding-icon icon-red">🔴</div>
+            <div>
+                <div class="finding-title">Vollständiger SAP-Schlüsselbund exfiltriert</div>
+                <p class="finding-desc">USR02 + USR04 + AGR_USERS + RFCDES zusammen ergeben: alle Passwort-Hashes, alle Berechtigungen, alle Rollen und alle Zugangsdaten zu Fremdsystemen. Das ist der vollständigste mögliche SAP-Datensatz für einen Angreifer.</p>
+            </div>
+        </div>
+        <div class="finding-card">
+            <div class="finding-icon icon-red">⚡</div>
+            <div>
+                <div class="finding-title">Automatisiertes Tool — kein manueller Zugriff</div>
+                <p class="finding-desc">Sechs Tabellen in einer Sekunde — das ist physisch nicht manuell möglich. SDEMIR verwendet ein Skript oder ein SAP-Angriffs-Tool (z.B. ein RFC_READ_TABLE-Wrapper). Das deutet auf einen geplanten, vorbereiteten Angriff hin.</p>
+            </div>
+        </div>
+        <div class="finding-card">
+            <div class="finding-icon icon-yellow">⚠️</div>
+            <div>
+                <div class="finding-title">Interne IP — Insider Threat oder Lateral Movement</div>
+                <p class="finding-desc">Der Zugriff erfolgt von 10.10.2.100 — einer internen IP-Adresse. Entweder ist SDEMIR ein böswilliger Insider, oder ein Angreifer hat SDEMIRs Workstation bereits kompromittiert und agiert von dort aus.</p>
+            </div>
+        </div>
+        <div class="finding-card">
+            <div class="finding-icon icon-green">✅</div>
+            <div>
+                <div class="finding-title">EU1 + hohe Zeilenzahl = zuverlässiger Alert</div>
+                <p class="finding-desc">Ein normaler Benutzer liest niemals USR02 oder RFCDES. Ein Alert auf EU1-Events für diese Tabellen hat eine Falsch-Positiv-Rate von nahezu null — jeder Treffer ist ein echter Vorfall.</p>
+            </div>
+        </div>
+    </div>
+
+    <h2>Empfehlungen</h2>
+
+    <div class="lessons">
+        <div class="lesson-card">
+            <div class="lesson-number">01</div>
+            <div class="lesson-title">SDEMIR sofort sperren und forensisch untersuchen</div>
+            <p class="lesson-desc">Workstation 10.10.2.100 isolieren, Memory-Dump erstellen, alle Netzwerkverbindungen zum Tatzeitpunkt analysieren. Wohin wurden die Daten übertragen?</p>
+        </div>
+        <div class="lesson-card">
+            <div class="lesson-number">02</div>
+            <div class="lesson-title">Alle SAP-Passwörter zurücksetzen</div>
+            <p class="lesson-desc">Da USR02 ausgelesen wurde, müssen alle SAP-Benutzerpasswörter als kompromittiert betrachtet werden — systemweiter Passwort-Reset aller Konten, beginnend mit Admin-Usern.</p>
+        </div>
+        <div class="lesson-card">
+            <div class="lesson-number">03</div>
+            <div class="lesson-title">RFC-Verbindungspasswörter ändern</div>
+            <p class="lesson-desc">Da RFCDES ausgelesen wurde, müssen alle RFC-Verbindungspasswörter in der gesamten SAP-Landschaft sofort geändert werden — alle verbundenen Systeme sind potenziell kompromittiert.</p>
+        </div>
+        <div class="lesson-card">
+            <div class="lesson-number">04</div>
+            <div class="lesson-title">SE16/EU1-Zugriff auf sensible Tabellen einschränken</div>
+            <p class="lesson-desc">USR02, USR04, AGR_USERS, RFCDES dürfen nur von autorisierten Basis-Administratoren lesbar sein. Berechtigungsobjekt S_TABU_DIS konsequent einsetzen und regelmäßig auditieren.</p>
+        </div>
+    </div>
+
+    <div class="callout callout-green">
+        <span class="callout-icon">✅</span>
+        <p class="callout-text">
+            <strong>SAP Security Serie abgeschlossen:</strong> Diese fünf Szenarien decken die
+            wichtigsten SAP-Angriffsvektoren ab — von Brute-Force über kompromittierte Admin-Konten
+            und Privilege Escalation bis hin zu externem RFC-Angriff und Datenexfiltration.
+            Alle detektiert mit Splunk SPL und dem SAP Security Audit Log.
+        </p>
+    </div>
+
+</main>
+
+<footer>
+    <div class="footer-inner">
+        <div class="footer-links">
+            <a href="index.html">← Blog</a>
+            <a href="https://github.com/yasinkilicma" target="_blank">GitHub</a>
+            <a href="https://www.linkedin.com/in/yasin-kilic-cyber-security/" target="_blank">LinkedIn</a>
+        </div>
+        <p class="footer-copy">© 2026 Yasin Kilic — SOC Analyst in Training</p>
+    </div>
+</footer>
+
+</body>
+</html>
