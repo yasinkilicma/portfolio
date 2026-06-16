@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAP Brute-Force-Angriff erkennen mit Splunk SIEM | Yasin Kilic</title>
+    <meta name="description" content="Wie ich einen SAP-Credential-Angriff im Home-SOC-Lab simuliert und mit Splunk SPL detektiert habe — 12 fehlgeschlagene Logins, automatische Kontosperrung, Event-IDs AU2 und AUI.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0e1a;
+            --bg2: #0f1525;
+            --bg3: #161d30;
+            --border: #1e2a42;
+            --accent: #00d4ff;
+            --accent2: #ff4757;
+            --accent3: #2ed573;
+            --text: #e0e6f0;
+            --text-muted: #6b7a99;
+            --code-bg: #0d1117;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Sora', sans-serif;
+            font-size: 16px;
+            line-height: 1.8;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(10, 14, 26, 0.9);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 0;
+        }
+
+        .header-inner {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 18px;
+            letter-spacing: -0.5px;
+        }
+
+        .back-link {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: var(--accent); }
+
+        .hero {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 64px 24px 48px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .hero-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 4px;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-red   { background: rgba(255, 71, 87, 0.15);  color: var(--accent2); border: 1px solid rgba(255, 71, 87, 0.3); }
+        .badge-blue  { background: rgba(0, 212, 255, 0.10);  color: var(--accent);  border: 1px solid rgba(0, 212, 255, 0.2); }
+        .badge-green { background: rgba(46, 213, 115, 0.10); color: var(--accent3); border: 1px solid rgba(46, 213, 115, 0.2); }
+
+        .meta-date {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        h1 {
+            font-size: clamp(28px, 5vw, 44px);
+            font-weight: 700;
+            line-height: 1.2;
+            letter-spacing: -1px;
+            margin-bottom: 20px;
+        }
+
+        h1 span { color: var(--accent2); }
+
+        .hero-summary {
+            font-size: 17px;
+            color: var(--text-muted);
+            max-width: 680px;
+            line-height: 1.7;
+        }
+
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 28px;
+        }
+
+        .tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            padding: 5px 12px;
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            color: var(--text-muted);
+        }
+
+        .content {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 56px 24px;
+        }
+
+        .stat-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            background: var(--border);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 56px;
+        }
+
+        .stat-item {
+            background: var(--bg2);
+            padding: 24px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--accent);
+            display: block;
+        }
+
+        .stat-number.red { color: var(--accent2); }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        h2 {
+            font-size: 22px;
+            font-weight: 700;
+            margin: 48px 0 20px;
+            padding-left: 16px;
+            border-left: 3px solid var(--accent);
+            letter-spacing: -0.3px;
+        }
+
+        h3 {
+            font-size: 17px;
+            font-weight: 600;
+            margin: 32px 0 12px;
+            color: var(--accent);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        p { margin-bottom: 16px; color: var(--text); }
+
+        .arch-box {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 28px;
+            margin: 24px 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            line-height: 1.8;
+            color: #8b9ab8;
+            overflow-x: auto;
+        }
+
+        .arch-box .hl  { color: var(--accent); }
+        .arch-box .hl2 { color: var(--accent3); }
+        .arch-box .hl3 { color: var(--accent2); }
+
+        .code-block {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .code-header {
+            background: var(--bg3);
+            border-bottom: 1px solid var(--border);
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .code-lang { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); font-weight: 600; letter-spacing: 0.5px; }
+        .code-desc { font-size: 12px; color: var(--text-muted); }
+
+        .code-body {
+            padding: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            line-height: 1.7;
+            color: #a8b8d8;
+            overflow-x: auto;
+        }
+
+        .code-body .comment { color: #4a5568; }
+        .code-body .keyword { color: #ff79c6; }
+        .code-body .string  { color: #f1fa8c; }
+        .code-body .number  { color: var(--accent3); }
+        .code-body .cmd     { color: var(--accent); }
+
+        .findings {
+            display: grid;
+            gap: 16px;
+            margin: 24px 0;
+        }
+
+        .finding-card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px 24px;
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 16px;
+            align-items: start;
+            transition: border-color 0.2s;
+        }
+
+        .finding-card:hover { border-color: var(--accent); }
+
+        .finding-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .icon-red    { background: rgba(255, 71, 87, 0.15); }
+        .icon-blue   { background: rgba(0, 212, 255, 0.10); }
+        .icon-green  { background: rgba(46, 213, 115, 0.10); }
+        .icon-yellow { background: rgba(255, 200, 0, 0.10); }
+
+        .finding-title { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+        .finding-desc  { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin: 0; }
+
+        .alert-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 13px;
+        }
+
+        .alert-table th {
+            background: var(--bg3);
+            color: var(--text-muted);
+            font-weight: 600;
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+        }
+
+        .alert-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(30, 42, 66, 0.5);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .alert-table tr:hover td { background: var(--bg2); }
+
+        .severity-high { color: var(--accent2); font-weight: 600; }
+        .severity-med  { color: #ffa502; }
+        .severity-low  { color: var(--accent3); }
+
+        .timeline {
+            position: relative;
+            margin: 24px 0;
+            padding-left: 32px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--accent), var(--accent2));
+        }
+
+        .timeline-item { position: relative; margin-bottom: 28px; }
+
+        .timeline-dot {
+            position: absolute;
+            left: -28px;
+            top: 4px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: 2px solid var(--bg);
+        }
+
+        .timeline-dot.red   { background: var(--accent2); }
+        .timeline-dot.green { background: var(--accent3); }
+
+        .timeline-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent);
+        }
+
+        .timeline-title.red { color: var(--accent2); }
+        .timeline-desc { font-size: 14px; color: var(--text-muted); margin: 0; }
+
+        .callout {
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin: 24px 0;
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .callout-blue  { background: rgba(0, 212, 255, 0.06);  border: 1px solid rgba(0, 212, 255, 0.2); }
+        .callout-red   { background: rgba(255, 71, 87, 0.06);  border: 1px solid rgba(255, 71, 87, 0.2); }
+        .callout-green { background: rgba(46, 213, 115, 0.06); border: 1px solid rgba(46, 213, 115, 0.2); }
+
+        .callout-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+        .callout-text { font-size: 14px; line-height: 1.7; color: var(--text); margin: 0; }
+        .callout-text strong { color: var(--accent); }
+
+        .event-id-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 12px;
+            margin: 24px 0;
+        }
+
+        .event-id-card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px 20px;
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .event-id-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 6px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .event-id-badge.red    { background: rgba(255,71,87,0.15);  color: var(--accent2); border: 1px solid rgba(255,71,87,0.3); }
+        .event-id-badge.blue   { background: rgba(0,212,255,0.10);  color: var(--accent);  border: 1px solid rgba(0,212,255,0.2); }
+        .event-id-badge.green  { background: rgba(46,213,115,0.10); color: var(--accent3); border: 1px solid rgba(46,213,115,0.2); }
+        .event-id-badge.yellow { background: rgba(255,200,0,0.10);  color: #ffa502;        border: 1px solid rgba(255,200,0,0.3); }
+
+        .event-id-info .event-name { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+        .event-id-info .event-desc { font-size: 12px; color: var(--text-muted); margin: 0; line-height: 1.5; }
+
+        .lessons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin: 24px 0;
+        }
+
+        .lesson-card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .lesson-number {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--border);
+            line-height: 1;
+            margin-bottom: 12px;
+        }
+
+        .lesson-title { font-weight: 600; font-size: 14px; margin-bottom: 6px; }
+        .lesson-desc  { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin: 0; }
+
+        img.screenshot {
+            width: 100%;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            margin: 20px 0;
+        }
+
+        .screenshot-caption {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: -12px;
+            margin-bottom: 24px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 40px 24px;
+            text-align: center;
+        }
+
+        .footer-inner { max-width: 860px; margin: 0 auto; }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 16px;
+        }
+
+        .footer-links a {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover { color: var(--accent); }
+
+        .footer-copy {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        @media (max-width: 600px) {
+            .stat-bar { grid-template-columns: repeat(2, 1fr); }
+            .lessons  { grid-template-columns: 1fr; }
+            h1        { font-size: 28px; }
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero    { animation: fadeUp 0.6s ease; }
+        .content { animation: fadeUp 0.6s ease 0.1s both; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-inner">
+        <a href="../index.html" class="logo">YK</a>
+        <a href="index.html" class="back-link">← Blog</a>
+    </div>
+</header>
+
+<section class="hero">
+    <div class="hero-meta">
+        <span class="badge badge-red">🔴 ANGRIFFSERKENNUNG</span>
+        <span class="badge badge-blue">SOC LAB</span>
+        <span class="badge badge-green">SAP SECURITY</span>
+        <span class="meta-date">Juni 2026</span>
+    </div>
+    <h1>SAP <span>Brute-Force-Angriff</span><br>mit Splunk SIEM erkennen</h1>
+    <p class="hero-summary">
+        Ich habe einen realen SAP-Credential-Angriff in meinem Home-SOC-Lab simuliert —
+        12 fehlgeschlagene Login-Versuche von einer externen IP-Adresse, automatische Kontosperrung —
+        und jeden Schritt mit Splunk SPL und dem SAP Security Audit Log detektiert.
+    </p>
+    <div class="tags">
+        <span class="tag">SAP Security</span>
+        <span class="tag">Splunk</span>
+        <span class="tag">SIEM</span>
+        <span class="tag">Brute-Force</span>
+        <span class="tag">SAP Audit Log</span>
+        <span class="tag">SPL</span>
+        <span class="tag">SOC</span>
+        <span class="tag">Threat Detection</span>
+        <span class="tag">Python</span>
+    </div>
+</section>
+
+<main class="content">
+
+    <!-- STATS -->
+    <div class="stat-bar">
+        <div class="stat-item">
+            <span class="stat-number red">12</span>
+            <span class="stat-label">Fehlgeschlagene Logins</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">128</span>
+            <span class="stat-label">Generierte Events</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">5</span>
+            <span class="stat-label">Angriffsszenarien</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number red">1</span>
+            <span class="stat-label">Gesperrtes Konto (HIGH)</span>
+        </div>
+    </div>
+
+    <!-- LAB-AUFBAU -->
+    <h2>Lab-Aufbau</h2>
+    <p>
+        Dieselbe Terraform + Docker Infrastruktur wie in allen meinen SOC-Labs — einmal aufgebaut,
+        jederzeit reproduzierbar. Splunk Enterprise läuft als Docker-Container auf meinem Mac mini M4,
+        mit einem dedizierten
+        <code style="background:var(--bg3);padding:2px 8px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:13px;">sap_audit</code>-Index,
+        der Events über den HTTP Event Collector (HEC) empfängt.
+    </p>
+
+    <div class="arch-box">
+<span class="hl">Mac mini M4</span>
+    │
+    └── <span class="hl2">Docker</span>  (platform=linux/amd64 via Rosetta)
+           └── <span class="hl2">soc-lab-splunk</span>  (splunk/splunk)
+                  ├── Port <span class="hl3">8000</span>  →  Web-UI
+                  ├── Port <span class="hl3">8088</span>  →  HEC (SAP-Log-Ingestion)
+                  └── Index: <span class="hl">sap_audit</span>  /  Sourcetype: <span class="hl">sap:audit</span>
+
+<span class="hl2">Python-Generator</span>  →  128 SAP Security Audit Log Events
+    ├── Szenario 1: Brute-Force (AU2 × 12 → AUI)
+    ├── Szenario 2: Admin-Login außerhalb der Arbeitszeiten
+    ├── Szenario 3: Privilege Escalation (AUB-Storm)
+    ├── Szenario 4: Externer RFC-Angriff
+    └── Szenario 5: Sensitive Tabellenzugriffe (EU1)
+    </div>
+
+    <p>
+        Anstatt ein vollständiges SAP-NetWeaver-System aufzusetzen, habe ich ein Python-Skript
+        geschrieben, das authentische SAP Security Audit Log Events im korrekten Format generiert
+        und direkt über HEC an Splunk sendet. Dieser Ansatz wird auch in Red-Team-Simulationen
+        und bei der SIEM-Validierung eingesetzt.
+    </p>
+
+    <!-- SAP SECURITY AUDIT LOG -->
+    <h2>Das SAP Security Audit Log</h2>
+    <p>
+        Das <strong>SAP Security Audit Log (SAL)</strong> — erreichbar über Transaktion
+        <code style="background:var(--bg3);padding:2px 8px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:13px;">SM20</code> —
+        ist die primäre Datenquelle für die SAP-Bedrohungserkennung. Es protokolliert jeden
+        sicherheitsrelevanten Vorgang: Anmeldungen, fehlgeschlagene Authentifizierungen,
+        Transaktionsstarts, Berechtigungsfehler und RFC-Aufrufe.
+    </p>
+
+    <div class="callout callout-blue">
+        <span class="callout-icon">ℹ️</span>
+        <p class="callout-text">
+            <strong>Warum SAP-Logs im SOC entscheidend sind:</strong> SAP-ERP-Systeme speichern
+            die sensibelsten Unternehmensdaten — Finanzdaten, HR-Informationen, Kundendaten.
+            Ein Angreifer mit SAP-Zugang kann alles extrahieren, ohne einen einzigen Endpoint
+            anzufassen — und umgeht damit EDR und netzwerkbasierte Erkennung vollständig.
+        </p>
+    </div>
+
+    <p>Die im Lab überwachten Event-IDs:</p>
+
+    <div class="event-id-grid">
+        <div class="event-id-card">
+            <span class="event-id-badge red">AU2</span>
+            <div class="event-id-info">
+                <div class="event-name">Fehlgeschlagener Dialog-Login</div>
+                <p class="event-desc">Falsches Passwort oder gesperrter Benutzer. Primärer Indikator für einen Brute-Force-Angriff.</p>
+            </div>
+        </div>
+        <div class="event-id-card">
+            <span class="event-id-badge green">AU1</span>
+            <div class="event-id-info">
+                <div class="event-name">Erfolgreicher Dialog-Login</div>
+                <p class="event-desc">Nach einem Sturm von AU2-Events bedeutet ein AU1 von derselben IP: die Credentials wurden geknackt.</p>
+            </div>
+        </div>
+        <div class="event-id-card">
+            <span class="event-id-badge red">AUI</span>
+            <div class="event-id-info">
+                <div class="event-name">Benutzer gesperrt</div>
+                <p class="event-desc">Konto automatisch gesperrt, nachdem der Fehlversuch-Schwellenwert überschritten wurde.</p>
+            </div>
+        </div>
+        <div class="event-id-card">
+            <span class="event-id-badge yellow">AUB</span>
+            <div class="event-id-info">
+                <div class="event-name">Berechtigungsprüfung fehlgeschlagen</div>
+                <p class="event-desc">Benutzer hat versucht, auf eine Ressource oder Transaktion ohne ausreichende Berechtigung zuzugreifen.</p>
+            </div>
+        </div>
+        <div class="event-id-card">
+            <span class="event-id-badge blue">AU6</span>
+            <div class="event-id-info">
+                <div class="event-name">Transaktion gestartet</div>
+                <p class="event-desc">Eine SAP-Transaktion (TCode) wurde ausgeführt. Kritische TCodes wie SE38, SU01, PFCG gelten als Hochrisiko.</p>
+            </div>
+        </div>
+        <div class="event-id-card">
+            <span class="event-id-badge red">AU4</span>
+            <div class="event-id-info">
+                <div class="event-name">Fehlgeschlagener RFC-Login</div>
+                <p class="event-desc">Fehlgeschlagene Remote-Function-Call-Authentifizierung — typisch bei externem SAP-Angriffs-Tooling.</p>
+            </div>
+        </div>
+        <div class="event-id-card">
+            <span class="event-id-badge red">EU1</span>
+            <div class="event-id-info">
+                <div class="event-name">Generischer Tabellenzugriff (Lesen)</div>
+                <p class="event-desc">Direkter Datenbankzugriff. Das Lesen von USR02 oder AGR_USERS ist ein starkes Warnsignal.</p>
+            </div>
+        </div>
+        <div class="event-id-card">
+            <span class="event-id-badge blue">DU9</span>
+            <div class="event-id-info">
+                <div class="event-name">Report / Programm gestartet</div>
+                <p class="event-desc">ABAP-Report ausgeführt. Benutzer-Enumerierungs-Reports wie RSUSR002 außerhalb der Geschäftszeiten sind verdächtig.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- DER ANGRIFF -->
+    <h2>Der Angriff — Brute-Force-Szenario</h2>
+    <p>
+        Der simulierte Angreifer zielt auf das SAP-Produktivsystem <strong>SAPPRD01</strong>, Mandant <strong>100</strong>.
+        Er hat den Benutzernamen <code style="background:var(--bg3);padding:2px 8px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:13px;">JSCHMIDT</code>
+        über OSINT oder eine vorgelagerte Reconnaissance-Phase identifiziert und beginnt,
+        die Login-Schnittstelle von einer externen IP-Adresse aus anzugreifen.
+    </p>
+
+    <div class="callout callout-red">
+        <span class="callout-icon">🚨</span>
+        <p class="callout-text">
+            <strong>Angreifer-IP:</strong> 45.33.32.156 — eine bekannte Scan-IP-Adresse außerhalb des Unternehmensnetzwerks.
+            Kein VPN, keine interne IP — dies ist ein direkter Angriff auf ein internet-exponiertes SAP-System.
+        </p>
+    </div>
+
+    <h3>Attack-Timeline</h3>
+
+    <div class="timeline">
+        <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-title">09:00 — Angriff beginnt</div>
+            <p class="timeline-desc">Der Angreifer sendet Login-Anfragen an SAPPRD01, Ziel ist Benutzer JSCHMIDT. Erstes AU2-Event wird generiert.</p>
+        </div>
+        <div class="timeline-item">
+            <div class="timeline-dot red"></div>
+            <div class="timeline-title red">09:00–09:12 — 12 fehlgeschlagene Logins (AU2 × 12)</div>
+            <p class="timeline-desc">Zwölf fehlgeschlagene Anmeldeversuche in rascher Folge von 45.33.32.156. Jeder Versuch erzeugt ein AU2-Event im Security Audit Log.</p>
+        </div>
+        <div class="timeline-item">
+            <div class="timeline-dot red"></div>
+            <div class="timeline-title red">09:13 — Konto gesperrt (AUI)</div>
+            <p class="timeline-desc">Die automatische Sperrrichtlinie von SAP greift. Benutzer JSCHMIDT wird gesperrt. Severity: HIGH. Der Angreifer ist blockiert — aber der Benutzer ist ebenfalls ausgesperrt.</p>
+        </div>
+        <div class="timeline-item">
+            <div class="timeline-dot green"></div>
+            <div class="timeline-title">09:45 — Legitimer Benutzer kehrt zurück</div>
+            <p class="timeline-desc">Der echte JSCHMIDT meldet sich von der internen IP 10.10.1.42 an, nachdem das Konto vom Basis-Team entsperrt wurde. Normalbetrieb wird wiederhergestellt.</p>
+        </div>
+    </div>
+
+    <!-- ERKENNUNG -->
+    <h2>Erkennung — Splunk SPL-Queries</h2>
+
+    <h3>Query 1 — Brute-Force-Quelle identifizieren</h3>
+    <p>
+        Die erste Query findet alle Benutzer, die mehr als 5 fehlgeschlagene Login-Versuche (AU2)
+        erhalten haben, und gruppiert sie nach Quell-IP. Eine einzelne IP, die mehrfach gegen
+        dasselbe Konto vorgeht, ist das klassische Brute-Force-Muster.
+    </p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">SPL</span>
+            <span class="code-desc">Brute-Force-Erkennung — fehlgeschlagene Logins pro Benutzer/IP</span>
+        </div>
+        <div class="code-body">
+<span class="comment"># IPs mit mehr als 5 fehlgeschlagenen Logins gegen dasselbe Konto finden</span>
+<span class="cmd">index</span>=sap_audit <span class="cmd">event_id</span>=AU2
+| <span class="cmd">stats</span> count <span class="keyword">by</span> user, terminal
+| <span class="keyword">where</span> count &gt; <span class="number">5</span>
+        </div>
+    </div>
+
+    <img src="images/sap-bruteforce-query1.png" alt="Splunk SPL Ergebnis: JSCHMIDT / 45.33.32.156 / count 12" class="screenshot">
+    <p class="screenshot-caption">Abb. 1 — Ergebnis: Benutzer JSCHMIDT wurde 12-mal von der externen IP 45.33.32.156 angegriffen</p>
+
+    <p>
+        Das Ergebnis ist eindeutig: ein Benutzer, eine Angreifer-IP, zwölf Versuche.
+        In einer Produktionsumgebung würde dies sofort einen P1-Alert und eine IP-Sperrung
+        auf Firewall-Ebene auslösen.
+    </p>
+
+    <h3>Query 2 — Kontosperrung bestätigen</h3>
+    <p>
+        Ein Brute-Force-Angriff, der unterhalb des Sperrschwellenwerts bleibt, ist weitaus gefährlicher
+        als einer, der erwischt wird. Das AUI-Event bestätigt, dass die Sperrung tatsächlich ausgelöst wurde —
+        und zeigt genau, wann es passiert ist, welcher Server betroffen war und die Severity-Einstufung.
+    </p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">SPL</span>
+            <span class="code-desc">Kontosperrung bestätigen — AUI-Event-Details</span>
+        </div>
+        <div class="code-body">
+<span class="comment"># Vollständige Details des Kontosperrungs-Events anzeigen</span>
+<span class="cmd">index</span>=sap_audit <span class="cmd">event_id</span>=AUI
+| <span class="cmd">table</span> _time, user, terminal, server, severity, message
+        </div>
+    </div>
+
+    <img src="images/sap-bruteforce-query2.png" alt="Splunk SPL Ergebnis: JSCHMIDT auf SAPPRD01 gesperrt, Severity HIGH" class="screenshot">
+    <p class="screenshot-caption">Abb. 2 — JSCHMIDT auf SAPPRD01 gesperrt — Severity HIGH — "User JSCHMIDT locked after 12 failed login attempts"</p>
+
+    <p>
+        Das AUI-Event liefert den abschließenden Beweis. Wir haben nun das vollständige Bild:
+        Angreifer-IP → betroffenes Konto → Sperrungs-Event → betroffenes Produktivsystem.
+        Das ist alles, was für ein Incident-Ticket benötigt wird.
+    </p>
+
+    <!-- INCIDENT-ZUSAMMENFASSUNG -->
+    <h2>Incident-Zusammenfassung</h2>
+
+    <table class="alert-table">
+        <thead>
+            <tr>
+                <th>ZEIT</th>
+                <th>EVENT-ID</th>
+                <th>BENUTZER</th>
+                <th>QUELL-IP</th>
+                <th>SERVER</th>
+                <th>SEVERITY</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>09:00–09:12</td>
+                <td>AU2 × 12</td>
+                <td>JSCHMIDT</td>
+                <td class="severity-high">45.33.32.156</td>
+                <td>SAPPRD01</td>
+                <td class="severity-high">HIGH</td>
+            </tr>
+            <tr>
+                <td>09:13</td>
+                <td>AUI</td>
+                <td>JSCHMIDT</td>
+                <td class="severity-high">45.33.32.156</td>
+                <td>SAPPRD01</td>
+                <td class="severity-high">HIGH</td>
+            </tr>
+            <tr>
+                <td>09:45</td>
+                <td>AU1</td>
+                <td>JSCHMIDT</td>
+                <td class="severity-low">10.10.1.42</td>
+                <td>SAPPRD01</td>
+                <td class="severity-low">INFO</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- FINDINGS -->
+    <h2>Wichtige Erkenntnisse</h2>
+
+    <div class="findings">
+        <div class="finding-card">
+            <div class="finding-icon icon-red">🔴</div>
+            <div>
+                <div class="finding-title">Externe IP greift direkt auf Produktiv-SAP zu</div>
+                <p class="finding-desc">45.33.32.156 ist eine bekannte Scan-IP ohne Geschäftsbeziehung zur Organisation. Direkter Internet-Zugang zum SAP-GUI-Port ist eine kritische Fehlkonfiguration — SAP sollte niemals direkt im Internet exponiert sein, ohne WAF oder SAP Web Dispatcher.</p>
+            </div>
+        </div>
+        <div class="finding-card">
+            <div class="finding-icon icon-red">🔒</div>
+            <div>
+                <div class="finding-title">Kontosperrung als DoS-Vektor</div>
+                <p class="finding-desc">Obwohl die Sperrrichtlinie den Brute-Force gestoppt hat, war auch der legitime Benutzer JSCHMIDT ausgesperrt. Ein Angreifer kann dies gezielt einsetzen, um wichtige SAP-Benutzer (Buchhaltung, HR) während kritischer Geschäftszeiten zu sperren.</p>
+            </div>
+        </div>
+        <div class="finding-card">
+            <div class="finding-icon icon-yellow">⚠️</div>
+            <div>
+                <div class="finding-title">Risiko der Benutzer-Enumeration</div>
+                <p class="finding-desc">Der Angreifer wusste, dass JSCHMIDT ein gültiger Benutzername ist. SAPs Standard-Fehlermeldung unterscheidet zwar nicht zwischen "falscher Benutzer" und "falsches Passwort", aber Antwortzeit-Unterschiede können für die Enumeration ausgenutzt werden.</p>
+            </div>
+        </div>
+        <div class="finding-card">
+            <div class="finding-icon icon-green">✅</div>
+            <div>
+                <div class="finding-title">Sperrrichtlinie hat funktioniert — aber Alerting fehlte</div>
+                <p class="finding-desc">Die Kontosperrung hat nach 12 Versuchen korrekt ausgelöst. Ohne SIEM-Integration hätte dieses Event jedoch still im SM20-Log gelebt — unbemerkt, bis jemand manuell nachgeschaut hätte.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- EMPFEHLUNGEN -->
+    <h2>Empfehlungen</h2>
+
+    <div class="lessons">
+        <div class="lesson-card">
+            <div class="lesson-number">01</div>
+            <div class="lesson-title">SAP nie direkt ins Internet exponieren</div>
+            <p class="lesson-desc">Einen SAP Web Dispatcher oder WAF vor alle SAP-Systeme schalten. Direkter Internet-Zugang zum SAP Router oder DIAG-Port ist ein kritisches Sicherheitsrisiko.</p>
+        </div>
+        <div class="lesson-card">
+            <div class="lesson-number">02</div>
+            <div class="lesson-title">Echtzeit-Alert bei AU2-Häufung</div>
+            <p class="lesson-desc">SIEM-Alert konfigurieren: &gt;5 AU2-Events von derselben IP innerhalb von 10 Minuten = sofortiger P1-Alert. Nicht auf AUI warten — die Sperrung ist bereits zu spät.</p>
+        </div>
+        <div class="lesson-card">
+            <div class="lesson-number">03</div>
+            <div class="lesson-title">Sperrschwellenwert reduzieren</div>
+            <p class="lesson-desc">SAP-Standard liegt oft bei 5–12 Versuchen. Für privilegierte Benutzer (SAPABAP1, DDIC, SAP*) auf 3 reduzieren. Hochwertige Konten brauchen engeren Schutz.</p>
+        </div>
+        <div class="lesson-card">
+            <div class="lesson-number">04</div>
+            <div class="lesson-title">Angreifer-IPs automatisch blockieren</div>
+            <p class="lesson-desc">AU2-Quell-IPs in die Firewall-Automatisierung einspeisen. Eine IP, die SAP-Login-Fehler generiert, sollte innerhalb von Minuten gesperrt werden — nicht Stunden.</p>
+        </div>
+    </div>
+
+    <div class="callout callout-blue">
+        <span class="callout-icon">🔗</span>
+        <p class="callout-text">
+            <strong>Nächster Teil dieser Serie:</strong> Admin-Login außerhalb der Arbeitszeiten —
+            ein privilegierter SAP-Benutzer (SAPABAP1) meldet sich um 02:30 Uhr von einer externen IP
+            am Produktivsystem an und führt SE38, SU01 und PFCG aus. Alles detektiert mit Splunk SPL.
+        </p>
+    </div>
+
+</main>
+
+<footer>
+    <div class="footer-inner">
+        <div class="footer-links">
+            <a href="index.html">← Blog</a>
+            <a href="https://github.com/yasinkilicma" target="_blank">GitHub</a>
+            <a href="https://www.linkedin.com/in/yasin-kilic-cyber-security/" target="_blank">LinkedIn</a>
+        </div>
+        <p class="footer-copy">© 2026 Yasin Kilic — SOC Analyst in Training</p>
+    </div>
+</footer>
+
+</body>
+</html>
