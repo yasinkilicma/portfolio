@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Port-Scan-Erkennung mit FortiGate & Splunk — nmap Fingerabdruck | Yasin Kilic</title>
+    <meta name="description" content="nmap SYN-Scan-Erkennung mit FortiGate-Firewall-Logs und Splunk: TCP-RST-Fingerabdruck (sentbyte=164/rcvdbyte=60), Angreifer-Profil und Echtzeit-Dashboard.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0e1a; --bg2: #0f1525; --bg3: #161d30;
+            --border: #1e2a42; --accent: #00d4ff; --accent2: #ff4757;
+            --accent3: #2ed573; --text: #e0e6f0; --text-muted: #6b7a99;
+            --code-bg: #0d1117;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: var(--bg); color: var(--text); font-family: 'Sora', sans-serif; font-size: 16px; line-height: 1.8; }
+        header { position: sticky; top: 0; z-index: 100; background: rgba(10,14,26,0.9); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 16px 0; }
+        .header-inner { max-width: 860px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; }
+        .logo { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--accent); text-decoration: none; font-size: 18px; }
+        .back-link { font-size: 13px; color: var(--text-muted); text-decoration: none; }
+        .back-link:hover { color: var(--accent); }
+        .hero { max-width: 860px; margin: 0 auto; padding: 64px 24px 48px; border-bottom: 1px solid var(--border); }
+        .hero-meta { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+        .badge { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 4px; letter-spacing: 0.5px; }
+        .badge-red { background: rgba(255,71,87,0.15); color: var(--accent2); border: 1px solid rgba(255,71,87,0.3); }
+        .badge-blue { background: rgba(0,212,255,0.1); color: var(--accent); border: 1px solid rgba(0,212,255,0.2); }
+        .badge-green { background: rgba(46,213,115,0.1); color: var(--accent3); border: 1px solid rgba(46,213,115,0.2); }
+        .hero h1 { font-size: clamp(32px,5vw,48px); font-weight: 700; letter-spacing: -1px; line-height: 1.15; margin-bottom: 20px; }
+        .hero h1 span { color: var(--accent); }
+        .hero-summary { font-size: 17px; color: var(--text-muted); max-width: 640px; line-height: 1.7; }
+        .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
+        .tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); border: 1px solid var(--border); border-radius: 4px; padding: 4px 10px; }
+        .content { max-width: 860px; margin: 0 auto; padding: 48px 24px 80px; }
+        h2 { font-size: 22px; font-weight: 700; margin: 48px 0 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+        h3 { font-size: 17px; font-weight: 600; color: var(--accent); margin: 32px 0 14px; font-family: 'JetBrains Mono', monospace; }
+        p { margin-bottom: 16px; }
+        ul, ol { margin-left: 24px; margin-bottom: 20px; }
+        .stat-bar { display: flex; gap: 24px; margin: 24px 0 40px; flex-wrap: wrap; }
+        .stat-item { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px 28px; min-width: 140px; }
+        .stat-number { display: block; font-family: 'JetBrains Mono', monospace; font-size: 28px; font-weight: 700; color: var(--accent); margin-bottom: 4px; }
+        .stat-label { font-size: 12px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+        .code-block { background: var(--code-bg); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin: 20px 0; }
+        .code-header { background: var(--bg3); border-bottom: 1px solid var(--border); padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; }
+        .code-lang { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); font-weight: 600; }
+        .code-desc { font-size: 12px; color: var(--text-muted); }
+        .code-body { padding: 20px; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.7; color: #a8b8d8; overflow-x: auto; }
+        .code-body .comment { color: #4a5568; }
+        .code-body .cmd { color: var(--accent); }
+        .code-body .keyword { color: #ff79c6; }
+        .code-body .string { color: #f1fa8c; }
+        .code-body .number { color: var(--accent3); }
+        .callout { border-radius: 10px; padding: 16px 20px; margin: 20px 0; display: flex; gap: 12px; }
+        .callout-blue { background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.2); }
+        .callout-red { background: rgba(255,71,87,0.08); border: 1px solid rgba(255,71,87,0.2); }
+        .callout-orange { background: rgba(255,165,2,0.08); border: 1px solid rgba(255,165,2,0.2); }
+        .callout-icon { font-size: 20px; flex-shrink: 0; }
+        .callout-text { font-size: 14px; line-height: 1.6; margin: 0; }
+        .arch-box { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin: 20px 0; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #a8b8d8; white-space: pre; overflow-x: auto; }
+        footer { border-top: 1px solid var(--border); padding: 36px 24px; text-align: center; }
+        .footer-inner { max-width: 860px; margin: 0 auto; }
+        .footer-links { display: flex; justify-content: center; gap: 24px; margin-bottom: 14px; flex-wrap: wrap; }
+        .footer-links a { font-size: 13px; color: var(--text-muted); text-decoration: none; }
+        .footer-links a:hover { color: var(--accent); }
+        .footer-copy { font-size: 12px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .hero, .content { animation: fadeUp 0.6s ease; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-inner">
+        <a href="../index.html" class="logo">YK</a>
+        <a href="index.html" class="back-link">← Blog</a>
+    </div>
+</header>
+
+<section class="hero">
+    <div class="hero-meta">
+        <span class="badge badge-red">🔴 NETWORK FORENSICS</span>
+        <span class="badge badge-blue">FORTIGATE</span>
+        <span class="badge badge-green">SPLUNK</span>
+    </div>
+    <h1>Port-Scan-Erkennung mit <span>FortiGate & Splunk</span></h1>
+    <p class="hero-summary">
+        Wie der TCP-RST-Fingerabdruck von nmap SYN-Scans in FortiGate-Logs sichtbar wird —
+        und wie ein Echtzeit-Splunk-Dashboard Angreifer-Profile in Sekunden aufbaut.
+    </p>
+    <div class="tags">
+        <span class="tag">FortiGate</span>
+        <span class="tag">nmap</span>
+        <span class="tag">Port-Scan</span>
+        <span class="tag">TCP RST</span>
+        <span class="tag">Splunk</span>
+        <span class="tag">SPL</span>
+        <span class="tag">Network Forensics</span>
+    </div>
+</section>
+
+<main class="content">
+
+    <div class="stat-bar">
+        <div class="stat-item">
+            <span class="stat-number">6</span>
+            <span class="stat-label">client-rst Sessions</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">2</span>
+            <span class="stat-label">Gescannte Ports</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">164/60</span>
+            <span class="stat-label">nmap Fingerabdruck (bytes)</span>
+        </div>
+    </div>
+
+    <h2>Kontext</h2>
+    <p>
+        In diesem Lab-Szenario wurde von einem Kali-Linux-Client (Debian ARM64)
+        ein <strong>nmap SYN-Scan</strong> gegen <code>8.8.8.8</code> (Google DNS) durchgeführt.
+        Der gesamte Datenverkehr läuft dabei durch eine <strong>FortiGate-VM 7.4.12</strong>,
+        die alle Verbindungsversuche protokolliert.
+    </p>
+    <p>
+        Die Frage: <strong>Kann eine Firewall einen Port-Scan erkennen — ohne IPS, nur auf Basis von Traffic-Logs?</strong>
+    </p>
+
+    <h3>Lab-Architektur</h3>
+    <div class="arch-box">
+[Kali Client]           [FortiGate-VM]          [Internet]
+198.51.100.50   LAN →   198.51.100.99 | WAN  →  8.8.8.8
+                         port3          port1
+                         (intern)       (extern)
+
+Syslog UDP 5514  →  Python HEC Bridge  →  Splunk index=fortigate
+    </div>
+
+    <h2>Wie nmap in Firewall-Logs erscheint</h2>
+    <p>
+        Ein <strong>nmap SYN-Scan</strong> (<code>-sS</code>) sendet ein TCP-SYN-Paket an jeden Zielport.
+        Je nach Zustand des Ports reagiert das Ziel unterschiedlich:
+    </p>
+    <ul>
+        <li><strong>Port offen:</strong> Ziel antwortet mit SYN-ACK → nmap sendet RST (Verbindung abgebrochen)</li>
+        <li><strong>Port geschlossen:</strong> Ziel antwortet mit RST → FortiGate loggt <code>action=client-rst</code></li>
+        <li><strong>Port gefiltert:</strong> Keine Antwort → FortiGate loggt <code>action=timeout</code></li>
+    </ul>
+
+    <div class="callout callout-blue">
+        <span class="callout-icon">ℹ️</span>
+        <p class="callout-text">
+            <strong>Der entscheidende Fingerabdruck:</strong> Bei einem nmap SYN-Scan gegen einen
+            geschlossenen Port sendet nmap genau <strong>64 Bytes</strong> (SYN-Paket mit Options).
+            Die Firewall leitet dieses Paket weiter (164 Bytes mit Ethernet/IP-Header) und empfängt
+            den RST (60 Bytes). Dieses Muster — <code>sentbyte=164 / rcvdbyte=60</code> —
+            ist ein zuverlässiger nmap-Fingerabdruck.
+        </p>
+    </div>
+
+    <h2>FortiGate Log-Analyse</h2>
+    <p>
+        Die FortiGate-VM protokolliert jeden Verbindungsversuch als Traffic-Log.
+        Für Port-Scan-Erkennung sind folgende Felder relevant:
+    </p>
+
+    <ul>
+        <li><code>type=traffic</code> — Verbindungsevent</li>
+        <li><code>action=client-rst</code> — Verbindung durch RST beendet (Scan-Indikator)</li>
+        <li><code>sentbyte=164</code> — Gesendete Bytes (nmap SYN-Paket-Größe mit Headers)</li>
+        <li><code>rcvdbyte=60</code> — Empfangene Bytes (RST-Paket-Größe)</li>
+        <li><code>srcip</code> / <code>dstip</code> / <code>dstport</code> — Quell-IP, Ziel-IP, Ziel-Port</li>
+        <li><code>service</code> — Erkannter Dienst (z.B. DNS, HTTPS)</li>
+    </ul>
+
+    <h3>SPL — Port-Scan-Erkennung</h3>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">SPL</span>
+            <span class="code-desc">Alle client-rst Sessions mit nmap-Fingerabdruck</span>
+        </div>
+        <div class="code-body">
+<span class="cmd">index</span>=fortigate <span class="cmd">type</span>=traffic <span class="cmd">action</span>=client-rst
+| <span class="cmd">eval</span> nmap_sig=<span class="cmd">case</span>(
+    sentbyte=<span class="number">164</span> AND rcvdbyte=<span class="number">60</span>, <span class="string">"nmap SYN-Scan"</span>,
+    sentbyte=<span class="number">60</span>  AND rcvdbyte=<span class="number">0</span>,  <span class="string">"gefiltert"</span>,
+    <span class="keyword">true</span>(), <span class="string">"andere"</span>
+  )
+| <span class="cmd">table</span> _time srcip dstip dstport service sentbyte rcvdbyte nmap_sig
+| <span class="cmd">sort</span> -_time
+        </div>
+    </div>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">SPL</span>
+            <span class="code-desc">Angreifer-Fingerabdruck — Scanner-Profil</span>
+        </div>
+        <div class="code-body">
+<span class="cmd">index</span>=fortigate <span class="cmd">type</span>=traffic <span class="cmd">action</span>=client-rst
+| <span class="cmd">stats</span>
+    count <span class="keyword">as</span> sessions
+    dc(dstip)   <span class="keyword">as</span> ziel_ip_anzahl
+    dc(dstport) <span class="keyword">as</span> gescannte_ports
+    values(dstport) <span class="keyword">as</span> ports
+    <span class="keyword">by</span> srcip srccountry
+| <span class="cmd">sort</span> -sessions
+        </div>
+    </div>
+
+    <h2>Ergebnisse aus dem Lab</h2>
+    <p>
+        Der nmap-Scan von <code>198.51.100.50</code> (Kali) gegen <code>8.8.8.8</code> erzeugte
+        <strong>6 client-rst Sessions</strong> auf den Ports <strong>53 (DNS)</strong> und
+        <strong>443 (HTTPS)</strong>. Alle anderen Ports erschienen entweder als offen oder
+        gefiltert und wurden nicht als client-rst geloggt.
+    </p>
+
+    <div class="callout callout-red">
+        <span class="callout-icon">🚨</span>
+        <p class="callout-text">
+            <strong>Befund:</strong> FortiGate erkennt nmap-Scans zuverlässig anhand des
+            TCP-RST-Fingerabdrucks — <em>ohne</em> IPS-Modul, allein auf Basis der Traffic-Logs.
+            Das Byte-Muster <code>sentbyte=164 / rcvdbyte=60</code> ist tool-spezifisch für
+            nmap und erlaubt die Unterscheidung von normalem Datenverkehr.
+        </p>
+    </div>
+
+    <h2>Das Splunk-Dashboard</h2>
+    <p>
+        Das <strong>Port-Scan-Erkennung</strong>-Dashboard visualisiert die Scan-Aktivität in Echtzeit:
+    </p>
+    <ul>
+        <li><strong>KPI-Karten:</strong> Scan-Sessions, Scanner-IPs, gescannte Ports, Ziel-IPs, Timeout-Sessions</li>
+        <li><strong>Zeitreihe:</strong> Wann wurde gescannt? (5-Minuten-Intervall)</li>
+        <li><strong>Angreifer-Fingerabdruck:</strong> Pro Scanner-IP: Ziel-IPs, Ports, Häufigkeit</li>
+        <li><strong>nmap Byte-Profil:</strong> Tool-Erkennung anhand sentbyte/rcvdbyte-Muster</li>
+        <li><strong>Scan-Map:</strong> Welche Quell-IP hat welche Ziel-IP und welchen Port gescannt?</li>
+        <li><strong>Traffic-Vergleich:</strong> Normaler Datenverkehr vs. Scan-Sessions (Pie-Chart)</li>
+    </ul>
+
+    <h3>Architektur: FortiGate → Splunk</h3>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">PYTHON</span>
+            <span class="code-desc">UDP-zu-HEC-Bridge (~/soc-lab/fgt-syslog-hec.py)</span>
+        </div>
+        <div class="code-body">
+<span class="comment"># FortiGate sendet Syslog UDP → Python-Bridge → Splunk HEC</span>
+LISTEN_PORT = <span class="number">5514</span>       <span class="comment"># UDP-Port für FortiGate-Syslog</span>
+HEC_URL     = <span class="string">"https://127.0.0.1:8088/services/collector/event"</span>
+INDEX       = <span class="string">"fortigate"</span>
+SOURCETYPE  = <span class="string">"fgt_log"</span>
+<span class="comment"># 4 Worker-Threads, Queue maxsize=10000, SSL CERT_NONE</span>
+        </div>
+    </div>
+
+    <h2>Defensive Maßnahmen</h2>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">IOC</span>
+            <span class="code-desc">Detection-Regeln für Port-Scan-Erkennung</span>
+        </div>
+        <div class="code-body">
+<span class="comment"># 1. nmap SYN-Scan Fingerabdruck</span>
+<span class="cmd">type</span>=traffic <span class="cmd">action</span>=client-rst sentbyte=<span class="number">164</span> rcvdbyte=<span class="number">60</span>
+
+<span class="comment"># 2. Mehrere client-rst von derselben Quell-IP (Threshold: >5 in 60s)</span>
+<span class="cmd">index</span>=fortigate <span class="cmd">action</span>=client-rst
+| <span class="cmd">bucket</span> _time span=<span class="number">60</span>s
+| <span class="cmd">stats</span> count dc(dstport) <span class="keyword">as</span> ports <span class="keyword">by</span> srcip _time
+| <span class="cmd">where</span> ports > <span class="number">5</span>
+
+<span class="comment"># 3. Timeout-Sessions (gefilterte Ports)</span>
+<span class="cmd">type</span>=traffic <span class="cmd">action</span>=timeout sentbyte=<span class="number">60</span> rcvdbyte=<span class="number">0</span>
+        </div>
+    </div>
+
+    <h2>Fazit</h2>
+    <p>
+        Dieses Lab zeigt, dass <strong>Firewall-Traffic-Logs allein</strong> für die Erkennung
+        von Port-Scans ausreichen — kein IPS, keine Deep Packet Inspection erforderlich.
+        Der TCP-RST-Fingerabdruck von nmap ist konsistent und gut zu erkennen.
+    </p>
+    <ol>
+        <li><strong>FortiGate loggt jeden Verbindungsversuch</strong> mit Byte-Zählern</li>
+        <li><strong>nmap SYN-Scan erzeugt</strong> ein eindeutiges <code>sentbyte=164 / rcvdbyte=60</code>-Muster</li>
+        <li><strong>Splunk SPL</strong> kann dieses Muster in Echtzeit erkennen und visualisieren</li>
+        <li><strong>Angreifer-Profile</strong> lassen sich automatisch aus den Logs aufbauen</li>
+    </ol>
+
+    <div class="callout callout-blue">
+        <span class="callout-icon">📚</span>
+        <p class="callout-text">
+            <strong>Weiterführend:</strong> FortiGate IPS-Sensor-Integration für automatische
+            Blockierung erkannter Scanner sowie Splunk-Alerts für Echtzeit-Benachrichtigung
+            bei Port-Scan-Aktivität.
+        </p>
+    </div>
+
+</main>
+
+<footer>
+    <div class="footer-inner">
+        <div class="footer-links">
+            <a href="index.html">← Blog</a>
+            <a href="https://github.com/yasinkilicma" target="_blank">GitHub</a>
+            <a href="https://www.linkedin.com/in/yasin-kilic-cyber-security/" target="_blank">LinkedIn</a>
+        </div>
+        <p class="footer-copy">© 2026 Yasin Kilic — SOC Analyst in Training</p>
+    </div>
+</footer>
+
+</body>
+</html>
