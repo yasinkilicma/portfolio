@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home-Lab Architektur — FortiGate + Splunk SOC auf Apple Silicon | Yasin Kilic</title>
+    <meta name="description" content="Komplette Lab-Architektur: FortiGate-VM auf Mac mini M4 (UTM), Debian-Kali-Client via QEMU Socket-Networking und Splunk SOC mit BOTS v1 Datensatz — alles auf einem einzigen Gerät.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0e1a; --bg2: #0f1525; --bg3: #161d30;
+            --border: #1e2a42; --accent: #00d4ff; --accent2: #ff4757;
+            --accent3: #2ed573; --accent4: #ffa502;
+            --text: #e0e6f0; --text-muted: #6b7a99;
+            --code-bg: #0d1117;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: var(--bg); color: var(--text); font-family: 'Sora', sans-serif; font-size: 16px; line-height: 1.8; }
+        header { position: sticky; top: 0; z-index: 100; background: rgba(10,14,26,0.9); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 16px 0; }
+        .header-inner { max-width: 860px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; }
+        .logo { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--accent); text-decoration: none; font-size: 18px; }
+        .back-link { font-size: 13px; color: var(--text-muted); text-decoration: none; }
+        .back-link:hover { color: var(--accent); }
+        .hero { max-width: 860px; margin: 0 auto; padding: 64px 24px 48px; border-bottom: 1px solid var(--border); }
+        .hero-meta { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+        .badge { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 4px; letter-spacing: 0.5px; }
+        .badge-blue  { background: rgba(0,212,255,0.1);  color: var(--accent);  border: 1px solid rgba(0,212,255,0.2); }
+        .badge-green { background: rgba(46,213,115,0.1); color: var(--accent3); border: 1px solid rgba(46,213,115,0.2); }
+        .badge-orange{ background: rgba(255,165,2,0.1);  color: var(--accent4); border: 1px solid rgba(255,165,2,0.2); }
+        .hero-title { font-size: clamp(26px,4vw,38px); font-weight: 700; line-height: 1.2; margin-bottom: 16px; }
+        .hero-subtitle { font-size: 17px; color: var(--text-muted); max-width: 680px; }
+        article { max-width: 860px; margin: 0 auto; padding: 48px 24px 80px; }
+        h2 { font-size: 22px; font-weight: 700; margin: 52px 0 20px; padding-left: 16px; border-left: 3px solid var(--accent); }
+        h3 { font-size: 17px; font-weight: 600; color: var(--accent); margin: 36px 0 14px; font-family: 'JetBrains Mono', monospace; }
+        p { margin-bottom: 16px; color: #c8d4e8; }
+        ul, ol { margin: 0 0 16px 20px; color: #c8d4e8; }
+        li { margin-bottom: 6px; }
+        strong { color: var(--text); }
+        code { font-family: 'JetBrains Mono', monospace; font-size: 13px; background: var(--bg3); padding: 2px 7px; border-radius: 4px; color: var(--accent); }
+
+        /* ── Diyagram Kutular ─────────────────────────────────────────── */
+        .arch-box {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 28px 28px;
+            margin: 24px 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: #a8b8d8;
+            white-space: pre;
+            overflow-x: auto;
+            line-height: 1.7;
+        }
+        .arch-box .node-host    { color: #ffa502; font-weight: 600; }
+        .arch-box .node-fw      { color: #00d4ff; font-weight: 600; }
+        .arch-box .node-client  { color: #2ed573; font-weight: 600; }
+        .arch-box .node-soc     { color: #ff4757; font-weight: 600; }
+        .arch-box .node-net     { color: #a29bfe; font-weight: 600; }
+        .arch-box .node-data    { color: #fd79a8; font-weight: 600; }
+        .arch-box .dim          { color: #3d4f6e; }
+        .arch-box .label        { color: #6b7a99; font-size: 12px; }
+
+        /* ── Komponenten-Karten ───────────────────────────────────────── */
+        .component-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 24px 0; }
+        @media (max-width: 600px) { .component-grid { grid-template-columns: 1fr; } }
+        .component-card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .component-card.blue   { border-left: 3px solid var(--accent); }
+        .component-card.green  { border-left: 3px solid var(--accent3); }
+        .component-card.red    { border-left: 3px solid var(--accent2); }
+        .component-card.orange { border-left: 3px solid var(--accent4); }
+        .comp-title { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; margin-bottom: 10px; }
+        .comp-title.blue   { color: var(--accent); }
+        .comp-title.green  { color: var(--accent3); }
+        .comp-title.red    { color: var(--accent2); }
+        .comp-title.orange { color: var(--accent4); }
+        .comp-desc { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin: 0; }
+        .comp-spec { font-size: 12px; font-family: 'JetBrains Mono', monospace; color: #3d5a80; margin-top: 8px; }
+
+        /* ── Daten-Flow ──────────────────────────────────────────────── */
+        .flow-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .flow-num {
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px; font-weight: 600;
+            flex-shrink: 0;
+        }
+        .flow-num.blue   { background: rgba(0,212,255,0.15);  color: var(--accent); }
+        .flow-num.green  { background: rgba(46,213,115,0.15); color: var(--accent3); }
+        .flow-num.red    { background: rgba(255,71,87,0.15);  color: var(--accent2); }
+        .flow-num.orange { background: rgba(255,165,2,0.15);  color: var(--accent4); }
+        .flow-body { flex: 1; }
+        .flow-title { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+        .flow-desc  { font-size: 14px; color: var(--text-muted); }
+
+        /* ── Callout ─────────────────────────────────────────────────── */
+        .callout { background: rgba(0,212,255,0.05); border: 1px solid rgba(0,212,255,0.2); border-radius: 10px; padding: 16px 20px; margin: 20px 0; display: flex; gap: 12px; }
+        .callout-green { background: rgba(46,213,115,0.05); border-color: rgba(46,213,115,0.2); }
+        .callout-orange { background: rgba(255,165,2,0.05); border-color: rgba(255,165,2,0.2); }
+        .callout-icon { font-size: 18px; flex-shrink: 0; padding-top: 1px; }
+        .callout-text { font-size: 14px; color: #a8b8d8; margin: 0; line-height: 1.7; }
+
+        /* ── Tabelle ─────────────────────────────────────────────────── */
+        .data-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px; }
+        .data-table th { background: var(--bg3); color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+        .data-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: #c8d4e8; vertical-align: top; }
+        .data-table tr:last-child td { border-bottom: none; }
+        .data-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--accent3); }
+
+        /* ── Screenshot ──────────────────────────────────────────────── */
+        .screenshot { width: 100%; border-radius: 12px; border: 1px solid var(--border); margin: 20px 0; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+        .screenshot-caption { font-size: 13px; color: var(--text-muted); text-align: center; margin: -12px 0 24px; }
+
+        /* ── Footer ──────────────────────────────────────────────────── */
+        footer { border-top: 1px solid var(--border); padding: 32px 0; text-align: center; color: var(--text-muted); font-size: 13px; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-inner">
+        <a href="../index.html" class="logo">YK</a>
+        <a href="index.html" class="back-link">← Alle Blog-Posts</a>
+    </div>
+</header>
+
+<div class="hero">
+    <div class="hero-meta">
+        <span class="badge badge-orange">LAB ARCHITEKTUR</span>
+        <span class="badge badge-blue">FortiGate</span>
+        <span class="badge badge-green">Splunk SOC</span>
+        <span class="badge badge-blue">Apple Silicon</span>
+    </div>
+    <h1 class="hero-title">Home-Lab Architektur<br>FortiGate + Splunk SOC auf einem Mac</h1>
+    <p class="hero-subtitle">
+        Wie man auf einem einzigen Mac mini M4 eine vollständige Netzwerk-Sicherheitsumgebung betreibt —
+        mit einer echten Firewall-VM, einem Angreifer-Client und einem SIEM-System mit 955.807 realen Angriffsdaten.
+    </p>
+</div>
+
+<article>
+
+    <!-- ── WARUM ─────────────────────────────────────────────────────────── -->
+    <h2>Was ist dieses Lab?</h2>
+    <p>
+        Ein <strong>Home-Lab</strong> ist eine selbst aufgebaute Lernumgebung — kein Cloud-Dienst, kein Schulungsraum,
+        sondern echte Software, die auf dem eigenen Gerät läuft. Dieses Lab besteht aus zwei Teilen:
+    </p>
+    <div class="component-grid">
+        <div class="component-card orange">
+            <div class="comp-title orange">FortiGate Firewall-Lab</div>
+            <p class="comp-desc">Eine echte Unternehmens-Firewall läuft als virtuelle Maschine. Ein simulierter Angreifer-Client schickt Verkehr durch die Firewall — genau wie in einem echten Netzwerk.</p>
+        </div>
+        <div class="component-card red">
+            <div class="comp-title red">Splunk SOC-Lab</div>
+            <p class="comp-desc">Ein Security Operations Center (SOC) im Miniformat. Splunk sammelt alle Logs und zeigt in Dashboards, was im Netzwerk passiert — inklusive echter Ransomware-Angriffsdaten.</p>
+        </div>
+    </div>
+    <p>
+        Beide Labs laufen gleichzeitig auf einem einzigen <strong>Mac mini M4</strong>. Keine Cloud-Kosten,
+        keine separaten Server — alles virtualisiert auf einem Gerät.
+    </p>
+
+    <!-- ── GESAMTBILD ─────────────────────────────────────────────────────── -->
+    <h2>Das Gesamtbild auf einen Blick</h2>
+    <p>So sieht das komplette Lab von oben aus — alle Komponenten, alle Verbindungen:</p>
+
+    <div class="arch-box">
+<span class="node-host">╔══════════════════════════════════════════════════════════════════════════╗</span>
+<span class="node-host">║                        MAC MINI M4  (Host-Rechner)                      ║</span>
+<span class="node-host">╚══════════════════════════════════════════════════════════════════════════╝</span>
+         │                          │                          │
+         ▼                          ▼                          ▼
+<span class="node-fw">┌─────────────────────┐</span>  <span class="node-client">┌─────────────────────┐</span>  <span class="node-soc">┌─────────────────────┐</span>
+<span class="node-fw">│   UTM 4.7.5         │</span>  <span class="node-client">│   QEMU (standalone) │</span>  <span class="node-soc">│   Docker            │</span>
+<span class="node-fw">│  ┌───────────────┐  │</span>  <span class="node-client">│  ┌───────────────┐  │</span>  <span class="node-soc">│  ┌───────────────┐  │</span>
+<span class="node-fw">│  │ FortiGate-VM  │  │</span>  <span class="node-client">│  │ Debian ARM64  │  │</span>  <span class="node-soc">│  │    Splunk     │  │</span>
+<span class="node-fw">│  │  7.4.12 ARM64 │  │</span>  <span class="node-client">│  │  (Kali Tools) │  │</span>  <span class="node-soc">│  │  Enterprise   │  │</span>
+<span class="node-fw">│  │               │  │</span>  <span class="node-client">│  │               │  │</span>  <span class="node-soc">│  │               │  │</span>
+<span class="node-fw">│  │ port1: WAN    │  │</span>  <span class="node-client">│  │ IP: 192.0.2.50│  │</span>  <span class="node-soc">│  │ Port 8000     │  │</span>
+<span class="node-fw">│  │ port3: LAN ───┼──┼──┼── socket ──►│  │  │</span>  <span class="node-soc">│  │ Port 8088 HEC │  │</span>
+<span class="node-fw">│  └───────────────┘  │</span>  <span class="node-client">│  └───────────────┘  │</span>  <span class="node-soc">│  └───────────────┘  │</span>
+<span class="node-fw">└─────────────────────┘</span>  <span class="node-client">└─────────────────────┘</span>  <span class="node-soc">└─────────────────────┘</span>
+         │                                                     ▲
+         │ Syslog (UDP 5514)                                   │
+         │                                                     │
+         ▼                                          HEC (HTTPS 8088)
+<span class="node-net">┌─────────────────────┐</span>                                       │
+<span class="node-net">│  Python HEC-Bridge  │───────────────────────────────────────┘</span>
+<span class="node-net">│  fgt-syslog-hec.py  │</span>  <span class="dim">Empfängt Syslog UDP, leitet weiter an Splunk HEC</span>
+<span class="node-net">└─────────────────────┘</span>
+         │
+         ▼
+<span class="node-data">┌────────────────────────────────────────────────────────────────┐</span>
+<span class="node-data">│                        INTERNET                                │</span>
+<span class="node-data">│          Firewall-Traffic geht durch FortiGate  →  WAN         │</span>
+<span class="node-data">└────────────────────────────────────────────────────────────────┘</span>
+    </div>
+
+    <!-- ── KOMPONENTEN ────────────────────────────────────────────────────── -->
+    <h2>Die einzelnen Komponenten erklärt</h2>
+    <p>Was macht jede Komponente — und warum wurde sie so gewählt?</p>
+
+    <h3>① Mac mini M4 — der Host</h3>
+    <p>
+        Der <strong>Mac mini M4</strong> ist der physische Rechner, auf dem alles läuft.
+        Er hat einen ARM64-Prozessor (Apple Silicon) — das bedeutet, alle virtuellen Maschinen
+        müssen ebenfalls ARM64-Software verwenden. Das ist wichtig, weil ältere x86-VMs hier
+        nicht laufen würden.
+    </p>
+    <div class="callout callout-orange">
+        <span class="callout-icon">💡</span>
+        <p class="callout-text">
+            <strong>Was ist ARM64?</strong> Eine Prozessor-Architektur — wie eine "Sprache", die der Chip versteht.
+            Intel/AMD-PCs sprechen x86. Apple Silicon spricht ARM64. Software muss in der richtigen
+            "Sprache" geschrieben sein, sonst läuft sie nicht.
+        </p>
+    </div>
+
+    <h3>② UTM 4.7.5 — der Hypervisor für die Firewall</h3>
+    <p>
+        <strong>UTM</strong> ist eine Virtualisierungssoftware für macOS — ähnlich wie VMware oder VirtualBox,
+        aber speziell für Apple Silicon optimiert. UTM nutzt Apples eingebautes
+        <strong>Hypervisor Framework (hvf)</strong>, sodass die FortiGate-VM mit voller CPU-Geschwindigkeit läuft.
+    </p>
+    <div class="component-grid">
+        <div class="component-card blue">
+            <div class="comp-title blue">Hypervisor = VM-Gastgeber</div>
+            <p class="comp-desc">Ein Hypervisor teilt die Hardware des Computers in mehrere virtuelle Computer auf. Jede VM denkt, sie hat echte Hardware — in Wirklichkeit teilt sie sich mit anderen VMs.</p>
+        </div>
+        <div class="component-card green">
+            <div class="comp-title green">Apple hvf = Hardware-Beschleunigung</div>
+            <p class="comp-desc">Ohne hvf würde jede CPU-Instruktion in Software emuliert — sehr langsam. Mit hvf laufen ARM64-VMs fast so schnell wie nativ auf der echten Hardware.</p>
+        </div>
+    </div>
+
+    <h3>③ FortiGate-VM 7.4.12 ARM64 — die Firewall</h3>
+    <p>
+        <strong>FortiGate</strong> ist eine Enterprise-Firewall von Fortinet, die in Unternehmensnetzen weltweit eingesetzt wird.
+        In diesem Lab läuft sie als virtuelle Maschine (VM) in UTM — mit denselben Features wie auf echter Hardware.
+    </p>
+
+    <div class="arch-box">
+<span class="label">FortiGate-VM Netzwerk-Interfaces:</span>
+
+<span class="node-fw">port1</span>  ──►  <span class="node-net">UTM "Shared" (NAT)</span>  ──►  <span class="node-data">Internet</span>
+              <span class="dim">IP: 192.0.2.2 (WAN)</span>
+              <span class="dim">Funktion: WAN-Anbindung + Management-GUI</span>
+              <span class="dim">Mac-GUI: https://192.0.2.2</span>
+
+<span class="node-fw">port3</span>  ──►  <span class="node-net">QEMU Socket-Netzwerk</span>  ──►  <span class="node-client">Debian-Client</span>
+              <span class="dim">IP: 192.0.2.99/24 (LAN)</span>
+              <span class="dim">Funktion: internes Netzwerk für den Client</span>
+              <span class="dim">DHCP-Server: .100 – .200</span>
+    </div>
+
+    <div class="callout">
+        <span class="callout-icon">🔥</span>
+        <p class="callout-text">
+            <strong>Was macht eine Firewall?</strong> Sie kontrolliert, welcher Netzwerk-Verkehr erlaubt ist.
+            Jedes Paket, das vom Client ins Internet will, passiert die FortiGate — sie entscheidet:
+            Durchlassen, Blockieren oder Loggen. Genau das passiert hier in Echtzeit.
+        </p>
+    </div>
+
+    <h3>④ QEMU Socket-Networking — das unsichtbare Kabel</h3>
+    <p>
+        Der Debian-Client läuft <strong>nicht</strong> in UTM, sondern in einem separaten QEMU-Prozess.
+        Die Verbindung zwischen Client und FortiGate erfolgt über ein <strong>virtuelles Netzwerkkabel</strong>:
+        QEMU Socket-Networking.
+    </p>
+
+    <div class="arch-box">
+<span class="label">Wie QEMU Socket-Networking funktioniert:</span>
+
+<span class="node-fw">FortiGate (in UTM)</span>                    <span class="node-client">Debian-Client (in QEMU)</span>
+      │                                         │
+      │  port3  <span class="dim">listen=127.0.0.1:4700</span>         │  <span class="dim">connect=127.0.0.1:4700</span>
+      │     └────────────────────────────────────┘
+      │              <span class="node-net">TCP-Socket (lokal)</span>
+      │         <span class="dim">(nur innerhalb des Macs sichtbar)</span>
+      │
+<span class="label">Start-Reihenfolge wichtig:</span>
+  <span class="dim">1. FortiGate starten → öffnet den Socket (wartet)</span>
+  <span class="dim">2. QEMU starten → verbindet sich mit dem Socket</span>
+  <span class="dim">→ Danach fließen Ethernet-Frames zwischen beiden VMs</span>
+    </div>
+
+    <div class="callout callout-orange">
+        <span class="callout-icon">💡</span>
+        <p class="callout-text">
+            <strong>Warum kein UTM für den Client?</strong> UTM kann keine beliebigen QEMU-Argumente übergeben —
+            es filtert Leerzeichen in den Parametern heraus, was die Socket-Konfiguration unmöglich macht.
+            Der direkte QEMU-Befehl (<code>brew install qemu</code>) gibt volle Kontrolle.
+        </p>
+    </div>
+
+    <h3>⑤ Debian ARM64 (Kali-Client)</h3>
+    <p>
+        Der "Angreifer-Client" ist eine <strong>Debian ARM64 Cloud-Image VM</strong>. Kali Linux ist
+        technisch gesehen Debian + Sicherheits-Tools — daher wurden einfach die gewünschten Tools
+        nachinstalliert: <code>nmap</code>, <code>hping3</code>, <code>tcpdump</code>, <code>curl</code>.
+    </p>
+
+    <div class="arch-box">
+<span class="label">Client-Konfiguration:</span>
+
+IP-Adresse:   <span class="node-client">192.0.2.50/24</span>      <span class="dim">(statisch via Netplan)</span>
+Gateway:      <span class="node-fw">192.0.2.99</span>         <span class="dim">(FortiGate port3 = Default-GW)</span>
+Konsole:      <span class="dim">TCP 127.0.0.1:4600</span>  <span class="dim">(seriell via nc oder expect)</span>
+Start:        <span class="dim">~/kali-lab/start-lab.sh</span>
+
+Installierte Tools:
+  nmap        <span class="dim">→ Port-Scanner (Netzwerk-Erkennung)</span>
+  hping3      <span class="dim">→ Packet-Crafter (manuelle TCP/UDP-Pakete)</span>
+  tcpdump     <span class="dim">→ Paket-Mitschnitt</span>
+  curl        <span class="dim">→ HTTP-Client (für AV/IPS-Tests)</span>
+    </div>
+
+    <!-- ── SOC LAB ────────────────────────────────────────────────────────── -->
+    <h2>Das SOC-Lab: Splunk + BOTS v1</h2>
+    <p>
+        Parallel zum FortiGate-Lab läuft ein <strong>Security Operations Center (SOC)</strong> in Docker.
+        Es besteht aus Splunk Enterprise und zwei Datenquellen.
+    </p>
+
+    <h3>⑥ Docker + Splunk Enterprise</h3>
+
+    <div class="arch-box">
+<span class="label">SOC-Lab Komponenten:</span>
+
+<span class="node-host">Mac mini M4</span>
+    │
+    └── <span class="node-soc">Docker Container: soc-lab-splunk</span>
+            │
+            ├── <span class="node-net">Port 8000</span>  → Splunk Web-GUI  <span class="dim">(Browser: localhost:8000)</span>
+            ├── <span class="node-net">Port 8088</span>  → HEC Endpoint    <span class="dim">(HTTP Event Collector)</span>
+            └── <span class="node-net">Port 9997</span>  → Splunk Indexer  <span class="dim">(für Forwarder)</span>
+
+<span class="label">Splunk Indexes (Datenspeicher):</span>
+
+  <span class="node-fw">index=fortigate</span>   <span class="dim">→ Echtzeit-Logs aus dem FortiGate-Lab</span>
+                     <span class="dim">→ Fließen via Python HEC-Bridge rein</span>
+
+  <span class="node-soc">index=botsv1</span>      <span class="dim">→ BOTS v1 Datensatz (955.807 Events)</span>
+                     <span class="dim">→ Echter Ransomware-Angriff von 2016</span>
+                     <span class="dim">→ WICHTIG: lebt im Container (nie löschen!)</span>
+    </div>
+
+    <div class="callout callout-green">
+        <span class="callout-icon">🏆</span>
+        <p class="callout-text">
+            <strong>Was ist BOTS v1?</strong> "Boss of the SOC" ist ein öffentlicher Datensatz von Splunk —
+            echte Logs eines simulierten Unternehmensangriffs (Wayne Enterprises, August 2016).
+            Ein Angreifer installierte den Cerber-Ransomware-Trojaner, der Dateien verschlüsselte und
+            sich seitlich im Netzwerk ausbreitete. Mit 955.807 Events ist das ein realistisches
+            Übungs-Szenario für SOC-Analysten.
+        </p>
+    </div>
+
+    <h3>⑦ Python HEC-Bridge — Logs in Echtzeit</h3>
+    <p>
+        Die FortiGate sendet ihre Logs als <strong>Syslog UDP</strong> (Port 5514). Splunk versteht
+        dieses Format nicht direkt — deswegen übersetzt ein Python-Skript die Logs und schickt
+        sie über den <strong>HTTP Event Collector (HEC)</strong> an Splunk weiter.
+    </p>
+
+    <div class="arch-box">
+<span class="label">Log-Pipeline (Echtzeit):</span>
+
+<span class="node-fw">FortiGate-VM</span>
+    │
+    │  Syslog UDP :5514
+    │  <span class="dim">(jede Firewall-Aktion → ein Log-Eintrag)</span>
+    ▼
+<span class="node-net">Python-Skript: fgt-syslog-hec.py</span>
+    │  <span class="dim">• Empfängt UDP-Pakete auf Port 5514</span>
+    │  <span class="dim">• 4 Worker-Threads (parallele Verarbeitung)</span>
+    │  <span class="dim">• Queue: max. 10.000 Einträge</span>
+    │
+    │  HTTPS POST → localhost:8088
+    │  <span class="dim">Token: HEC_TOKEN (in config)</span>
+    ▼
+<span class="node-soc">Splunk HEC (HTTP Event Collector)</span>
+    │
+    │  <span class="dim">sourcetype=fgt_log, index=fortigate</span>
+    ▼
+<span class="node-soc">Splunk Dashboard: FortiGate SOC</span>
+    <span class="dim">(Traffic, IPS, AntiVirus, Port-Scans — alles live)</span>
+    </div>
+
+    <!-- ── NETZWERK-ÜBERSICHT ──────────────────────────────────────────────── -->
+    <h2>Netzwerk-Adressen im Überblick</h2>
+    <p>
+        Alle öffentlich dokumentierten Adressen verwenden <strong>Dokumentations-IPs</strong> (RFC 5737) —
+        diese Ranges sind offiziell für Beispiele und Dokumentation reserviert und erscheinen nie im echten Internet.
+    </p>
+
+    <table class="data-table">
+        <thead>
+            <tr><th>KOMPONENTE</th><th>IP-ADRESSE</th><th>NETZWERK</th><th>FUNKTION</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Mac mini M4 (Host)</td><td>192.0.2.1</td><td>WAN-Segment</td><td>Host-Rechner, NAT-Gateway für FortiGate</td></tr>
+            <tr><td>FortiGate port1 (WAN)</td><td>192.0.2.2</td><td>WAN-Segment</td><td>Internet-Zugang + Management-GUI (HTTPS)</td></tr>
+            <tr><td>FortiGate port3 (LAN)</td><td>192.0.2.99</td><td>LAN-Segment</td><td>Default-Gateway für den Client</td></tr>
+            <tr><td>Debian-Client (Kali)</td><td>192.0.2.50</td><td>LAN-Segment</td><td>Angreifer-Client, sendet Traffic durch FW</td></tr>
+            <tr><td>Splunk Web-GUI</td><td>localhost:8000</td><td>Host-only</td><td>SIEM-Dashboard (Browser)</td></tr>
+            <tr><td>Splunk HEC</td><td>localhost:8088</td><td>Host-only</td><td>Log-Eingang (HTTP Event Collector)</td></tr>
+        </tbody>
+    </table>
+
+    <!-- ── DATENFLUSS ─────────────────────────────────────────────────────── -->
+    <h2>Was passiert bei einem Angriff — Schritt für Schritt</h2>
+    <p>Beispiel: Der Kali-Client führt einen nmap-Port-Scan durch. So fließen die Daten:</p>
+
+    <div class="flow-step">
+        <div class="flow-num green">1</div>
+        <div class="flow-body">
+            <div class="flow-title">Client startet den Scan</div>
+            <div class="flow-desc">Der Kali-Client sendet TCP-SYN-Pakete an Ziel-IPs — ein normaler nmap-Port-Scan. Ziel: herausfinden, welche Ports offen sind.</div>
+        </div>
+    </div>
+    <div class="flow-step">
+        <div class="flow-num blue">2</div>
+        <div class="flow-body">
+            <div class="flow-title">Pakete treffen auf die FortiGate</div>
+            <div class="flow-desc">Jedes Paket passiert die LAN→WAN-Policy. Die FortiGate analysiert den Traffic — Flow-Inspection, IPS, AntiVirus. Für jeden abgeschlossenen TCP-Flow entsteht ein Log-Eintrag.</div>
+        </div>
+    </div>
+    <div class="flow-step">
+        <div class="flow-num orange">3</div>
+        <div class="flow-body">
+            <div class="flow-title">Syslog → Python-Bridge → Splunk</div>
+            <div class="flow-desc">Die FortiGate schickt den Log per UDP Syslog an Port 5514. Das Python-Skript empfängt ihn sofort und leitet ihn per HTTPS an Splunk HEC weiter. Latenz: unter 1 Sekunde.</div>
+        </div>
+    </div>
+    <div class="flow-step">
+        <div class="flow-num red">4</div>
+        <div class="flow-body">
+            <div class="flow-title">Splunk indexiert und visualisiert</div>
+            <div class="flow-desc">Splunk speichert den Event im Index <code>fortigate</code>. Das Port-Scan-Detection-Dashboard zeigt sofort: neue Scanner-IP, gescannte Ports, nmap-Fingerabdruck (sentbyte=164, rcvdbyte=60).</div>
+        </div>
+    </div>
+
+    <!-- ── SPLUNK DASHBOARDS ──────────────────────────────────────────────── -->
+    <h2>Die Splunk-Dashboards</h2>
+    <p>
+        Im Laufe des Labs entstanden <strong>8 Custom-Dashboards</strong> in Splunk — je eines für jeden
+        Analyse-Schwerpunkt. Alle Dashboards sind auf Deutsch beschriftet.
+    </p>
+
+    <div class="arch-box">
+<span class="label">Splunk Dashboard-Übersicht:</span>
+
+<span class="node-net">SOC Home</span>  <span class="dim">→ Zentrale Navigation + Live-KPIs beider Labs</span>
+│
+├── <span class="node-fw">FortiGate SOC</span>          <span class="dim">→ Echtzeit: Traffic, UTM, IPS, Virus</span>  <span class="label">[index=fortigate]</span>
+├── <span class="node-fw">Port-Scan-Erkennung</span>    <span class="dim">→ nmap-Fingerabdruck, Angreifer-Profil</span>  <span class="label">[index=fortigate]</span>
+│
+├── <span class="node-soc">BOTS v1 — Cerber</span>       <span class="dim">→ Gesamt-Übersicht Ransomware-Angriff</span>   <span class="label">[index=botsv1]</span>
+├── <span class="node-soc">Suricata IDS</span>           <span class="dim">→ Web-Angriffe, XSS, SQLi, Shellshock</span>  <span class="label">[index=botsv1]</span>
+├── <span class="node-soc">SMB Lateral Movement</span>   <span class="dim">→ Ransomware-Ausbreitung 250.100→250.20</span><span class="label">[index=botsv1]</span>
+├── <span class="node-soc">Sysmon Process Creation</span><span class="dim">→ osk.exe Masquerading, Parent-Child</span>    <span class="label">[index=botsv1]</span>
+└── <span class="node-soc">Registry Persistence</span>   <span class="dim">→ Run-Keys, RunOnce, CMD AutoRun</span>        <span class="label">[index=botsv1]</span>
+    </div>
+
+    <!-- ── START-REIHENFOLGE ──────────────────────────────────────────────── -->
+    <h2>Lab starten — die richtige Reihenfolge</h2>
+    <p>
+        Die Startreihenfolge ist wichtig: Der QEMU-Socket-Listener muss <strong>vor</strong> dem
+        Client geöffnet sein, sonst schlägt die Verbindung fehl.
+    </p>
+
+    <div class="arch-box">
+<span class="label">Start-Reihenfolge:</span>
+
+<span class="dim">Schritt 1:</span>  <span class="node-soc">Docker Splunk</span>  <span class="dim">(läuft im Hintergrund, meist schon aktiv)</span>
+  docker start soc-lab-splunk
+
+<span class="dim">Schritt 2:</span>  <span class="node-fw">FortiGate-VM in UTM starten</span>
+  utmctl start E6133DD1-0297-4B83-9999-72BB1633FAB1
+  <span class="dim">→ Wartet auf Socket-Verbindung auf Port 4700</span>
+  <span class="dim">→ Warten bis FortiOS vollständig gebootet ist (~30 Sek.)</span>
+
+<span class="dim">Schritt 3:</span>  <span class="node-client">Debian-Client (QEMU) starten</span>
+  ~/kali-lab/start-lab.sh
+  <span class="dim">→ Verbindet sich mit FortiGate über Socket :4700</span>
+  <span class="dim">→ Seriell-Konsole: nc 127.0.0.1 4600</span>
+
+<span class="dim">Schritt 4:</span>  <span class="node-net">Python HEC-Bridge starten</span>
+  python3 ~/soc-lab/fgt-syslog-hec.py
+  <span class="dim">→ Empfängt UDP 5514, leitet weiter an localhost:8088</span>
+
+<span class="dim">Fertig:</span>  Alle Komponenten laufen — Splunk unter http://localhost:8000
+    </div>
+
+    <!-- ── WARUM SO ────────────────────────────────────────────────────────── -->
+    <h2>Warum diese Architektur?</h2>
+    <p>
+        Jede Design-Entscheidung hat einen Grund. Hier die wichtigsten:
+    </p>
+
+    <table class="data-table">
+        <thead>
+            <tr><th>ENTSCHEIDUNG</th><th>WARUM</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>FortiGate in UTM (nicht QEMU)</td>
+                <td>UTM nutzt Apples Hypervisor Framework für native ARM64-Beschleunigung — keine Emulation, volle Performance.</td>
+            </tr>
+            <tr>
+                <td>Debian statt Kali</td>
+                <td>Kali ist Debian. Der Kali-Installer scheiterte an fehlendem Framebuffer und UEFI-Problemen unter ARM64 hvf. Cloud-Image bootet direkt ohne Installer.</td>
+            </tr>
+            <tr>
+                <td>QEMU Socket statt zweites UTM-Interface</td>
+                <td>UTM kann keine Leerzeichen in QEMU-Argumente einfügen — Socket-Parameter wären dadurch kaputt. Direktes QEMU gibt volle Kontrolle.</td>
+            </tr>
+            <tr>
+                <td>Python HEC-Bridge statt Syslog-Forwarder</td>
+                <td>Splunk's nativer Syslog-Input erfordert einen Universal Forwarder oder Add-on. Die Python-Bridge ist ein einziges Skript, keine Installation nötig.</td>
+            </tr>
+            <tr>
+                <td>BOTS v1 im Container (nie löschen)</td>
+                <td>Die 955.807 Events liegen in der Writable-Layer des Containers. Docker-Volume-Migration oder Neuanlage würde alle Daten verlieren.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- ── VERKNÜPFTE POSTS ───────────────────────────────────────────────── -->
+    <h2>Alle zugehörigen Blog-Posts</h2>
+    <p>Jede Komponente hat einen eigenen Artikel mit Details, SPL-Queries und Screenshots:</p>
+
+    <table class="data-table">
+        <thead>
+            <tr><th>THEMA</th><th>LINK</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>FortiGate-VM Lab Setup (UTM)</td><td><a href="fortigate-vm-lab-apple-silicon.html" style="color:var(--accent)">fortigate-vm-lab-apple-silicon →</a></td></tr>
+            <tr><td>Kali-Client via QEMU Socket</td><td><a href="fortigate-lab-attacker-client-socket.html" style="color:var(--accent)">fortigate-lab-attacker-client-socket →</a></td></tr>
+            <tr><td>IPS Custom Signature Test</td><td><a href="fortigate-ips-custom-signature-test.html" style="color:var(--accent)">fortigate-ips-custom-signature-test →</a></td></tr>
+            <tr><td>AntiVirus EICAR Test</td><td><a href="fortigate-antivirus-eicar-test.html" style="color:var(--accent)">fortigate-antivirus-eicar-test →</a></td></tr>
+            <tr><td>Port-Scan-Erkennung mit Splunk</td><td><a href="soc-port-scan-detection-de.html" style="color:var(--accent)">soc-port-scan-detection-de →</a></td></tr>
+            <tr><td>FortiGate → Splunk Pipeline</td><td><a href="fortigate-splunk-soc-pipeline-de.html" style="color:var(--accent)">fortigate-splunk-soc-pipeline-de →</a></td></tr>
+            <tr><td>Suricata IDS Analyse (BOTS v1)</td><td><a href="soc-suricata-ids-de.html" style="color:var(--accent)">soc-suricata-ids-de →</a></td></tr>
+            <tr><td>SMB Lateral Movement</td><td><a href="soc-smb-lateral-movement-de.html" style="color:var(--accent)">soc-smb-lateral-movement-de →</a></td></tr>
+            <tr><td>Sysmon Process Creation</td><td><a href="soc-sysmon-process-creation-de.html" style="color:var(--accent)">soc-sysmon-process-creation-de →</a></td></tr>
+            <tr><td>Registry Persistence</td><td><a href="soc-registry-persistence-de.html" style="color:var(--accent)">soc-registry-persistence-de →</a></td></tr>
+        </tbody>
+    </table>
+
+</article>
+
+<footer>
+    <p>© 2026 Yasin Kilic · <a href="../index.html" style="color:var(--accent);text-decoration:none;">Portfolio</a></p>
+</footer>
+
+</body>
+</html>
