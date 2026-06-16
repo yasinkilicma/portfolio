@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cerber Ransomware in einem Home-SOC-Lab detektieren | Yasin Kilic</title>
+    <meta name="description" content="Wie ich ein vollständiges SOC-Lab mit Terraform, Docker und Splunk aufgebaut und anschließend einen echten Cerber-Ransomware-Angriff im BOTS v1 Datensatz untersucht habe.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0e1a; --bg2: #0f1525; --bg3: #161d30;
+            --border: #1e2a42; --accent: #00d4ff; --accent2: #ff4757;
+            --accent3: #2ed573; --text: #e0e6f0; --text-muted: #6b7a99;
+            --code-bg: #0d1117;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: var(--bg); color: var(--text); font-family: 'Sora', sans-serif; font-size: 16px; line-height: 1.8; }
+        header { position: sticky; top: 0; z-index: 100; background: rgba(10,14,26,0.9); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 16px 0; }
+        .header-inner { max-width: 860px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; }
+        .logo { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--accent); text-decoration: none; font-size: 18px; letter-spacing: -0.5px; }
+        .back-link { font-size: 13px; color: var(--text-muted); text-decoration: none; transition: color 0.2s; }
+        .back-link:hover { color: var(--accent); }
+        .hero { max-width: 860px; margin: 0 auto; padding: 64px 24px 48px; border-bottom: 1px solid var(--border); }
+        .hero-meta { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+        .badge { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 4px; letter-spacing: 0.5px; }
+        .badge-red { background: rgba(255,71,87,0.15); color: var(--accent2); border: 1px solid rgba(255,71,87,0.3); }
+        .badge-blue { background: rgba(0,212,255,0.1); color: var(--accent); border: 1px solid rgba(0,212,255,0.2); }
+        .badge-green { background: rgba(46,213,115,0.1); color: var(--accent3); border: 1px solid rgba(46,213,115,0.2); }
+        .meta-date { font-size: 13px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+        h1 { font-size: clamp(28px,5vw,44px); font-weight: 700; line-height: 1.2; letter-spacing: -1px; margin-bottom: 20px; }
+        h1 span { color: var(--accent); }
+        .hero-summary { font-size: 17px; color: var(--text-muted); max-width: 680px; line-height: 1.7; }
+        .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 28px; }
+        .tag { font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 5px 12px; background: var(--bg3); border: 1px solid var(--border); border-radius: 20px; color: var(--text-muted); }
+        .content { max-width: 860px; margin: 0 auto; padding: 56px 24px; }
+        .stat-bar { display: grid; grid-template-columns: repeat(3,1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 56px; }
+        .stat-item { background: var(--bg2); padding: 24px; text-align: center; }
+        .stat-number { font-family: 'JetBrains Mono', monospace; font-size: 28px; font-weight: 600; color: var(--accent); display: block; }
+        .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+        h2 { font-size: 22px; font-weight: 700; margin: 48px 0 20px; padding-left: 16px; border-left: 3px solid var(--accent); letter-spacing: -0.3px; }
+        h3 { font-size: 17px; font-weight: 600; margin: 32px 0 12px; color: var(--accent); font-family: 'JetBrains Mono', monospace; }
+        p { margin-bottom: 16px; color: var(--text); }
+        code { font-family: 'JetBrains Mono', monospace; font-size: 13px; background: var(--bg3); padding: 2px 8px; border-radius: 4px; color: var(--accent); }
+        .arch-box { background: var(--code-bg); border: 1px solid var(--border); border-radius: 12px; padding: 28px; margin: 24px 0; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.8; color: #8b9ab8; overflow-x: auto; }
+        .arch-box .highlight { color: var(--accent); }
+        .arch-box .highlight2 { color: var(--accent3); }
+        .arch-box .highlight3 { color: var(--accent2); }
+        .code-block { background: var(--code-bg); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin: 20px 0; }
+        .code-header { background: var(--bg3); border-bottom: 1px solid var(--border); padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; }
+        .code-lang { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); font-weight: 600; letter-spacing: 0.5px; }
+        .code-desc { font-size: 12px; color: var(--text-muted); }
+        .code-body { padding: 20px; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.7; color: #a8b8d8; overflow-x: auto; }
+        .code-body .comment { color: #4a5568; }
+        .code-body .keyword { color: #ff79c6; }
+        .code-body .string { color: #f1fa8c; }
+        .code-body .number { color: var(--accent3); }
+        .code-body .cmd { color: var(--accent); }
+        .findings { display: grid; gap: 16px; margin: 24px 0; }
+        .finding-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: start; transition: border-color 0.2s; }
+        .finding-card:hover { border-color: var(--accent); }
+        .finding-icon { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+        .icon-red { background: rgba(255,71,87,0.15); }
+        .icon-blue { background: rgba(0,212,255,0.1); }
+        .icon-green { background: rgba(46,213,115,0.1); }
+        .icon-yellow { background: rgba(255,200,0,0.1); }
+        .finding-title { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+        .finding-desc { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin: 0; }
+        .alert-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13px; }
+        .alert-table th { background: var(--bg3); color: var(--text-muted); font-weight: 600; padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.5px; }
+        .alert-table td { padding: 12px 16px; border-bottom: 1px solid rgba(30,42,66,0.5); font-family: 'JetBrains Mono', monospace; }
+        .alert-table tr:hover td { background: var(--bg2); }
+        .severity-high { color: var(--accent2); font-weight: 600; }
+        .severity-med { color: #ffa502; }
+        .severity-low { color: var(--accent3); }
+        .timeline { position: relative; margin: 24px 0; padding-left: 32px; }
+        .timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: linear-gradient(to bottom, var(--accent), var(--accent2)); }
+        .timeline-item { position: relative; margin-bottom: 28px; }
+        .timeline-dot { position: absolute; left: -28px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg); }
+        .timeline-dot.red { background: var(--accent2); }
+        .timeline-dot.green { background: var(--accent3); }
+        .timeline-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; font-family: 'JetBrains Mono', monospace; color: var(--accent); }
+        .timeline-desc { font-size: 14px; color: var(--text-muted); margin: 0; }
+        .callout { border-radius: 12px; padding: 20px 24px; margin: 24px 0; display: flex; gap: 16px; align-items: flex-start; }
+        .callout-blue { background: rgba(0,212,255,0.06); border: 1px solid rgba(0,212,255,0.2); }
+        .callout-red { background: rgba(255,71,87,0.06); border: 1px solid rgba(255,71,87,0.2); }
+        .callout-green { background: rgba(46,213,115,0.06); border: 1px solid rgba(46,213,115,0.2); }
+        .callout-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+        .callout-text { font-size: 14px; line-height: 1.7; color: var(--text); margin: 0; }
+        .callout-text strong { color: var(--accent); }
+        .lessons { display: grid; grid-template-columns: repeat(auto-fit,minmax(240px,1fr)); gap: 16px; margin: 24px 0; }
+        .lesson-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+        .lesson-number { font-family: 'JetBrains Mono', monospace; font-size: 28px; font-weight: 600; color: var(--border); line-height: 1; margin-bottom: 12px; }
+        .lesson-title { font-weight: 600; font-size: 14px; margin-bottom: 6px; }
+        .lesson-desc { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin: 0; }
+        .screenshot { width: 100%; border-radius: 12px; border: 1px solid var(--border); margin: 20px 0; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+        .screenshot-caption { font-size: 13px; color: var(--text-muted); text-align: center; margin: -12px 0 24px; }
+        footer { border-top: 1px solid var(--border); padding: 40px 24px; text-align: center; }
+        .footer-inner { max-width: 860px; margin: 0 auto; }
+        .footer-links { display: flex; justify-content: center; gap: 24px; margin-bottom: 16px; }
+        .footer-links a { font-size: 13px; color: var(--text-muted); text-decoration: none; transition: color 0.2s; }
+        .footer-links a:hover { color: var(--accent); }
+        .footer-copy { font-size: 12px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+        @media (max-width: 600px) { .stat-bar { grid-template-columns: 1fr; } .lessons { grid-template-columns: 1fr; } h1 { font-size: 28px; } }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .hero { animation: fadeUp 0.6s ease; }
+        .content { animation: fadeUp 0.6s ease 0.1s both; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-inner">
+        <a href="../index.html" class="logo">YK</a>
+        <a href="index.html" class="back-link">← Blog</a>
+    </div>
+</header>
+
+<section class="hero">
+    <div class="hero-meta">
+        <span class="badge badge-red">INCIDENT REPORT</span>
+        <span class="badge badge-blue">SOC LAB</span>
+        <span class="meta-date">Mai 2026</span>
+    </div>
+    <h1><span>Cerber Ransomware</span><br>in einem Home-SOC-Lab detektieren</h1>
+    <p class="hero-summary">
+        Wie ich eine vollständige SOC-Umgebung mit Terraform, Docker und Splunk Enterprise aufgebaut
+        und anschließend einen echten Ransomware-Angriff anhand von 955.807 authentischen Angriffs-Events
+        aus dem BOTS v1 Datensatz untersucht habe.
+    </p>
+    <div class="tags">
+        <span class="tag">Terraform</span>
+        <span class="tag">Docker</span>
+        <span class="tag">Splunk</span>
+        <span class="tag">SIEM</span>
+        <span class="tag">Suricata IDS</span>
+        <span class="tag">Cerber Ransomware</span>
+        <span class="tag">Incident Response</span>
+        <span class="tag">SPL</span>
+        <span class="tag">Infrastructure as Code</span>
+    </div>
+</section>
+
+<main class="content">
+
+    <!-- STATS -->
+    <div class="stat-bar">
+        <div class="stat-item">
+            <span class="stat-number">955.807</span>
+            <span class="stat-label">Analysierte Angriffs-Events</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">22</span>
+            <span class="stat-label">Log-Quell-Typen</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">3</span>
+            <span class="stat-label">Kerntechnologien</span>
+        </div>
+    </div>
+
+    <!-- ARCHITEKTUR -->
+    <h2>Lab-Architektur</h2>
+    <p>
+        Das Ziel war, eine realistische SOC-Umgebung von Grund auf per Infrastructure as Code aufzubauen —
+        keine manuelle Konfiguration, alles reproduzierbar und versionskontrolliert auf GitHub.
+    </p>
+
+    <div class="arch-box">
+<span class="highlight">Terraform</span> (Infrastructure as Code)
+    │
+    ├── <span class="highlight2">docker_network</span>   →  soc-lab-network (bridge)
+    ├── <span class="highlight2">docker_volume</span>    →  soc-lab-splunk-data (persistent)
+    └── <span class="highlight2">docker_container</span> →  soc-lab-splunk
+            │
+            ├── Port <span class="highlight3">8000</span>  →  Splunk Web-GUI
+            ├── Port <span class="highlight3">8088</span>  →  HTTP Event Collector (HEC)
+            └── Port <span class="highlight3">9997</span>  →  Universal Forwarder
+    </div>
+
+    <img src="images/dashboard-overview.png" alt="SOC Security Dashboard Übersicht" class="screenshot">
+    <p class="screenshot-caption">Abb. 1 — Splunk SOC Security Dashboard: Top-Angriffs-Signaturen, Angreifer-IPs und Attack Timeline auf einen Blick</p>
+
+    <p>
+        Splunk Enterprise läuft in Docker, vollständig von Terraform verwaltet. Das bedeutet: Die gesamte
+        Lab-Umgebung kann mit einem einzigen <code>terraform apply</code> Befehl von Null aufgebaut werden.
+    </p>
+
+    <!-- DATENSATZ -->
+    <h2>Der Datensatz — BOTS v1</h2>
+    <p>
+        Der <strong>Boss of the SOC (BOTS) v1</strong> Datensatz von Splunk enthält echte Angriffsdaten
+        aus einer simulierten Unternehmensumgebung. Er deckt eine mehrstufige Angriffskampagne ab,
+        die im August 2016 ein fiktives Unternehmen (Wayne Enterprises) angegriffen hat.
+    </p>
+
+    <div class="callout callout-blue">
+        <span class="callout-icon">ℹ️</span>
+        <p class="callout-text">
+            <strong>955.807 Events</strong> aus 22 Quell-Typen — darunter Suricata IDS, Windows Event Logs,
+            FortiGate-Firewall, IIS-Webserver-Logs, Netzwerk-Streams (DNS, HTTP, SMB, TCP) und Nessus-Vulnerability-Scans.
+        </p>
+    </div>
+
+    <!-- UNTERSUCHUNG -->
+    <h2>Die Untersuchung</h2>
+
+    <h3>Schritt 1 — Reconnaissance: Was haben wir überhaupt?</h3>
+    <p>Zunächst habe ich die verfügbaren Log-Quellen kartiert und identifiziert, welche Systeme angegriffen wurden.</p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">SPL</span>
+            <span class="code-desc">Alle Log-Quellen und Event-Anzahl im Überblick</span>
+        </div>
+        <div class="code-body">
+<span class="comment"># Events pro Quell-Typ zählen — um zu verstehen, welche Daten vorliegen</span>
+<span class="cmd">index</span>=botsv1 <span class="cmd">earliest</span>=<span class="number">0</span>
+| <span class="cmd">stats</span> count <span class="keyword">by</span> sourcetype
+| <span class="cmd">sort</span> -count
+        </div>
+    </div>
+
+    <p>Ergebnis: Suricata IDS hatte 125.584 Alarme, SMB-Traffic 151.568 Events, Windows Security Logs 87.430 Einträge.</p>
+
+    <h3>Schritt 2 — Zielsystem identifizieren</h3>
+    <p>Nessus-Vulnerability-Scan-Logs zeigten, welche internen Systeme der Angreifer aktiv sondierte.</p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">SPL</span>
+            <span class="code-desc">Vulnerability-Scan-Ziele herausfinden</span>
+        </div>
+        <div class="code-body">
+<span class="comment"># Welche Hosts wurden gescannt? (Nessus = Angreifer kartiert das Netzwerk)</span>
+<span class="cmd">index</span>=botsv1 <span class="cmd">earliest</span>=<span class="number">0</span> <span class="cmd">sourcetype</span>=nessus:scan
+| <span class="cmd">stats</span> count <span class="keyword">by</span> host_ip
+| <span class="cmd">sort</span> -count
+        </div>
+    </div>
+
+    <p>Primärziel: <code>192.168.250.20</code> wurde 37-mal gescannt — eindeutig das Hauptangriffsziel.</p>
+
+    <h3>Schritt 3 — IDS-Alarm-Analyse</h3>
+    <p>Suricata-IDS-Alarme gegen die Ziel-IP zeigten die eingesetzten Angriffstechniken.</p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">SPL</span>
+            <span class="code-desc">Suricata-Alarme gegen das Hauptopfer</span>
+        </div>
+        <div class="code-body">
+<span class="comment"># Welche Angriffs-Signaturen haben gegen unser Ziel ausgelöst?</span>
+<span class="cmd">index</span>=botsv1 <span class="cmd">earliest</span>=<span class="number">0</span> <span class="cmd">sourcetype</span>=suricata <span class="cmd">dest_ip</span>=<span class="string">192.168.250.20</span>
+| <span class="cmd">stats</span> count <span class="keyword">by</span> alert.signature
+| <span class="cmd">sort</span> -count
+| <span class="cmd">head</span> <span class="number">10</span>
+        </div>
+    </div>
+
+    <table class="alert-table">
+        <thead>
+            <tr>
+                <th>ALARM-SIGNATUR</th>
+                <th>ANZAHL</th>
+                <th>SCHWERE</th>
+                <th>BEDEUTUNG</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>ETPRO TROJAN Ransomware/Cerber Onion Domain Lookup</td>
+                <td>2</td>
+                <td class="severity-high">KRITISCH</td>
+                <td>C2-Kommunikation via Tor</td>
+            </tr>
+            <tr>
+                <td>ET SCAN Behavioral Unusual Port 445 traffic</td>
+                <td>2</td>
+                <td class="severity-high">HOCH</td>
+                <td>SMB-Port-Scan — WannaCry-Vektor</td>
+            </tr>
+            <tr>
+                <td>ET SCAN Behavioral Unusual Port 135 traffic</td>
+                <td>1</td>
+                <td class="severity-med">MITTEL</td>
+                <td>RPC-Port-Scan — Windows-Exploit-Vorbereitung</td>
+            </tr>
+            <tr>
+                <td>SURICATA DNS malformed response data</td>
+                <td>1</td>
+                <td class="severity-med">MITTEL</td>
+                <td>DNS-Manipulationsversuch</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <img src="images/attack-signatures.png" alt="Top 10 Angriffs-Signaturen in Splunk" class="screenshot">
+    <p class="screenshot-caption">Abb. 2 — Top 10 Suricata-Alarm-Signaturen: DNS-Manipulation und Web Application Attacks dominieren</p>
+
+    <div class="callout callout-red">
+        <span class="callout-icon">🚨</span>
+        <p class="callout-text">
+            <strong>Kritischer Fund:</strong> Die Signatur <em>"ETPRO TROJAN Ransomware/Cerber Onion Domain Lookup"</em>
+            bestätigt, dass der Rechner <code>192.168.250.20</code> mit <strong>Cerber Ransomware</strong> infiziert war
+            und aktiv mit einem Tor-basierten Command-&amp;-Control-Server kommunizierte.
+        </p>
+    </div>
+
+    <h3>Schritt 4 — Angreifer-Zuordnung</h3>
+    <p>Die Suche nach allen Quell-IPs zeigte sowohl den externen Angreifer als auch die laterale Ausbreitung im Netzwerk.</p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">SPL</span>
+            <span class="code-desc">Alle Angriffsquellen identifizieren</span>
+        </div>
+        <div class="code-body">
+<span class="comment"># Wer erzeugt den meisten bösartigen Traffic?</span>
+<span class="cmd">index</span>=botsv1 <span class="cmd">earliest</span>=<span class="number">0</span> <span class="cmd">sourcetype</span>=suricata
+| <span class="cmd">stats</span> count <span class="keyword">by</span> src_ip
+| <span class="cmd">sort</span> -count
+| <span class="cmd">head</span> <span class="number">10</span>
+        </div>
+    </div>
+
+    <div class="findings">
+        <div class="finding-card">
+            <div class="finding-icon icon-red">🔴</div>
+            <div>
+                <div class="finding-title">192.168.250.100 — Kompromittierter interner Rechner</div>
+                <p class="finding-desc">2.907 Alarme — die höchste Anzahl aller Quellen. Ein interner Rechner führt laterale Bewegung durch: Die Infektion hat sich bereits im Netzwerk ausgebreitet.</p>
+            </div>
+        </div>
+        <div class="finding-card">
+            <div class="finding-icon icon-yellow">⚠️</div>
+            <div>
+                <div class="finding-title">192.168.2.50 — Externer Angreifer</div>
+                <p class="finding-desc">2.250 Alarme. Dies ist die IP-Adresse des ursprünglichen Bedrohungsakteurs — der Einstiegspunkt des Angriffs von außen.</p>
+            </div>
+        </div>
+        <div class="finding-card">
+            <div class="finding-icon icon-blue">ℹ️</div>
+            <div>
+                <div class="finding-title">8.8.8.8 — Google DNS</div>
+                <p class="finding-desc">2.038 DNS-Anfragen an Googles öffentlichen DNS — typisches Verhalten des Domain Generation Algorithm (DGA) von Ransomware für die C2-Kommunikation.</p>
+            </div>
+        </div>
+    </div>
+
+    <img src="images/attacker-ips.png" alt="Top Angreifer-IPs in Splunk" class="screenshot">
+    <p class="screenshot-caption">Abb. 3 — Top Angreifer-IPs: 192.168.250.100 (interner kompromittierter Host) mit den meisten Alarmen — ein klares Zeichen für Lateral Movement</p>
+
+    <!-- ANGRIFFS-TIMELINE -->
+    <h2>Rekonstruierte Angriffs-Timeline</h2>
+    <div class="timeline">
+        <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-title">Phase 1 — Reconnaissance</div>
+            <p class="timeline-desc">Externer Angreifer (192.168.2.50) führt Nessus-Vulnerability-Scans gegen interne Hosts durch. Ziel 192.168.250.20 als Hauptopfer identifiziert.</p>
+        </div>
+        <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-title">Phase 2 — Erstzugriff</div>
+            <p class="timeline-desc">Angreifer nutzt Schwachstelle auf 192.168.250.20 aus. SMB-Port-Scan (Port 445) und RPC-Sondierung (Port 135) deuten auf einen Windows-Exploit-Vektor hin.</p>
+        </div>
+        <div class="timeline-item">
+            <div class="timeline-dot red"></div>
+            <div class="timeline-title">Phase 3 — Cerber Ransomware</div>
+            <p class="timeline-desc">Cerber Ransomware wird auf 192.168.250.20 installiert. IDS erkennt Tor-(.onion)-Domain-Lookup — Ransomware kontaktiert seinen C2-Server für Verschlüsselungsschlüssel.</p>
+        </div>
+        <div class="timeline-item">
+            <div class="timeline-dot red"></div>
+            <div class="timeline-title">Phase 4 — Lateral Movement</div>
+            <p class="timeline-desc">Infektion breitet sich auf 192.168.250.100 aus. Dieser interne Rechner erzeugt das höchste Alarm-Volumen — 2.907 IDS-Alarme.</p>
+        </div>
+        <div class="timeline-item">
+            <div class="timeline-dot green"></div>
+            <div class="timeline-title">Phase 5 — Detektion</div>
+            <p class="timeline-desc">Suricata IDS erzeugt insgesamt 125.584 Alarme. SOC-Analyst korreliert Nessus-Scans, IDS-Alarme und Windows Event Logs zur vollständigen Angriffskette.</p>
+        </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <h2>Das Security Dashboard</h2>
+    <p>
+        Mit Splunks eingebauten Visualisierungswerkzeugen habe ich ein 4-Panel SOC Security Dashboard gebaut,
+        das alle Erkenntnisse in einer einzigen Echtzeit-Ansicht zusammenfasst:
+    </p>
+
+    <div class="findings">
+        <div class="finding-card">
+            <div class="finding-icon icon-blue">📊</div>
+            <div>
+                <div class="finding-title">Panel 1 — Top 10 Angriffs-Signaturen</div>
+                <p class="finding-desc">Balkendiagramm der häufigsten Suricata-IDS-Signaturen. Zeigt sofort DNS-Manipulation und XSS-Versuche als dominante Angriffsvektoren.</p>
+            </div>
+        </div>
+        <div class="finding-card">
+            <div class="finding-icon icon-red">🎯</div>
+            <div>
+                <div class="finding-title">Panel 2 — Top 10 Angreifer-IPs</div>
+                <p class="finding-desc">Zeigt 192.168.250.100 als aktivste Quelle — eine unerwartete interne IP, die sofort auf Lateral Movement hinweist.</p>
+            </div>
+        </div>
+        <div class="finding-card">
+            <div class="finding-icon icon-yellow">🏹</div>
+            <div>
+                <div class="finding-title">Panel 3 — Top 10 Zielsysteme</div>
+                <p class="finding-desc">Tortendiagramm mit 192.168.250.70 als meistangegriffenem System — hilft, Eindämmungsmaßnahmen zu priorisieren.</p>
+            </div>
+        </div>
+        <div class="finding-card">
+            <div class="finding-icon icon-green">📈</div>
+            <div>
+                <div class="finding-title">Panel 4 — Angriffs-Timeline</div>
+                <p class="finding-desc">Liniendiagramm der Angriffs-Aktivität über Zeit (August 2016) — zeigt Dauer und Intensitäts-Spitzen der Kampagne.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ERKENNTNISSE -->
+    <h2>Wichtigste Erkenntnisse</h2>
+    <div class="lessons">
+        <div class="lesson-card">
+            <div class="lesson-number">01</div>
+            <div class="lesson-title">IaC macht Labs reproduzierbar</div>
+            <p class="lesson-desc">Terraform + Docker bedeutet: Die gesamte SOC-Umgebung kann in Minuten von Null aufgebaut werden. Kein manuelles Setup, kein Configuration Drift.</p>
+        </div>
+        <div class="lesson-card">
+            <div class="lesson-number">02</div>
+            <div class="lesson-title">Lateral Movement ist lautlos</div>
+            <p class="lesson-desc">Der kompromittierte interne Rechner (192.168.250.100) erzeugte mehr Alarme als der externe Angreifer — interner Traffic wird oft zu wenig überwacht.</p>
+        </div>
+        <div class="lesson-card">
+            <div class="lesson-number">03</div>
+            <div class="lesson-title">Mehrere Quellen korrelieren</div>
+            <p class="lesson-desc">Keine einzelne Log-Quelle erzählte die ganze Geschichte. Die Angriffskette wurde erst sichtbar durch die Korrelation von Nessus-Scans, Suricata-Alarmen und Windows Event Logs.</p>
+        </div>
+        <div class="lesson-card">
+            <div class="lesson-number">04</div>
+            <div class="lesson-title">DNS ist ein Warnsignal</div>
+            <p class="lesson-desc">2.038 DNS-Anfragen an 8.8.8.8 und fehlerhafte DNS-Antworten sind klassische C2-Kommunikationsmuster von Ransomware — DNS-Traffic immer überwachen.</p>
+        </div>
+    </div>
+
+    <div class="callout callout-green">
+        <span class="callout-icon">✅</span>
+        <p class="callout-text">
+            <strong>Quellcode auf GitHub:</strong> Sowohl die Terraform-Infrastruktur als auch die Splunk-Konfiguration
+            sind vollständig dokumentiert und versionskontrolliert.
+            <a href="https://github.com/yasinkilicma/terraform-splunk-demo" target="_blank"
+               style="color:var(--accent3);text-decoration:none;"> → terraform-splunk-demo</a>
+        </p>
+    </div>
+
+</main>
+
+<footer>
+    <div class="footer-inner">
+        <div class="footer-links">
+            <a href="index.html">← Blog</a>
+            <a href="https://github.com/yasinkilicma/terraform-splunk-demo" target="_blank">GitHub</a>
+            <a href="https://www.linkedin.com/in/yasin-kilic-cyber-security/" target="_blank">LinkedIn</a>
+        </div>
+        <p class="footer-copy">© 2026 Yasin Kilic</p>
+    </div>
+</footer>
+
+</body>
+</html>
