@@ -43,6 +43,8 @@
         .stat-number { display: block; font-family: 'JetBrains Mono', monospace; font-size: 28px; font-weight: 700; color: var(--accent); margin-bottom: 4px; }
         .stat-label { font-size: 12px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
         .code-block { background: var(--code-bg); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin: 20px 0; }
+        .screenshot { width: 100%; border-radius: 12px; border: 1px solid var(--border); margin: 20px 0; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+        .screenshot-caption { font-size: 13px; color: var(--text-muted); text-align: center; margin: -12px 0 24px; }
         .code-header { background: var(--bg3); border-bottom: 1px solid var(--border); padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; }
         .code-lang { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); font-weight: 600; }
         .code-desc { font-size: 12px; color: var(--text-muted); }
@@ -241,6 +243,9 @@ Syslog UDP 5514  →  Python HEC Bridge  →  Splunk index=fortigate
         <li><strong>Scan-Map:</strong> Welche Quell-IP hat welche Ziel-IP und welchen Port gescannt?</li>
         <li><strong>Traffic-Vergleich:</strong> Normaler Datenverkehr vs. Scan-Sessions (Pie-Chart)</li>
     </ul>
+
+    <img src="images/soc-port-scan-detection.png" alt="Port-Scan-Erkennung Splunk Dashboard — KPI-Karten, Zeitreihe und Angreifer-Fingerabdruck" class="screenshot">
+    <p class="screenshot-caption">Abb. 1 — Port-Scan-Erkennung Dashboard: 19 Scan-Sessions, 2 Scanner-IPs (192.168.64.2, 192.168.1.50), Top-Port 443 — in Splunk Enterprise</p>
 
     <h3>Architektur: FortiGate → Splunk</h3>
 
