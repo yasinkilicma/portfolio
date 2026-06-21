@@ -261,7 +261,7 @@
                 </div>
                 <div class="spl-wrap">
                     <div class="spl-label">// SPL</div>
-                    <div class="spl"><span class="fd">index</span>=winsec <span class="fd">EventCode</span>=<span class="nm">4769</span>
+                    <div class="spl"><span class="fd">index</span>=windows_security <span class="fd">EventCode</span>=<span class="nm">4769</span>
   <span class="fd">TicketEncryptionType</span>=<span class="st">"0x17"</span>
   <span class="kw">NOT</span> <span class="fd">ServiceName</span>=<span class="st">"krbtgt"</span>
   <span class="kw">NOT</span> <span class="fd">ServiceName</span>=<span class="st">"*$"</span>
@@ -300,7 +300,7 @@
                 </div>
                 <div class="spl-wrap">
                     <div class="spl-label">// SPL</div>
-                    <div class="spl"><span class="fd">index</span>=winsec <span class="fd">EventCode</span>=<span class="nm">4768</span>
+                    <div class="spl"><span class="fd">index</span>=windows_security <span class="fd">EventCode</span>=<span class="nm">4768</span>
   <span class="fd">PreAuthType</span>=<span class="st">"0"</span>
   <span class="fd">TicketEncryptionType</span>=<span class="st">"0x17"</span>
   <span class="fd">Status</span>=<span class="st">"0x0"</span>
@@ -342,7 +342,7 @@
                 </div>
                 <div class="spl-wrap">
                     <div class="spl-label">// SPL</div>
-                    <div class="spl"><span class="fd">index</span>=winsec <span class="fd">EventCode</span>=<span class="nm">4662</span>
+                    <div class="spl"><span class="fd">index</span>=windows_security <span class="fd">EventCode</span>=<span class="nm">4662</span>
   <span class="fd">AccessMask</span>=<span class="st">"0x100"</span>
 | <span class="kw">where</span> (<span class="kw">match</span>(<span class="fd">Properties</span>,<span class="st">"1131f6aa"</span>)
   <span class="kw">OR</span> <span class="kw">match</span>(<span class="fd">Properties</span>,<span class="st">"1131f6ad"</span>))
@@ -379,7 +379,7 @@
                 </div>
                 <div class="spl-wrap">
                     <div class="spl-label">// SPL — Anomalie via Privileges</div>
-                    <div class="spl"><span class="fd">index</span>=winsec <span class="fd">EventCode</span>=<span class="nm">4672</span>
+                    <div class="spl"><span class="fd">index</span>=windows_security <span class="fd">EventCode</span>=<span class="nm">4672</span>
 | <span class="kw">where</span> <span class="kw">match</span>(<span class="fd">PrivilegeList</span>,
         <span class="st">"(?i)SeTcbPrivilege"</span>)
 | <span class="kw">table</span> <span class="fd">_time</span>,<span class="fd">SubjectUserName</span>,
@@ -414,10 +414,10 @@
                     </div>
                     <div class="spl-wrap" style="margin-top:0">
                         <div class="spl-label">// SPL — TGS ohne TGT in letzter Stunde</div>
-                        <div class="spl"><span class="fd">index</span>=winsec <span class="fd">EventCode</span>=<span class="nm">4769</span>
+                        <div class="spl"><span class="fd">index</span>=windows_security <span class="fd">EventCode</span>=<span class="nm">4769</span>
 | <span class="kw">eval</span> t1=<span class="fd">_time</span>
 | <span class="kw">join</span> <span class="kw">type</span>=<span class="kw">left</span> <span class="fd">AccountName</span> [
-    <span class="kw">search</span> <span class="fd">index</span>=winsec <span class="fd">EventCode</span>=<span class="nm">4768</span>
+    <span class="kw">search</span> <span class="fd">index</span>=windows_security <span class="fd">EventCode</span>=<span class="nm">4768</span>
     | <span class="kw">eval</span> t2=<span class="fd">_time</span>
     | <span class="kw">table</span> <span class="fd">AccountName</span>,t2 ]
 | <span class="kw">where</span> <span class="kw">isnull</span>(t2)
@@ -434,7 +434,7 @@
     <h2>// Master Query — alle 5 Angriffe kombiniert</h2>
 
     <div class="spl" style="border-radius:10px;padding:16px 18px;font-size:12px;">
-<span class="fd">index</span>=winsec (
+<span class="fd">index</span>=windows_security (
   (<span class="fd">EventCode</span>=<span class="nm">4769</span> <span class="fd">TicketEncryptionType</span>=<span class="st">"0x17"</span> <span class="kw">NOT</span> <span class="fd">ServiceName</span>=<span class="st">"krbtgt"</span> <span class="kw">NOT</span> <span class="fd">ServiceName</span>=<span class="st">"*$"</span>)  <span class="cm">← Kerberoasting</span>
   <span class="kw">OR</span> (<span class="fd">EventCode</span>=<span class="nm">4768</span> <span class="fd">PreAuthType</span>=<span class="st">"0"</span>)                                                      <span class="cm">← AS-REP Roasting</span>
   <span class="kw">OR</span> (<span class="fd">EventCode</span>=<span class="nm">4662</span> <span class="fd">AccessMask</span>=<span class="st">"0x100"</span>)                                                   <span class="cm">← DCSync</span>
