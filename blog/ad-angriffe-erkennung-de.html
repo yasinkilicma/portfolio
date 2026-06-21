@@ -164,7 +164,7 @@
     <div class="callout blue">
         <div class="callout-icon">→</div>
         <div class="callout-body">
-            <p><strong>Warum Active Directory?</strong> AD ist das Herzstück jedes Windows-Unternehmensnetzwerks. 95% der Fortune-500-Unternehmen nutzen AD. Angreifer zielen immer auf AD ab — wer AD kompromittiert, hat das gesamte Netzwerk. Diese Angriffe sind in jedem SOC-Interview ein Thema.</p>
+            <p><strong>Warum Active Directory?</strong> AD ist das Herzstück jedes Windows-Unternehmensnetzwerks. 95% der Fortune-500-Unternehmen nutzen AD. Angreifer zielen immer auf AD ab — wer AD kompromittiert, hat das gesamte Netzwerk unter Kontrolle.</p>
         </div>
     </div>
 
@@ -476,7 +476,7 @@
     <div class="code-block">
         <div class="code-header">
             <span class="code-lang">SPL</span>
-            <span class="code-desc">Golden Ticket — Anomalie-Erkennung via Ticket-Laufzeit und Privilegien</span>
+            <span class="code-desc">Golden Ticket — Anomalie-Erkennung via Privilegien</span>
         </div>
         <div class="code-body"><span class="fd">index</span>=windows_security (<span class="fd">EventCode</span>=<span class="nm">4624</span> <span class="kw">OR</span> <span class="fd">EventCode</span>=<span class="nm">4672</span>)
 | <span class="kw">eval</span> suspicious_privs = <span class="kw">if</span>(
@@ -511,7 +511,7 @@
             <td>NTLM</td>
             <td>Kerberos</td>
         </tr>
-            <tr>
+        <tr>
             <td>Event ID (Login)</td>
             <td>4776 + 4624 Type 3 NTLM</td>
             <td>4768/4769 + 4624 Type 3 Kerberos</td>
@@ -624,54 +624,6 @@
          <span class="fd">TargetUserName</span>, <span class="fd">ServiceName</span>, <span class="fd">IpAddress</span>, <span class="fd">ComputerName</span>
 | <span class="kw">sort</span> <span class="fd">_time</span></div>
     </div>
-
-    <!-- QUICK REFERENCE -->
-    <h2>Quick Reference — Mülakat-Cheatsheet</h2>
-
-    <table class="event-table">
-        <tr>
-            <th>Angriff</th>
-            <th>Voraussetzung</th>
-            <th>Event ID + Merkmal</th>
-            <th>Tool</th>
-            <th>MITRE</th>
-        </tr>
-        <tr>
-            <td><strong>Kerberoasting</strong></td>
-            <td>Domain User</td>
-            <td><span class="eid" style="font-size:12px;">4769</span> EncType=0x17, SPN-Name</td>
-            <td><span class="ecat">Rubeus, Impacket</span></td>
-            <td><span class="mitre">T1558.003</span></td>
-        </tr>
-        <tr>
-            <td><strong>AS-REP Roasting</strong></td>
-            <td>Kein Account (anonym)</td>
-            <td><span class="eid" style="font-size:12px;">4768</span> PreAuthType=0, EncType=0x17</td>
-            <td><span class="ecat">Rubeus, Impacket</span></td>
-            <td><span class="mitre">T1558.004</span></td>
-        </tr>
-        <tr>
-            <td><strong>DCSync</strong></td>
-            <td>Replication-Rechte</td>
-            <td><span class="eid" style="font-size:12px;">4662</span> Replikations-GUIDs, kein DC$</td>
-            <td><span class="ecat">Mimikatz</span></td>
-            <td><span class="mitre">T1003.006</span></td>
-        </tr>
-        <tr>
-            <td><strong>Golden Ticket</strong></td>
-            <td>KRBTGT-Hash</td>
-            <td><span class="eid" style="font-size:12px;">4624</span> ohne <span class="eid" style="font-size:12px;">4768</span>, SeTcbPrivilege</td>
-            <td><span class="ecat">Mimikatz</span></td>
-            <td><span class="mitre">T1558.001</span></td>
-        </tr>
-        <tr>
-            <td><strong>Pass-the-Ticket</strong></td>
-            <td>Gestohlenes .kirbi</td>
-            <td><span class="eid" style="font-size:12px;">4769</span> ohne vorheriges <span class="eid" style="font-size:12px;">4768</span></td>
-            <td><span class="ecat">Mimikatz, Rubeus</span></td>
-            <td><span class="mitre">T1550.003</span></td>
-        </tr>
-    </table>
 
     <div class="callout green">
         <div class="callout-icon">→</div>
