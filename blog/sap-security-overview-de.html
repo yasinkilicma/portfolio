@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAP Security Audit Log Analysis — 5 Angriffsszenarien mit Splunk | Yasin Kilic</title>
+    <meta name="description" content="Vollständige SAP Security Audit Log Analyse: 5 Angriffsszenarien von Brute-Force über After-Hours Admin und Privilege Escalation bis zu RFC-Angriff und Datenexfiltration — mit Splunk SPL und echten Lab-Daten.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg:#0a0e1a; --bg2:#0f1525; --bg3:#161d30; --border:#1e2a42; --accent:#00d4ff; --accent2:#ff4757; --accent3:#2ed573; --purple:#a78bfa; --text:#e0e6f0; --text-muted:#6b7a99; --code-bg:#0d1117; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { background:var(--bg); color:var(--text); font-family:'Sora',sans-serif; font-size:16px; line-height:1.8; }
+        header { position:sticky; top:0; z-index:100; background:rgba(10,14,26,0.9); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); padding:16px 0; }
+        .header-inner { max-width:860px; margin:0 auto; padding:0 24px; display:flex; align-items:center; justify-content:space-between; }
+        .logo { font-family:'JetBrains Mono',monospace; font-weight:600; color:var(--accent); text-decoration:none; font-size:18px; letter-spacing:-0.5px; }
+        .back-link { font-size:13px; color:var(--text-muted); text-decoration:none; transition:color 0.2s; }
+        .back-link:hover { color:var(--purple); }
+        .hero { max-width:860px; margin:0 auto; padding:64px 24px 48px; border-bottom:1px solid var(--border); }
+        .hero-meta { display:flex; align-items:center; gap:12px; margin-bottom:24px; flex-wrap:wrap; }
+        .badge { font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600; padding:4px 10px; border-radius:4px; letter-spacing:0.5px; }
+        .badge-purple { background:rgba(167,139,250,0.12); color:var(--purple); border:1px solid rgba(167,139,250,0.3); }
+        .badge-red    { background:rgba(255,71,87,0.15);   color:var(--accent2); border:1px solid rgba(255,71,87,0.3); }
+        .badge-grn    { background:rgba(46,213,115,0.10);  color:var(--accent3); border:1px solid rgba(46,213,115,0.2); }
+        .meta-date { font-size:13px; color:var(--text-muted); font-family:'JetBrains Mono',monospace; }
+        h1 { font-size:clamp(28px,5vw,44px); font-weight:700; line-height:1.2; letter-spacing:-1px; margin-bottom:20px; }
+        h1 span { color:var(--purple); }
+        .hero-summary { font-size:17px; color:var(--text-muted); max-width:680px; line-height:1.7; }
+        .tags { display:flex; flex-wrap:wrap; gap:8px; margin-top:28px; }
+        .tag { font-family:'JetBrains Mono',monospace; font-size:12px; padding:5px 12px; background:var(--bg3); border:1px solid var(--border); border-radius:20px; color:var(--text-muted); }
+        .content { max-width:860px; margin:0 auto; padding:56px 24px; }
+        .stat-bar { display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--border); border:1px solid var(--border); border-radius:12px; overflow:hidden; margin-bottom:56px; }
+        .stat-item { background:var(--bg2); padding:22px 12px; text-align:center; }
+        .stat-number { font-family:'JetBrains Mono',monospace; font-size:26px; font-weight:600; color:var(--purple); display:block; }
+        .stat-number.red { color:var(--accent2); }
+        .stat-label { font-size:11px; color:var(--text-muted); margin-top:4px; }
+        h2 { font-size:22px; font-weight:700; margin:48px 0 20px; padding-left:16px; border-left:3px solid var(--purple); letter-spacing:-0.3px; }
+        p { margin-bottom:16px; color:var(--text); }
+        .callout { border:1px solid var(--border); border-radius:12px; padding:18px 22px; margin:24px 0; display:flex; gap:14px; align-items:flex-start; }
+        .callout.purple { border-color:rgba(167,139,250,0.3); background:rgba(167,139,250,0.04); }
+        .callout.red    { border-color:rgba(255,71,87,0.3);   background:rgba(255,71,87,0.04); }
+        .callout.blue   { border-color:rgba(0,212,255,0.25);  background:rgba(0,212,255,0.04); }
+        .callout.green  { border-color:rgba(46,213,115,0.25); background:rgba(46,213,115,0.04); }
+        .callout-icon { font-size:18px; flex-shrink:0; margin-top:2px; }
+        .callout-body p { margin:0; font-size:14px; color:var(--text-muted); }
+        .callout-body strong { color:var(--text); }
+
+        /* ── Kill Chain Timeline ── */
+        .kill-chain { margin:32px 0 48px; }
+        .kc-item { display:grid; grid-template-columns:auto 1fr; gap:0 24px; margin-bottom:4px; }
+        .kc-left { display:flex; flex-direction:column; align-items:center; }
+        .kc-dot { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:14px; font-weight:700; flex-shrink:0; border:2px solid; }
+        .kc-dot.s1 { background:rgba(255,71,87,0.15);   color:var(--accent2); border-color:rgba(255,71,87,0.4); }
+        .kc-dot.s2 { background:rgba(255,165,0,0.15);   color:#ffaa00;        border-color:rgba(255,165,0,0.4); }
+        .kc-dot.s3 { background:rgba(167,139,250,0.15); color:var(--purple);  border-color:rgba(167,139,250,0.4); }
+        .kc-dot.s4 { background:rgba(255,71,87,0.18);   color:var(--accent2); border-color:rgba(255,71,87,0.5); }
+        .kc-dot.s5 { background:rgba(255,71,87,0.22);   color:var(--accent2); border-color:rgba(255,71,87,0.6); }
+        .kc-line { width:2px; flex:1; background:var(--border); margin:4px 0; min-height:32px; }
+        .kc-item:last-child .kc-line { display:none; }
+        .kc-body { padding:4px 0 28px; }
+        .kc-phase { font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted); margin-bottom:4px; }
+        .kc-title { font-size:17px; font-weight:700; margin-bottom:6px; }
+        .kc-title a { color:var(--text); text-decoration:none; transition:color 0.2s; }
+        .kc-title a:hover { color:var(--purple); }
+        .kc-events { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
+        .kc-event { font-family:'JetBrains Mono',monospace; font-size:11px; padding:3px 8px; border-radius:4px; background:var(--bg3); border:1px solid rgba(167,139,250,0.2); color:var(--purple); }
+        .kc-desc { font-size:14px; color:var(--text-muted); line-height:1.6; }
+        .kc-severity { font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600; padding:2px 8px; border-radius:4px; display:inline-block; margin-top:8px; }
+        .sev-high { background:rgba(255,71,87,0.15);   color:var(--accent2); border:1px solid rgba(255,71,87,0.3); }
+        .sev-crit { background:rgba(255,165,0,0.15);   color:#ffaa00;        border:1px solid rgba(255,165,0,0.4); }
+        .sev-med  { background:rgba(167,139,250,0.12); color:var(--purple);  border:1px solid rgba(167,139,250,0.3); }
+
+        /* ── Event ID table ── */
+        .event-table { width:100%; border-collapse:collapse; margin:20px 0; font-size:13px; }
+        .event-table th { background:var(--bg3); color:var(--text-muted); font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.5px; padding:10px 14px; text-align:left; border-bottom:1px solid var(--border); }
+        .event-table td { padding:10px 14px; border-bottom:1px solid var(--border); vertical-align:top; }
+        .event-table tr:last-child td { border-bottom:none; }
+        .event-table .eid { font-family:'JetBrains Mono',monospace; font-weight:600; color:var(--purple); }
+        .event-table .ecat { font-size:11px; color:var(--text-muted); font-family:'JetBrains Mono',monospace; }
+
+        /* ── Scenario cards ── */
+        .scenario-grid { display:grid; gap:14px; margin:28px 0; }
+        .scenario-card { display:block; background:var(--bg2); border:1px solid var(--border); border-radius:14px; padding:22px 26px; text-decoration:none; transition:border-color 0.2s, transform 0.2s; }
+        .scenario-card:hover { border-color:var(--purple); transform:translateY(-2px); }
+        .sc-num { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-muted); margin-bottom:6px; }
+        .sc-title { font-size:17px; font-weight:700; color:var(--text); margin-bottom:6px; }
+        .scenario-card:hover .sc-title { color:var(--purple); }
+        .sc-events { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
+        .sc-event { font-family:'JetBrains Mono',monospace; font-size:11px; padding:2px 8px; border-radius:4px; background:var(--bg3); border:1px solid rgba(167,139,250,0.2); color:var(--purple); }
+        .sc-desc { font-size:13px; color:var(--text-muted); }
+        .sc-read { display:inline-block; margin-top:10px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--purple); }
+
+        .code-block { background:var(--code-bg); border:1px solid var(--border); border-radius:12px; overflow:hidden; margin:20px 0; }
+        .code-header { background:var(--bg3); border-bottom:1px solid var(--border); padding:10px 16px; display:flex; align-items:center; justify-content:space-between; }
+        .code-lang { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--purple); font-weight:600; letter-spacing:0.5px; }
+        .code-desc { font-size:12px; color:var(--text-muted); }
+        .code-body { padding:20px; font-family:'JetBrains Mono',monospace; font-size:13px; line-height:1.7; color:#a8b8d8; overflow-x:auto; }
+        .code-body .kw { color:#ff79c6; }
+        .code-body .fd { color:#bd93f9; }
+        .code-body .nm { color:var(--accent3); }
+        .code-body .cm { color:#44526a; font-style:italic; }
+        .code-body .hl { color:var(--purple); font-weight:600; }
+        .code-body .hl2 { color:var(--accent2); font-weight:600; }
+
+        footer { border-top:1px solid var(--border); padding:40px 24px; text-align:center; }
+        footer a { font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--purple); text-decoration:none; }
+        @media(max-width:640px) { .stat-bar{grid-template-columns:repeat(2,1fr);} }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-inner">
+        <a class="logo" href="../index.html">yk://portfolio</a>
+        <a class="back-link" href="index.html">← Blog</a>
+    </div>
+</header>
+
+<section class="hero">
+    <div class="hero-meta">
+        <span class="badge badge-grn">SERIES OVERVIEW</span>
+        <span class="badge badge-purple">SAP · SPLUNK</span>
+        <span class="badge badge-red">5 SZENARIEN</span>
+        <span class="meta-date">// Juni 2026</span>
+    </div>
+    <h1>SAP Security<br><span>Audit Log Analysis</span></h1>
+    <p class="hero-summary">
+        Eine vollständige SAP-Angriffskampagne analysiert mit Splunk und dem
+        SAP Security Audit Log (SM20): von der ersten Brute-Force-Attacke über
+        kompromittierte Admin-Konten und Privilege Escalation bis zu externen
+        RFC-Angriffen und Massenexfiltration sensibler Tabellen.
+        128 Events, 5 Szenarien, 8 Event-IDs.
+    </p>
+    <div class="tags">
+        <span class="tag">AU1 — Logon</span>
+        <span class="tag">AU2 — Failed Logon</span>
+        <span class="tag">AU4 — Account Locked</span>
+        <span class="tag">AUB — Auth Check Failed</span>
+        <span class="tag">AUI — Invalid Logon</span>
+        <span class="tag">EU1 — Table Access</span>
+        <span class="tag">DU9 — User Admin</span>
+        <span class="tag">SM20 · Splunk SPL</span>
+    </div>
+</section>
+
+<div class="content">
+
+    <div class="stat-bar">
+        <div class="stat-item">
+            <span class="stat-number">128</span>
+            <div class="stat-label">Events<br>generiert</div>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number red">5</span>
+            <div class="stat-label">Angriffs-<br>szenarien</div>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">8</span>
+            <div class="stat-label">SAP Audit<br>Event-IDs</div>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number red">20k+</span>
+            <div class="stat-label">Datensätze<br>exfiltriert</div>
+        </div>
+    </div>
+
+    <h2>Was ist das SAP Security Audit Log?</h2>
+    <p>
+        Das <strong>SAP Security Audit Log (SAL)</strong> ist die wichtigste
+        Sicherheitsprotokollquelle in SAP-Systemen. Es wird über Transaktion
+        <strong>SM20</strong> ausgelesen und protokolliert sicherheitsrelevante
+        Ereignisse: Anmeldungen, Anmeldefehler, Berechtigungsprüfungen,
+        RFC-Zugriffe und Tabellenoperationen.
+    </p>
+    <p>
+        Für diese Analyse habe ich ein Python-Skript entwickelt, das 128 realistische
+        SAP Audit Log Events über 5 Angriffsszenarien generiert und per
+        <strong>Splunk HEC</strong> in einen lokalen Splunk-Container injiziert.
+        Anschließend wurde ein vollständiges <strong>Security Monitoring Dashboard</strong>
+        gebaut.
+    </p>
+
+    <div class="callout purple">
+        <div class="callout-icon">→</div>
+        <div class="callout-body">
+            <p><strong>Relevanz für die Praxis:</strong> SAP-Systeme enthalten die
+            kritischsten Geschäftsdaten eines Unternehmens — Finanzdaten, Personalinformationen,
+            Lieferantenstammdaten. Angriffe auf SAP bleiben oft lange unentdeckt,
+            weil viele SOC-Teams keine SAP-spezifischen Detection Rules haben.
+            Der SAP Security Audit Log ist der erste Schritt zur Sichtbarkeit.</p>
+        </div>
+    </div>
+
+    <h2>Die 5 Angriffsszenarien</h2>
+
+    <div class="kill-chain">
+
+        <div class="kc-item">
+            <div class="kc-left">
+                <div class="kc-dot s1">01</div>
+                <div class="kc-line"></div>
+            </div>
+            <div class="kc-body">
+                <div class="kc-phase">// Credential Attack — External</div>
+                <div class="kc-title"><a href="sap-bruteforce-erkennung-splunk-de.html">SAP Brute-Force-Angriff</a></div>
+                <div class="kc-events">
+                    <span class="kc-event">AU2</span>
+                    <span class="kc-event">AUI</span>
+                    <span class="kc-event">AU4</span>
+                </div>
+                <div class="kc-desc">
+                    Externe IP <strong>185.220.101.5</strong> versucht 12-mal mit
+                    Default-Benutzernamen (<code>SAP*</code>, <code>DDIC</code>,
+                    <code>EARLYWATCH</code>) auf das Produktivsystem zuzugreifen.
+                    AU2-Events häufen sich, schließlich greift AU4 — automatische Kontosperrung.
+                    Klassisches Muster für automatisierte SAP-Angriffs-Tools.
+                </div>
+                <span class="kc-severity sev-high">HIGH</span>
+            </div>
+        </div>
+
+        <div class="kc-item">
+            <div class="kc-left">
+                <div class="kc-dot s2">02</div>
+                <div class="kc-line"></div>
+            </div>
+            <div class="kc-body">
+                <div class="kc-phase">// Insider Threat — Compromised Admin</div>
+                <div class="kc-title"><a href="sap-admin-login-erkennung-splunk-de.html">Kompromittiertes SAP-Admin-Konto</a></div>
+                <div class="kc-events">
+                    <span class="kc-event">AU1</span>
+                    <span class="kc-event">DU9</span>
+                </div>
+                <div class="kc-desc">
+                    <strong>SAPABAP1</strong> meldet sich um <strong>02:30 Uhr</strong>
+                    von einer externen IP an — außerhalb jeder normaler Geschäftszeit.
+                    Anschließend werden kritische Transaktionen ausgeführt:
+                    <code>SE38</code> (ABAP-Editor), <code>SU01</code> (Benutzerverwaltung),
+                    <code>PFCG</code> (Rollenpflege). DU9-Events dokumentieren jeden Eingriff
+                    in die Benutzeradministration.
+                </div>
+                <span class="kc-severity sev-crit">CRITICAL</span>
+            </div>
+        </div>
+
+        <div class="kc-item">
+            <div class="kc-left">
+                <div class="kc-dot s3">03</div>
+                <div class="kc-line"></div>
+            </div>
+            <div class="kc-body">
+                <div class="kc-phase">// Privilege Escalation — AUB Storm</div>
+                <div class="kc-title"><a href="sap-privilege-escalation-erkennung-de.html">SAP Privilege Escalation — AUB Storm</a></div>
+                <div class="kc-events">
+                    <span class="kc-event">AUB × 15</span>
+                </div>
+                <div class="kc-desc">
+                    Benutzer <strong>TKURT</strong> versucht 15-mal auf
+                    privilegierte Transaktionen zuzugreifen: <code>PFCG</code>,
+                    <code>SE11</code>, <code>SM30</code>, <code>SM59</code>, <code>SU01</code>.
+                    Jeder Versuch erzeugt einen AUB-Event (Authorization Check Failed).
+                    Ein gehäuftes AUB-Muster von einem einzelnen Benutzer auf kritische
+                    Transaktionen ist ein klares Privilege-Escalation-Signal.
+                </div>
+                <span class="kc-severity sev-high">HIGH</span>
+            </div>
+        </div>
+
+        <div class="kc-item">
+            <div class="kc-left">
+                <div class="kc-dot s4">04</div>
+                <div class="kc-line"></div>
+            </div>
+            <div class="kc-body">
+                <div class="kc-phase">// External Attack — RFC Exploitation</div>
+                <div class="kc-title"><a href="sap-rfc-angriff-erkennung-de.html">Externer SAP RFC-Angriff</a></div>
+                <div class="kc-events">
+                    <span class="kc-event">AU1</span>
+                    <span class="kc-event">AU2</span>
+                </div>
+                <div class="kc-desc">
+                    <strong>185.220.101.5</strong> testet über RFC-Verbindungen typische
+                    Exploit-Funktionsbausteine: <code>RFC_READ_TABLE</code> (Tabellen auslesen),
+                    <code>RFCPING</code> (Erreichbarkeit prüfen), <code>SAPMSSY1</code>
+                    (ältere Systemfunktion). Das Muster — mehrere RFC-Funktionen von einer
+                    externen IP mit Default-Credentials — ist das klassische Fingerprint
+                    automatisierter SAP-Angriffs-Tools wie bizploit oder ERPScan.
+                </div>
+                <span class="kc-severity sev-high">HIGH</span>
+            </div>
+        </div>
+
+        <div class="kc-item">
+            <div class="kc-left">
+                <div class="kc-dot s5">05</div>
+                <div class="kc-line"></div>
+            </div>
+            <div class="kc-body">
+                <div class="kc-phase">// Data Exfiltration — Mass Table Read</div>
+                <div class="kc-title"><a href="sap-datenexfiltration-erkennung-de.html">SAP Datenexfiltration</a></div>
+                <div class="kc-events">
+                    <span class="kc-event">EU1</span>
+                </div>
+                <div class="kc-desc">
+                    <strong>SDEMIR</strong> liest in einer einzigen Session sechs
+                    hochsensible Tabellen aus: <code>USR02</code> (Passwort-Hashes),
+                    <code>USR04</code> (Berechtigungen), <code>AGR_USERS</code>
+                    (Rollenzuordnungen), <code>RFCDES</code> (RFC-Verbindungen),
+                    <code>ABAP_SOURCE</code> (Quellcode), <code>T000</code> (Mandanten).
+                    Über <strong>20.000 Datensätze</strong> in Sekunden — EU1-Events
+                    als Exfiltrations-Indikator.
+                </div>
+                <span class="kc-severity sev-crit">CRITICAL</span>
+            </div>
+        </div>
+
+    </div>
+
+    <h2>SAP Audit Log Event-ID Referenz</h2>
+
+    <table class="event-table">
+        <tr>
+            <th>Event-ID</th>
+            <th>Bezeichnung</th>
+            <th>Erkennungsrelevanz</th>
+        </tr>
+        <tr>
+            <td class="eid">AU1</td>
+            <td>Successful logon<br><span class="ecat">Erfolgreiche Anmeldung — Uhrzeit + Terminal prüfen</span></td>
+            <td>After-Hours Login, externe IP</td>
+        </tr>
+        <tr>
+            <td class="eid">AU2</td>
+            <td>Logon attempt with unknown user<br><span class="ecat">Unbekannter Benutzername</span></td>
+            <td>Brute-Force, Default-User-Scanning</td>
+        </tr>
+        <tr>
+            <td class="eid">AU4</td>
+            <td>User account locked<br><span class="ecat">Konto nach Fehlversuchen gesperrt</span></td>
+            <td>Brute-Force bestätigt</td>
+        </tr>
+        <tr>
+            <td class="eid">AU6</td>
+            <td>Logon after account unlock<br><span class="ecat">Anmeldung nach Entsperrung</span></td>
+            <td>Wer hat gesperrt/entsperrt?</td>
+        </tr>
+        <tr>
+            <td class="eid">AUB</td>
+            <td>Authorization check failed<br><span class="ecat">Fehlgeschlagene Berechtigungsprüfung</span></td>
+            <td>Privilege Escalation — AUB Storm</td>
+        </tr>
+        <tr>
+            <td class="eid">AUI</td>
+            <td>Invalid logon (wrong password)<br><span class="ecat">Falsches Passwort — Benutzer existiert</span></td>
+            <td>Brute-Force mit bekannten Benutzern</td>
+        </tr>
+        <tr>
+            <td class="eid">EU1</td>
+            <td>Generic table access<br><span class="ecat">SE16 / RFC_READ_TABLE Tabellenzugriff</span></td>
+            <td>Datenexfiltration — rows_read Volumen</td>
+        </tr>
+        <tr>
+            <td class="eid">DU9</td>
+            <td>User admin change<br><span class="ecat">Benutzerstamm oder Rolle geändert</span></td>
+            <td>Kompromittiertes Admin-Konto</td>
+        </tr>
+    </table>
+
+    <h2>Master-Query — Alle kritischen SAP Events</h2>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">SPL</span>
+            <span class="code-desc">Alle Angriffs-Events — vollständige SAP Kill Chain</span>
+        </div>
+        <div class="code-body">
+<span class="fd">index</span>=sap_audit
+    (<span class="fd">event_id</span>=<span class="hl">AU2</span>         <span class="cm">← Failed logon</span>
+  <span class="kw">OR</span> <span class="fd">event_id</span>=<span class="hl">AUI</span>         <span class="cm">← Wrong password</span>
+  <span class="kw">OR</span> <span class="fd">event_id</span>=<span class="hl">AU4</span>         <span class="cm">← Account locked</span>
+  <span class="kw">OR</span> <span class="fd">event_id</span>=<span class="hl">AUB</span>         <span class="cm">← Auth check failed</span>
+  <span class="kw">OR</span> <span class="fd">event_id</span>=<span class="hl">DU9</span>         <span class="cm">← User admin change</span>
+  <span class="kw">OR</span> <span class="fd">event_id</span>=<span class="hl">EU1</span>)        <span class="cm">← Table access</span>
+| <span class="kw">eval</span> <span class="fd">phase</span> = <span class="kw">case</span>(
+    <span class="fd">event_id</span>=<span class="hl2">"AU2"</span> <span class="kw">OR</span> <span class="fd">event_id</span>=<span class="hl2">"AUI"</span> <span class="kw">OR</span> <span class="fd">event_id</span>=<span class="hl2">"AU4"</span>, <span class="hl2">"1-Brute-Force"</span>,
+    <span class="fd">event_id</span>=<span class="hl2">"DU9"</span>,                                     <span class="hl2">"2-Admin-Kompromittiert"</span>,
+    <span class="fd">event_id</span>=<span class="hl2">"AUB"</span>,                                     <span class="hl2">"3-Priv-Escalation"</span>,
+    <span class="fd">event_id</span>=<span class="hl2">"EU1"</span>,                                     <span class="hl2">"5-Datenexfiltration"</span>
+  )
+| <span class="kw">table</span> timestamp, phase, event_id, user, terminal, transaction, message, severity
+| <span class="kw">sort</span> timestamp
+        </div>
+    </div>
+
+    <div class="callout blue">
+        <div class="callout-icon">→</div>
+        <div class="callout-body">
+            <p><strong>Dashboard:</strong> Alle 5 Szenarien sind in einem einzigen
+            <a href="sap-security-dashboard-splunk-de.html" style="color:var(--accent);">Splunk Security Monitoring Dashboard</a>
+            zusammengefasst — KPI-Counter, Event-Timeline, Brute-Force-Tabelle,
+            After-Hours-Login, AUB-Storm, RFC-Angriff und EU1-Exfiltration
+            auf einem Blick.</p>
+        </div>
+    </div>
+
+    <h2>Alle Szenarien im Überblick</h2>
+
+    <div class="scenario-grid">
+        <a class="scenario-card" href="sap-bruteforce-erkennung-splunk-de.html">
+            <div class="sc-num">// Szenario 01 — Credential Attack</div>
+            <div class="sc-title">SAP Brute-Force-Angriff erkennen</div>
+            <div class="sc-events">
+                <span class="sc-event">AU2</span>
+                <span class="sc-event">AUI</span>
+                <span class="sc-event">AU4</span>
+            </div>
+            <div class="sc-desc">12 fehlgeschlagene Logins von 185.220.101.5 mit Default-Benutzernamen — AU2/AUI Häufung, automatische Sperrung via AU4</div>
+            <span class="sc-read">Zum Writeup →</span>
+        </a>
+        <a class="scenario-card" href="sap-admin-login-erkennung-splunk-de.html">
+            <div class="sc-num">// Szenario 02 — Compromised Admin</div>
+            <div class="sc-title">Kompromittiertes SAP-Admin-Konto erkennen</div>
+            <div class="sc-events">
+                <span class="sc-event">AU1</span>
+                <span class="sc-event">DU9</span>
+            </div>
+            <div class="sc-desc">SAPABAP1 loggt sich um 02:30 Uhr von externer IP ein — SE38, SU01, PFCG — After-Hours + externe IP + Admin-Transaktionen = CRITICAL</div>
+            <span class="sc-read">Zum Writeup →</span>
+        </a>
+        <a class="scenario-card" href="sap-privilege-escalation-erkennung-de.html">
+            <div class="sc-num">// Szenario 03 — Privilege Escalation</div>
+            <div class="sc-title">SAP Privilege Escalation — AUB Storm</div>
+            <div class="sc-events">
+                <span class="sc-event">AUB × 15</span>
+            </div>
+            <div class="sc-desc">TKURT scheitert 15-mal an PFCG, SE11, SM30, SM59, SU01 — gehäufte AUB-Events eines Benutzers auf kritische Transaktionen</div>
+            <span class="sc-read">Zum Writeup →</span>
+        </a>
+        <a class="scenario-card" href="sap-rfc-angriff-erkennung-de.html">
+            <div class="sc-num">// Szenario 04 — External RFC Attack</div>
+            <div class="sc-title">Externer SAP RFC-Angriff erkennen</div>
+            <div class="sc-events">
+                <span class="sc-event">AU1</span>
+                <span class="sc-event">AU2</span>
+            </div>
+            <div class="sc-desc">185.220.101.5 testet RFC_READ_TABLE, RFCPING und SAPMSSY1 — Fingerprint automatisierter SAP-Exploit-Tools</div>
+            <span class="sc-read">Zum Writeup →</span>
+        </a>
+        <a class="scenario-card" href="sap-datenexfiltration-erkennung-de.html">
+            <div class="sc-num">// Szenario 05 — Data Exfiltration</div>
+            <div class="sc-title">SAP Datenexfiltration erkennen</div>
+            <div class="sc-events">
+                <span class="sc-event">EU1</span>
+            </div>
+            <div class="sc-desc">SDEMIR liest USR02, USR04, AGR_USERS, RFCDES, ABAP_SOURCE, T000 — 20.000+ Datensätze in einer Session via EU1</div>
+            <span class="sc-read">Zum Writeup →</span>
+        </a>
+        <a class="scenario-card" href="sap-security-dashboard-splunk-de.html">
+            <div class="sc-num">// Dashboard — Alle 5 Szenarien</div>
+            <div class="sc-title">SAP Security Monitoring Dashboard</div>
+            <div class="sc-events">
+                <span class="sc-event">Splunk XML</span>
+                <span class="sc-event">7 Panels</span>
+            </div>
+            <div class="sc-desc">Alle Szenarien in einem Splunk Simple XML Dashboard — KPI-Counter, Timeline, Brute-Force, RFC-Angriff und Exfiltration auf einen Blick</div>
+            <span class="sc-read">Zum Dashboard →</span>
+        </a>
+        <a class="scenario-card" href="sap-log-generator-python-de.html">
+            <div class="sc-num">// Lab Setup — Python Generator</div>
+            <div class="sc-title">SAP Security Audit Log Generator mit Python</div>
+            <div class="sc-events">
+                <span class="sc-event">Python</span>
+                <span class="sc-event">HEC</span>
+                <span class="sc-event">128 Events</span>
+            </div>
+            <div class="sc-desc">128 realistische SAP Audit Log Events über alle 5 Szenarien generiert und per Splunk HEC injiziert — vollständiger Code mit Erklärung</div>
+            <span class="sc-read">Zum Code-Writeup →</span>
+        </a>
+    </div>
+
+</div>
+
+<footer>
+    <a href="index.html">← Zurück zum Blog</a>
+</footer>
+
+</body>
+</html>
