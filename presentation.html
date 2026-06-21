@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOC Analyst Portfolio - Yasin Kilic</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0e1a;
+            color: #e0e6f0;
+            overflow: hidden;
+        }
+        
+        .slide {
+            width: 100vw;
+            height: 100vh;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px;
+            position: relative;
+        }
+        
+        .slide.active {
+            display: flex;
+        }
+        
+        /* Navigation */
+        .nav {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            z-index: 1000;
+        }
+        
+        .nav button {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid #1e2a42;
+            background: rgba(10, 14, 26, 0.9);
+            color: #00d4ff;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .nav button:hover {
+            background: #00d4ff;
+            color: #0a0e1a;
+            border-color: #00d4ff;
+        }
+        
+        .slide-counter {
+            position: fixed;
+            bottom: 40px;
+            right: 40px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: #6b7a99;
+            z-index: 1000;
+        }
+        
+        /* Slide 1: Title */
+        .slide-title {
+            text-align: center;
+        }
+        
+        .slide-title h1 {
+            font-size: 64px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #00d4ff, #2ed573);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .slide-title h2 {
+            font-size: 28px;
+            color: #6b7a99;
+            font-weight: 300;
+            margin-bottom: 40px;
+        }
+        
+        .slide-title .subtitle {
+            font-size: 18px;
+            color: #00d4ff;
+            border: 2px solid #00d4ff;
+            padding: 12px 30px;
+            display: inline-block;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        /* Content Slides */
+        .slide-content {
+            max-width: 1100px;
+            width: 100%;
+        }
+        
+        .slide-content h2 {
+            font-size: 42px;
+            color: #00d4ff;
+            margin-bottom: 40px;
+            border-bottom: 3px solid #1e2a42;
+            padding-bottom: 15px;
+        }
+        
+        .slide-content h3 {
+            font-size: 24px;
+            color: #2ed573;
+            margin: 25px 0 15px;
+        }
+        
+        .slide-content p {
+            font-size: 20px;
+            line-height: 1.6;
+            color: #e0e6f0;
+            margin-bottom: 20px;
+        }
+        
+        .slide-content ul {
+            font-size: 20px;
+            line-height: 1.8;
+            margin-left: 30px;
+            color: #e0e6f0;
+        }
+        
+        .slide-content ul li {
+            margin-bottom: 10px;
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin: 40px 0;
+        }
+        
+        .stat-box {
+            background: #0f1525;
+            border: 2px solid #1e2a42;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .stat-box .number {
+            font-size: 48px;
+            font-weight: 700;
+            color: #00d4ff;
+            display: block;
+            margin-bottom: 10px;
+        }
+        
+        .stat-box .label {
+            font-size: 16px;
+            color: #6b7a99;
+        }
+        
+        /* Tech Stack */
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .tech-item {
+            background: #0f1525;
+            border: 2px solid #1e2a42;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            font-size: 18px;
+            color: #e0e6f0;
+        }
+        
+        .tech-item .icon {
+            font-size: 36px;
+            margin-bottom: 10px;
+            display: block;
+        }
+        
+        /* Findings */
+        .finding-box {
+            background: rgba(255, 71, 87, 0.1);
+            border: 2px solid rgba(255, 71, 87, 0.3);
+            border-radius: 10px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+        
+        .finding-box h4 {
+            color: #ff4757;
+            font-size: 22px;
+            margin-bottom: 15px;
+        }
+        
+        .finding-box p {
+            font-size: 18px;
+            color: #e0e6f0;
+        }
+        
+        /* Contact */
+        .contact-info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin: 40px 0;
+        }
+        
+        .contact-item {
+            background: #0f1525;
+            border: 2px solid #1e2a42;
+            border-radius: 10px;
+            padding: 25px;
+            font-size: 18px;
+        }
+        
+        .contact-item strong {
+            color: #00d4ff;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 20px;
+        }
+        
+        /* Progress Bar */
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background: #00d4ff;
+            transition: width 0.3s;
+            z-index: 1000;
+        }
+        
+        /* Two Column Layout */
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin: 30px 0;
+        }
+        
+        .col {
+            background: #0f1525;
+            border: 2px solid #1e2a42;
+            border-radius: 12px;
+            padding: 30px;
+        }
+        
+        .col h4 {
+            color: #00d4ff;
+            font-size: 22px;
+            margin-bottom: 15px;
+        }
+        
+        .col ul {
+            font-size: 18px;
+        }
+        
+        /* Code snippet */
+        .code-snippet {
+            background: #0d1117;
+            border: 1px solid #1e2a42;
+            border-radius: 8px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            color: #a8b8d8;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+        
+        .code-snippet .comment {
+            color: #4a5568;
+        }
+        
+        .code-snippet .cmd {
+            color: #00d4ff;
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+    
+    <!-- SLIDE 1: TITEL -->
+    <div class="slide active">
+        <div class="slide-title">
+            <h1>SOC Analyst Portfolio</h1>
+            <h2>Praktische Threat-Hunting & Incident-Response Analysen</h2>
+            <div class="subtitle">Yasin Kilic — SOC Analyst in Training</div>
+        </div>
+    </div>
+    
+    <!-- SLIDE 2: PROJEKTÜBERSICHT -->
+    <div class="slide">
+        <div class="slide-content">
+            <h2>Projektübersicht</h2>
+            <p>
+                Aufbau eines vollständigen SOC Home-Labs mit Terraform, Docker und Splunk. 
+                Analyse eines realen Cerber-Ransomware-Angriffs auf 955.807 Events aus dem BOTS v1 Datensatz.
+            </p>
+            
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <span class="number">955.807</span>
+                    <span class="label">Analysierte Events</span>
+                </div>
+                <div class="stat-box">
+                    <span class="number">6</span>
+                    <span class="label">Blog Posts</span>
+                </div>
+                <div class="stat-box">
+                    <span class="number">22</span>
+                    <span class="label">Log-Quellen</span>
+                </div>
+                <div class="stat-box">
+                    <span class="number">7</span>
+                    <span class="label">Attack-Phasen</span>
+                </div>
+                <div class="stat-box">
+                    <span class="number">4</span>
+                    <span class="label">SOC-Analysen</span>
+                </div>
+                <div class="stat-box">
+                    <span class="number">1</span>
+                    <span class="label">Security Assessment</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- SLIDE 3: TECHNOLOGIE-STACK -->
+    <div class="slide">
+        <div class="slide-content">
+            <h2>Technologie-Stack</h2>
+            
+            <div class="tech-grid">
+                <div class="tech-item">
+                    <span class="icon">🔍</span>
+                    <strong>Splunk</strong><br>
+                    SIEM & SPL Queries
+                </div>
+                <div class="tech-item">
+                    <span class="icon">🛡️</span>
+                    <strong>Suricata</strong><br>
+                    IDS/IPS Detection
+                </div>
+                <div class="tech-item">
+                    <span class="icon">📊</span>
+                    <strong>Sysmon</strong><br>
+                    Endpoint Monitoring
+                </div>
+                <div class="tech-item">
+                    <span class="icon">🔥</span>
+                    <strong>Fortigate</strong><br>
+                    Firewall Analysis
+                </div>
+                <div class="tech-item">
+                    <span class="icon">🐳</span>
+                    <strong>Docker</strong><br>
+                    Container Deployment
+                </div>
+                <div class="tech-item">
+                    <span class="icon">⚙️</span>
+                    <strong>Terraform</strong><br>
+                    Infrastructure as Code
+                </div>
+                <div class="tech-item">
+                    <span class="icon">🌐</span>
+                    <strong>SMB</strong><br>
+                    Network Protocol
+                </div>
+                <div class="tech-item">
+                    <span class="icon">📝</span>
+                    <strong>WinRegistry</strong><br>
+                    Persistence Analysis
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- SLIDE 4: ANALYSE 1 - SURICATA -->
+    <div class="slide">
+        <div class="slide-content">
+            <h2>Analyse 1: Cerber-Ransomware Detection</h2>
+            <h3>Suricata IDS Alert-Triage</h3>
+            
+            <div class="finding-box">
+                <h4>🔴 Critical Finding</h4>
+                <p>Suricata-Signatur <strong>"ETPRO TROJAN Ransomware/Cerber Onion Domain Lookup"</strong> 
+                identifiziert auf Host 192.168.250.20</p>
+            </div>
+            
+            <div class="two-col">
+                <div class="col">
+                    <h4>Reconnaissance</h4>
+                    <ul>
+                        <li>Nessus-Scan: 37 Scans auf 192.168.250.20</li>
+                        <li>Port-Scan: SMB (445) und NetBIOS (135)</li>
+                        <li>4 verschiedene IP-Ziele identifiziert</li>
+                    </ul>
+                </div>
+                <div class="col">
+                    <h4>Detection</h4>
+                    <ul>
+                        <li>EventID: 1 (ProcessCreate)</li>
+                        <li>Masquerading: osk.exe</li>
+                        <li>.onion Domain Lookup (Tor/C2)</li>
+                        <li>DNS-Exfiltration Indikator</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="code-snippet">
+                <span class="comment"># SPL Query: Suricata-Alerte gegen primäres Ziel</span><br>
+                <span class="cmd">index</span>=botsv1 <span class="cmd">sourcetype</span>=suricata <span class="cmd">dest_ip</span>=192.168.250.20<br>
+                | <span class="cmd">stats</span> count <span class="cmd">by</span> alert.signature | <span class="cmd">sort</span> -count
+            </div>
+        </div>
+    </div>
+    
+    <!-- SLIDE 5: ANALYSE 2 - SMB -->
+    <div class="slide">
+        <div class="slide-content">
+            <h2>Analyse 2: SMB Lateral Movement</h2>
+            <h3>Network Forensics auf 151.568 SMB-Events</h3>
+            
+            <div class="finding-box">
+                <h4>🔴 Ransomware Spread</h4>
+                <p>192.168.250.100 → 192.168.250.20 mit <strong>39.204 SMB-Events</strong>. 
+                Klare Indikation für Lateral Movement.</p>
+            </div>
+            
+            <div class="two-col">
+                <div class="col">
+                    <h4>SMB-Protokoll</h4>
+                    <ul>
+                        <li>Port 445 (Windows File Sharing)</li>
+                        <li>NTLM-Authentifizierung</li>
+                        <li>Pass-the-Hash Angriffe</li>
+                        <li>Admin-Shares (C$, ADMIN$)</li>
+                    </ul>
+                </div>
+                <div class="col">
+                    <h4>Attack-Pfad</h4>
+                    <ul>
+                        <li>Credential Harvesting (Mimikatz)</li>
+                        <li>Pass-the-Hash / Pass-the-Ticket</li>
+                        <li>Remote Service Creation (PsExec)</li>
+                        <li>File Encryption via SMB</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="code-snippet">
+                <span class="comment"># SPL Query: SMB-Verbindungen</span><br>
+                <span class="cmd">index</span>=botsv1 <span class="cmd">sourcetype</span>=stream:smb<br>
+                | <span class="cmd">stats</span> count <span class="cmd">by</span> src_ip, dest_ip | <span class="cmd">sort</span> -count
+            </div>
+        </div>
+    </div>
+    
+    <!-- SLIDE 6: ANALYSE 3 - SYSMON -->
+    <div class="slide">
+        <div class="slide-content">
+            <h2>Analyse 3: Sysmon Process Creation</h2>
+            <h3>Endpoint Forensics mit EventID 1</h3>
+            
+            <div class="finding-box">
+                <h4>🔴 Masquerading Detected</h4>
+                <p><strong>osk.exe</strong> (On-Screen Keyboard) läuft aus 
+                <strong>C:\Users\...\AppData\Roaming\...</strong> — nicht aus System32!</p>
+            </div>
+            
+            <div class="two-col">
+                <div class="col">
+                    <h4>Sysmon EventID 1</h4>
+                    <ul>
+                        <li>Image (Prozess-Pfad)</li>
+                        <li>CommandLine (Argumente)</li>
+                        <li>ParentImage (Eltern-Prozess)</li>
+                        <li>Hashes (SHA1/MD5/SHA256)</li>
+                        <li>IntegrityLevel</li>
+                    </ul>
+                </div>
+                <div class="col">
+                    <h4>Verdächtige Prozesse</h4>
+                    <ul>
+                        <li>osk.exe (Masquerading)</li>
+                        <li>php-cgi.exe (Webserver)</li>
+                        <li>cmd.exe /c "dir 2>&1"</li>
+                        <li>internat.exe (Persistence)</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="code-snippet">
+                <span class="comment"># XML-Parsing mit rex für Sysmon</span><br>
+                <span class="cmd">index</span>=botsv1 <span class="cmd">sourcetype</span>=XmlWinEventLog...Operational<br>
+                | <span class="cmd">rex</span> field=_raw "&lt;EventID&gt;(?&lt;EventID&gt;\d+)&lt;/EventID&gt;"<br>
+                | <span class="cmd">search</span> EventID=1<br>
+                | <span class="cmd">rex</span> field=_raw "&lt;Data Name='Image'&gt;(?&lt;Image&gt;[^&lt;]+)&lt;/Data&gt;"
+            </div>
+        </div>
+    </div>
+    
+    <!-- SLIDE 7: ANALYSE 4 - REGISTRY -->
+    <div class="slide">
+        <div class="slide-content">
+            <h2>Analyse 4: Registry Persistence</h2>
+            <h3>WinRegistry Run-Key Analyse</h3>
+            
+            <div class="finding-box">
+                <h4>🔴 Persistence Mechanism</h4>
+                <p><strong>osk.exe</strong> in Registry <strong>Run</strong> und <strong>RunOnce</strong> Keys eingetragen. 
+                Auto-Start bei jedem Login.</p>
+            </div>
+            
+            <div class="two-col">
+                <div class="col">
+                    <h4>Run-Keys</h4>
+                    <ul>
+                        <li>HKCU\...\Run\osk</li>
+                        <li>HKCU\...\RunOnce\osk</li>
+                        <li>HKCU\...\Run\internat.exe</li>
+                        <li>Command Processor\AutoRun</li>
+                    </ul>
+                </div>
+                <div class="col">
+                    <h4>Technik</h4>
+                    <ul>
+                        <li>Registry-Run-Keys (Auto-Start)</li>
+                        <li>Masquerading (legitime Namen)</li>
+                        <li>CMD-Hijacking (AutoRun)</li>
+                        <li>User-Profile Persistence</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="code-snippet">
+                <span class="comment"># SPL Query: Registry-Run-Keys</span><br>
+                <span class="cmd">index</span>=botsv1 <span class="cmd">sourcetype</span>=WinRegistry<br>
+                | <span class="cmd">search</span> key_path="*Run*"<br>
+                | <span class="cmd">stats</span> count <span class="cmd">by</span> key_path, data
+            </div>
+        </div>
+    </div>
+    
+    <!-- SLIDE 8: ANALYSE 5 - FORTIGATE -->
+    <div class="slide">
+        <div class="slide-content">
+            <h2>Analyse 5: Fortigate Firewall Traffic</h2>
+            <h3>Perimeter Analysis auf 55.279 Events</h3>
+            
+            <div class="finding-box">
+                <h4>🔴 C2-Kommunikation</h4>
+                <p>192.168.250.20 → 8.8.8.8 (Google DNS) mit <strong>1.194 ACCEPT Events</strong>. 
+                DNS-basierte C2-Kommunikation ungehindert.</p>
+            </div>
+            
+            <div class="two-col">
+                <div class="col">
+                    <h4>Gefundene Patterns</h4>
+                    <ul>
+                        <li>accept: C2-DNS (1.194)</li>
+                        <li>close: Externe IPs (1.438)</li>
+                        <li>deny: Broadcast (1.498)</li>
+                        <li>start: Scanner-DNS (4.080)</li>
+                    </ul>
+                </div>
+                <div class="col">
+                    <h4>Firewall-Actions</h4>
+                    <ul>
+                        <li><strong>accept</strong> = Verbindung erlaubt</li>
+                        <li><strong>deny</strong> = Paket blockiert</li>
+                        <li><strong>close</strong> = Session beendet</li>
+                        <li><strong>start</strong> = Session gestartet</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="code-snippet">
+                <span class="comment"># SPL Query: Fortigate Traffic</span><br>
+                <span class="cmd">index</span>=botsv1 <span class="cmd">sourcetype</span>=fgt_traffic<br>
+                | <span class="cmd">stats</span> count <span class="cmd">by</span> srcip, dstip, action | <span class="cmd">sort</span> -count
+            </div>
+        </div>
+    </div>
+    
+    <!-- SLIDE 9: SECURITY ASSESSMENT -->
+    <div class="slide">
+        <div class="slide-content">
+            <h2>Security Assessment</h2>
+            <h3>Wo die Firewall versagte</h3>
+            
+            <div class="finding-box">
+                <h4>⚠️ Nur 20% Effektivität</h4>
+                <p>Fortigate erfüllte nur Basis-Funktion (Broadcast-Denies). 
+                Kritische Bedrohungen passierten ungehindert.</p>
+            </div>
+            
+            <div class="two-col">
+                <div class="col">
+                    <h4>🔴 Gaps (Versagen)</h4>
+                    <ul>
+                        <li>C2-DNS: ACCEPT (kein DNS-Filter)</li>
+                        <li>SMB: Unsichtbar (kein East-West)</li>
+                        <li>Masquerading: Blind (kein EDR)</li>
+                        <li>IPS: Keine SMB-Signatures</li>
+                    </ul>
+                </div>
+                <div class="col">
+                    <h4>✅ Erfolg (Baseline)</h4>
+                    <ul>
+                        <li>Broadcast-Denies (Standard)</li>
+                        <li>Session-Logging (55.279 Events)</li>
+                        <li>Port-basiertes Blocking</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="code-snippet">
+                <span class="comment"># Defense-in-Depth: 5 Schichten nötig</span><br>
+                <span class="cmd">1.</span> DNS Security (FortiGuard DNS)<br>
+                <span class="cmd">2.</span> Internal Segmentation (VLAN)<br>
+                <span class="cmd">3.</span> IPS Signatures (SMB/Exploits)<br>
+                <span class="cmd">4.</span> Endpoint Detection (Sysmon/EDR)<br>
+                <span class="cmd">5.</span> Network Detection (Zeek/Suricata)
+            </div>
+        </div>
+    </div>
+    
+    <!-- SLIDE 10: FORTIGATE SOC-BEZUG -->
+    <div class="slide">
+        <div class="slide-content">
+            <h2>FortiGate: SOC-Bezug</h2>
+            <h3>Der Analyse-Loop — Blue-Team-Alltag</h3>
+            
+            <div class="callout callout-blue">
+                <span class="callout-icon">🔄</span>
+                <p class="callout-text">
+                    <strong>Der Analyse-Loop trainiert analytisches Denken:</strong> 
+                    Verdächtige Aktivität → Simulation & Trigger → Log & IPS Sichtbar → 
+                    Bewertung: False-Positive oder Threat? → Zurück zum Anfang.
+                </p>
+            </div>
+            
+            <div class="two-col">
+                <div class="col">
+                    <h4>FortiGate Lab</h4>
+                    <ul>
+                        <li><strong>Umgebung:</strong> FortiGate-VM 7.4.12 auf ARM64/Apple M4 via UTM</li>
+                        <li><strong>Themen:</strong> Firewall-Policies, IPS, AntiVirus, Web Filter, VPN</li>
+                        <li><strong>Schwerpunkt:</strong> Logging und Analyse von Netzwerkverkehr und Ereignissen</li>
+                        <li><strong>Ziel:</strong> NSE4 — aktuell in Vorbereitung</li>
+                    </ul>
+                </div>
+                <div class="col">
+                    <h4>→ SOC-Parallelen</h4>
+                    <ul>
+                        <li><strong>Firewall-Policy-Analyse</strong> → Regel-Validierung, Shadow-Rules, Allow/Deny-Logik</li>
+                        <li><strong>IPS-Signatures</strong> → Attack-Erkennung, False-Positive-Handling</li>
+                        <li><strong>AV-Scan</strong> → Malware-Detection, Quarantäne-Prozesse</li>
+                        <li><strong>Web-Filter</strong> → URL-Kategorisierung, C2-Domain-Blocking</li>
+                        <li><strong>VPN-Logging</strong> → Remote-Access-Monitoring, Anomalie-Erkennung</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="code-snippet" style="background: rgba(0,212,255,0.1); border: 2px solid #00d4ff;">
+                <strong style="color: #00d4ff;">SOC-Relevanz:</strong><br><br>
+                "Dieser Loop trainiert das analytische Denken, das im SOC täglich gefragt ist — 
+                vom ersten Alert bis zur fundierten Bewertung. Genau derselbe Zyklus, den ich 
+                täglich mit FortiGate-Logs und IPS-Ereignissen übe."
+            </div>
+        </div>
+    </div>
+    
+    <!-- SLIDE 11: AUTOMATISIERUNG -->
+    <div class="slide">
+        <div class="slide-content">
+            <h2>Automatisierung und Monitoring</h2>
+            <h3>Eigene Systeme im Live-Betrieb</h3>
+            
+            <div class="callout callout-green">
+                <span class="callout-icon">🐍</span>
+                <p class="callout-text">
+                    <strong>Meine Python-Systeme laufen 24/7 auf einem VPS</strong> und übernehmen 
+                    reale Aufgaben: Monitoring, Log-Auswertung, State-Handling, API-Anbindung, 
+                    Debugging und Anomalie-Erkennung.
+                </p>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <span class="number">24/7</span>
+                    <span class="label">Betrieb auf VPS</span>
+                </div>
+                <div class="stat-box">
+                    <span class="number">Python</span>
+                    <span class="label">Automatisierung</span>
+                </div>
+                <div class="stat-box">
+                    <span class="number">API</span>
+                    <span class="label">Externe Dienste</span>
+                </div>
+            </div>
+            
+            <div class="two-col">
+                <div class="col">
+                    <h4>Meine Python-Systeme</h4>
+                    <ul>
+                        <li><strong>Monitoring-Systeme</strong> → 24/7-Betrieb, Alarm-Generierung</li>
+                        <li><strong>Log-Auswertung</strong> → Automatisiertes Parsen, Korrelation</li>
+                        <li><strong>State-Handling</strong> → Status-Tracking, Fehlerbehandlung</li>
+                        <li><strong>API-Anbindung</strong> → Externe Dienste integrieren</li>
+                        <li><strong>Debugging</strong> → Anomalie-Erkennung, Root-Cause</li>
+                    </ul>
+                </div>
+                <div class="col">
+                    <h4>→ SOC-Skills</h4>
+                    <ul>
+                        <li><strong>Automatisierung</strong> → SOC-Playbooks, SOAR-Integration</li>
+                        <li><strong>Log-Parsing</strong> → SPL, Regex, Structured Data</li>
+                        <li><strong>State-Tracking</strong> → Incident-Timeline, IOC-Tracking</li>
+                        <li><strong>API-Integration</strong> → Threat-Intel-Feeds, Enrichment</li>
+                        <li><strong>Anomalie-Erkennung</strong> → Baseline, Thresholds, ML</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="code-snippet" style="background: rgba(46,213,115,0.1); border: 2px solid #2ed573;">
+                <strong style="color: #2ed573;">Direkte Übertragbarkeit:</strong><br><br>
+                "Diese Skills sind direkt auf den SOC-Alltag übertragbar: 24/7-Monitoring, 
+                automatisierte Log-Auswertung, API-Anbindung für Threat-Intel, und Anomalie-Erkennung 
+                sind genau die Tätigkeiten, die ein SOC Analyst täglich macht."
+            </div>
+        </div>
+    </div>
+    
+    <!-- SLIDE 12: NÄCHSTE SCHRITTE -->
+    <div class="slide">
+        <div class="slide-content">
+            <h2>Nächste Schritte und Lernziele</h2>
+            <h3>Meine geplante Entwicklung</h3>
+            
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <span class="number">📜</span>
+                    <span class="label">NSE4 — in Vorbereitung</span>
+                </div>
+                <div class="stat-box">
+                    <span class="number">🎯</span>
+                    <span class="label">Incident Response</span>
+                </div>
+                <div class="stat-box">
+                    <span class="number">📚</span>
+                    <span class="label">Kontinuierliches Lernen</span>
+                </div>
+            </div>
+            
+            <div class="two-col">
+                <div class="col">
+                    <h4>Konkrete Meilensteine</h4>
+                    <ul>
+                        <li><strong>NSE4 — aktuell in Vorbereitung</strong> → Abschluss der Fortinet-Zertifizierung als nächster konkreter Meilenstein</li>
+                        <li><strong>Incident Response</strong> → Tiefer in Incident Response und Threat Detection einsteigen</li>
+                        <li><strong>Kontinuierliches Lernen</strong> → Die Bedrohungslandschaft entwickelt sich — ich entwickle mich mit</li>
+                    </ul>
+                </div>
+                <div class="col">
+                    <h4>Warum SOC?</h4>
+                    <ul>
+                        <li><strong>Alarm-basiertes Arbeiten</strong> → Bereits aus der Praxis vertraut</li>
+                        <li><strong>Analytisches Denken</strong> → Der Analyse-Loop ist mein Alltag</li>
+                        <li><strong>24/7-Bereitschaft</strong> → Schichtsystem und Kontinuität gewohnt</li>
+                        <li><strong>Compliance-Disziplin</strong> → Strikte Prozesse und Dokumentation</li>
+                        <li><strong>ITSM-Disziplin</strong> → ServiceNow, Ticketing, SLA-Tracking</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="code-snippet" style="background: rgba(0,212,255,0.1); border: 2px solid #00d4ff;">
+                <strong style="color: #00d4ff;">Mein Fahrplan:</strong><br><br>
+                1. NSE4 abschließen (Fortinet-Firewall-Expertise)<br>
+                2. SOC-Grundlagen vertiefen (Splunk, SPL, Threat Hunting)<br>
+                3. Incident Response-Zertifizierung (CyberOps, SOC Analyst)<br>
+                4. Kontinuierliches Lab-Building (Neue Szenarien, Tools, Techniken)
+            </div>
+        </div>
+    </div>
+    
+    <!-- SLIDE 13: ERGEBNISSE -->
+    <div class="slide">
+        <div class="slide-content">
+            <h2>Ergebnisse & Lessons Learned</h2>
+            
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <span class="number">7</span>
+                    <span class="label">Attack-Phasen rekonstruiert</span>
+                </div>
+                <div class="stat-box">
+                    <span class="number">4</span>
+                    <span class="label">Critical Findings</span>
+                </div>
+                <div class="stat-box">
+                    <span class="number">15+</span>
+                    <span class="label">SPL Queries entwickelt</span>
+                </div>
+            </div>
+            
+            <h3>Key Takeaways</h3>
+            <ul>
+                <li><strong>Multi-Source-Correlation:</strong> Suricata + Sysmon + Registry + Firewall = vollständiges Bild</li>
+                <li><strong>Firewall ≠ 100% Sicherheit:</strong> Perimeter allein reicht nicht für Lateral-Movement</li>
+                <li><strong>DNS-Monitoring essenziell:</strong> C2 nutzt DNS als Tunnel — Port 53 ist nicht harmlos</li>
+                <li><strong>Endpoint Logs kritisch:</strong> Ohne Sysmon bleibt Masquerading unsichtbar</li>
+                <li><strong>SPL ist mächtig:</strong> XML-Parsing mit rex, Aggregation, Filterung</li>
+            </ul>
+        </div>
+    </div>
+    
+    <!-- SLIDE 11: WARUM SOC -->
+    <div class="slide">
+        <div class="slide-content">
+            <h2>Warum ich für SOC geeignet bin</h2>
+            <h3>Von Remote-Hands zu SOC Analyst</h3>
+            
+            <div class="callout callout-green">
+                <span class="callout-icon">🎯</span>
+                <p class="callout-text">
+                    <strong>Meine aktuelle Arbeit ist der Hardware-Teil des SOC-Workflows:</strong> 
+                    Monitoring-Alarm → prüfen → handeln → dokumentieren. Genau derselbe Zyklus, 
+                    nur mit physischen Geräten statt Security-Events.
+                </p>
+            </div>
+            
+            <div class="two-col">
+                <div class="col">
+                    <h4>Meine aktuelle Erfahrung</h4>
+                    <ul>
+                        <li><strong>Hardware IMAC</strong> — Disk-Einbau (12/48 Disks in Cluster), Komponentenwechsel, Change-Request-Management</li>
+                        <li><strong>Network Device Tasks</strong> — Cisco Nexus Switch-Reboots, physische Interventions</li>
+                        <li><strong>Monitoring-Alarm Incident</strong> — Netzwerkgerät reagiert nicht auf Monitoring → Alarm → Vor-Ort-Check + Reboot + Dokumentation</li>
+                        <li><strong>ITSM-Disziplin</strong> — ServiceNow-Tickets, Priorisierung, Eskalation, SLA-Tracking</li>
+                        <li><strong>Schichtübergabe</strong> — Lückenlose Übergabe für 24/7-Betrieb</li>
+                    </ul>
+                </div>
+                <div class="col">
+                    <h4>→ SOC-Parallelen</h4>
+                    <ul>
+                        <li><strong>Incident-Response-Zyklus</strong> → Alarm → Triaging → Eskalation → Dokumentation (birebir aynı)</li>
+                        <li><strong>Ticket-Disziplin</strong> → ServiceNow-Skills direkt übertragbar</li>
+                        <li><strong>Kritische Systeme unter Druck</strong> → Nightly-Maintenance, SLA-Druck, präzise Abläufe</li>
+                        <li><strong>Compliance/Chain of Custody</strong> → Datenträger dürfen DC nicht verlassen (Drop-Box + SN-Tracking) → vergleichbar mit Beweissicherung im IR</li>
+                        <li><strong>Prozessdisziplin</strong> → SAP-Change-Approval vor jedem Reboot/Shutdown</li>
+                        <li><strong>24/7-Mindset</strong> → Schichtübergabe, Kontinuität, Verantwortung</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="code-snippet" style="background: rgba(0,212,255,0.1); border: 2px solid #00d4ff;">
+                <strong style="color: #00d4ff;">Goldener Satz für das Gespräch:</strong><br><br>
+                "Monitoring-Alarm → prüfen → handeln → dokumentieren — das ist im Kern genau der SOC-Workflow, 
+                nur mit Hardware statt Security-Events. Und ITSM-Disziplin, 24/7-Bereitschaft und Compliance-Regeln 
+                kenne ich bereits aus der Praxis."
+            </div>
+        </div>
+    </div>
+    
+    <!-- SLIDE 12: KONTAKT -->
+    <div class="slide">
+        <div class="slide-content">
+            <h2>Kontakt</h2>
+            
+            <div class="contact-info">
+                <div class="contact-item">
+                    <strong>Portfolio</strong>
+                    yasinkilicma.github.io/portfolio
+                </div>
+                <div class="contact-item">
+                    <strong>GitHub</strong>
+                    github.com/yasinkilicma
+                </div>
+                <div class="contact-item">
+                    <strong>LinkedIn</strong>
+                    linkedin.com/in/yasin-kilic-cyber-security
+                </div>
+                <div class="contact-item">
+                    <strong>Blog</strong>
+                    6 SOC-Analysen verfügbar
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 60px;">
+                <div class="subtitle">Vielen Dank für Ihre Aufmerksamkeit</div>
+                <p style="margin-top: 20px; color: #6b7a99;">
+                    Fragen? Diskussion? Gerne!
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Navigation -->
+    <div class="nav">
+        <button onclick="prevSlide()">←</button>
+        <button onclick="nextSlide()">→</button>
+    </div>
+    
+    <div class="slide-counter">
+        <span id="currentSlide">1</span> / <span id="totalSlides">14</span>
+    </div>
+    
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        
+        document.getElementById('totalSlides').textContent = totalSlides;
+        
+        function showSlide(index) {
+            slides.forEach((slide, i) => {
+                slide.classList.remove('active');
+                if (i === index) {
+                    slide.classList.add('active');
+                }
+            });
+            document.getElementById('currentSlide').textContent = index + 1;
+            document.getElementById('progressBar').style.width = 
+                ((index + 1) / totalSlides * 100) + '%';
+        }
+        
+        function nextSlide() {
+            currentSlide = (currentSlide + 1) % totalSlides;
+            showSlide(currentSlide);
+        }
+        
+        function prevSlide() {
+            currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+            showSlide(currentSlide);
+        }
+        
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                prevSlide();
+            }
+        });
+        
+        // Initialize progress bar
+        showSlide(0);
+    </script>
+</body>
+</html>
