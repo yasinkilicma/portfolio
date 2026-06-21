@@ -25,40 +25,14 @@
         .hero h1 span { color:var(--accent); }
         .hero p { font-size:17px; color:var(--text-muted); max-width:620px; }
 
-        /* ── TABS ── */
-        .tab-bar {
-            max-width:900px;
-            margin:0 auto;
-            padding:0 24px;
-            display:flex;
-            gap:4px;
-            border-bottom:1px solid var(--border);
-            overflow-x:auto;
-            scrollbar-width:none;
-        }
+        .tab-bar { max-width:900px; margin:0 auto; padding:0 24px; display:flex; gap:4px; border-bottom:1px solid var(--border); overflow-x:auto; scrollbar-width:none; }
         .tab-bar::-webkit-scrollbar { display:none; }
-
-        .tab {
-            font-family:'JetBrains Mono',monospace;
-            font-size:12px;
-            font-weight:600;
-            letter-spacing:0.5px;
-            padding:12px 18px;
-            color:var(--text-muted);
-            cursor:pointer;
-            border-bottom:2px solid transparent;
-            margin-bottom:-1px;
-            white-space:nowrap;
-            transition:color 0.2s, border-color 0.2s;
-            user-select:none;
-        }
+        .tab { font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:600; letter-spacing:0.5px; padding:12px 18px; color:var(--text-muted); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px; white-space:nowrap; transition:color 0.2s, border-color 0.2s; user-select:none; }
         .tab:hover { color:var(--text); }
         .tab.active { color:var(--accent); border-bottom-color:var(--accent); }
         .tab.sap.active { color:#a78bfa; border-bottom-color:#a78bfa; }
 
-        /* ── CONTENT ── */
         .content { max-width:900px; margin:0 auto; padding:32px 24px 64px; }
-
         .tab-panel { display:none; }
         .tab-panel.active { display:block; animation:fadeUp 0.3s ease; }
 
@@ -110,20 +84,17 @@
     <p>Hands-on network &amp; security lab notes: FortiGate / NSE4, SAP Security, SOC pipeline and Splunk investigations.</p>
 </section>
 
-<!-- TABS -->
 <nav class="tab-bar">
-    <div class="tab active"        data-tab="all">// Alle</div>
-    <div class="tab sap"           data-tab="sap">// SAP Security</div>
-    <div class="tab"               data-tab="windows">// Windows Security</div>
-    <div class="tab"               data-tab="fortigate">// FortiGate &amp; SOC</div>
-    <div class="tab"               data-tab="cerber">// Cerber Kill Chain</div>
+    <div class="tab active" data-tab="all">// Alle</div>
+    <div class="tab sap"   data-tab="sap">// SAP Security</div>
+    <div class="tab"       data-tab="windows">// Windows Security</div>
+    <div class="tab"       data-tab="fortigate">// FortiGate &amp; SOC</div>
+    <div class="tab"       data-tab="cerber">// Cerber Kill Chain</div>
 </nav>
 
 <main class="content">
 
-    <!-- ════════════════════════════════
-         TAB: ALLE
-    ════════════════════════════════ -->
+    <!-- TAB: ALLE -->
     <div class="tab-panel active" id="panel-all">
 
         <h2>// Lab-Architektur</h2>
@@ -282,6 +253,12 @@
                 <div class="post-desc">fbauer öffnet Rechnung_2026_06.docm — das Makro startet in 3 Minuten: WINWORD spawnt cmd, cmd startet PowerShell -EncodedCommand, PowerShell legt backdoor-User via net.exe an. EventID 4688 zeichnet alles auf.</div>
                 <span class="read">Read →</span>
             </a>
+            <a class="post" href="win-event-ids-referenz-de.html">
+                <div class="post-meta"><span class="badge b-green">SOC REFERENZ</span><span class="badge b-blue">WINDOWS · SPLUNK</span><span class="lang">DE</span></div>
+                <div class="post-title">Windows Security Event ID Referenz — 30+ IDs für SOC-Analysten</div>
+                <div class="post-desc">Alle kritischen Windows Security Event IDs kategorisiert: Authentication, Account Management, Process Execution, Persistence und Audit-Manipulation — mit Splunk SPL-Queries, MITRE ATT&amp;CK Mapping und Angriffs-Korrelation.</div>
+                <span class="read">Read →</span>
+            </a>
         </div>
 
         <h2>// SAP Security</h2>
@@ -348,9 +325,7 @@
 
     </div>
 
-    <!-- ════════════════════════════════
-         TAB: SAP SECURITY
-    ════════════════════════════════ -->
+    <!-- TAB: SAP SECURITY -->
     <div class="tab-panel" id="panel-sap">
 
         <h2>// Dashboard &amp; Simulation</h2>
@@ -411,9 +386,7 @@
 
     </div>
 
-    <!-- ════════════════════════════════
-         TAB: WINDOWS SECURITY
-    ════════════════════════════════ -->
+    <!-- TAB: WINDOWS SECURITY -->
     <div class="tab-panel" id="panel-windows">
 
         <h2>// Windows Security Event Log</h2>
@@ -454,13 +427,17 @@
                 <div class="post-desc">fbauer öffnet Rechnung_2026_06.docm — das Makro startet in 3 Minuten: WINWORD spawnt cmd, cmd startet PowerShell -EncodedCommand, PowerShell legt backdoor-User via net.exe an. EventID 4688 zeichnet alles auf.</div>
                 <span class="read">Read →</span>
             </a>
+            <a class="post" href="win-event-ids-referenz-de.html">
+                <div class="post-meta"><span class="badge b-green">SOC REFERENZ</span><span class="badge b-blue">WINDOWS · SPLUNK</span><span class="lang">DE</span></div>
+                <div class="post-title">Windows Security Event ID Referenz — 30+ IDs für SOC-Analysten</div>
+                <div class="post-desc">Alle kritischen Windows Security Event IDs kategorisiert: Authentication, Account Management, Process Execution, Persistence und Audit-Manipulation — mit Splunk SPL-Queries, MITRE ATT&amp;CK Mapping und Angriffs-Korrelation.</div>
+                <span class="read">Read →</span>
+            </a>
         </div>
 
     </div>
 
-    <!-- ════════════════════════════════
-         TAB: FORTIGATE & SOC
-    ════════════════════════════════ -->
+    <!-- TAB: FORTIGATE & SOC -->
     <div class="tab-panel" id="panel-fortigate">
 
         <h2>// Lab-Architektur</h2>
@@ -539,9 +516,7 @@
 
     </div>
 
-    <!-- ════════════════════════════════
-         TAB: CERBER KILL CHAIN
-    ════════════════════════════════ -->
+    <!-- TAB: CERBER KILL CHAIN -->
     <div class="tab-panel" id="panel-cerber">
 
         <h2>// BOTS v1 — Cerber Ransomware Investigation</h2>
@@ -612,14 +587,11 @@
 <script>
     const tabs   = document.querySelectorAll('.tab');
     const panels = document.querySelectorAll('.tab-panel');
-
     tabs.forEach(tab => {
         tab.addEventListener('click', () => {
             const target = tab.dataset.tab;
-
             tabs.forEach(t => t.classList.remove('active'));
             panels.forEach(p => p.classList.remove('active'));
-
             tab.classList.add('active');
             document.getElementById('panel-' + target).classList.add('active');
         });
