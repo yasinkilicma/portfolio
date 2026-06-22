@@ -463,7 +463,7 @@
             <td><span class="eid">4688</span></td>
             <td>
                 <strong>Neuer Prozess gestartet</strong><br>
-                <span class="ecat">NewProcessName, ParentProcessName, CommandLine — vollständige Prozesskette</span>
+                <span class="ecat">New_Process_Name, Creator_Process_Name, Process_Command_Line — vollständige Prozesskette</span>
             </td>
             <td>Malware Execution, Living-off-the-Land</td>
             <td><span class="sev-crit">CRITICAL</span></td>
@@ -497,9 +497,9 @@
             <span class="code-desc">Macro Malware — verdächtige Parent-Child Prozessketten</span>
         </div>
         <div class="code-body"><span class="fd">index</span>=windows_security <span class="fd">EventCode</span>=<span class="nm">4688</span>
-| <span class="kw">where</span> <span class="kw">match</span>(<span class="fd">ParentProcessName</span>, <span class="st">"(?i)(winword|excel|powerpnt|outlook)"</span>)
-  <span class="kw">AND</span> <span class="kw">match</span>(<span class="fd">NewProcessName</span>, <span class="st">"(?i)(cmd|powershell|wscript|cscript|mshta)"</span>)
-| <span class="kw">table</span> <span class="fd">_time</span>, <span class="fd">ParentProcessName</span>, <span class="fd">NewProcessName</span>, <span class="fd">CommandLine</span>, <span class="fd">ComputerName</span>
+| <span class="kw">where</span> <span class="kw">match</span>(<span class="fd">Creator_Process_Name</span>, <span class="st">"(?i)(winword|excel|powerpnt|outlook)"</span>)
+  <span class="kw">AND</span> <span class="kw">match</span>(<span class="fd">New_Process_Name</span>, <span class="st">"(?i)(cmd|powershell|wscript|cscript|mshta)"</span>)
+| <span class="kw">table</span> <span class="fd">_time</span>, <span class="fd">Creator_Process_Name</span>, <span class="fd">New_Process_Name</span>, <span class="fd">Process_Command_Line</span>, <span class="fd">ComputerName</span>
 | <span class="kw">sort</span> <span class="fd">_time</span></div>
     </div>
 
@@ -509,8 +509,8 @@
             <span class="code-desc">Living-off-the-Land — verdächtige System-Tools als Angreifer-Werkzeug</span>
         </div>
         <div class="code-body"><span class="fd">index</span>=windows_security <span class="fd">EventCode</span>=<span class="nm">4688</span>
-| <span class="kw">where</span> <span class="kw">match</span>(<span class="fd">NewProcessName</span>, <span class="st">"(?i)(net\.exe|net1\.exe|whoami|ipconfig|nltest|mimikatz)"</span>)
-| <span class="kw">table</span> <span class="fd">_time</span>, <span class="fd">NewProcessName</span>, <span class="fd">CommandLine</span>, <span class="fd">SubjectUserName</span>, <span class="fd">ComputerName</span>
+| <span class="kw">where</span> <span class="kw">match</span>(<span class="fd">New_Process_Name</span>, <span class="st">"(?i)(net\.exe|net1\.exe|whoami|ipconfig|nltest|mimikatz)"</span>)
+| <span class="kw">table</span> <span class="fd">_time</span>, <span class="fd">New_Process_Name</span>, <span class="fd">Process_Command_Line</span>, <span class="fd">SubjectUserName</span>, <span class="fd">ComputerName</span>
 | <span class="kw">sort</span> <span class="fd">_time</span></div>
     </div>
 
@@ -551,7 +551,7 @@
             <td><span class="eid">7045</span></td>
             <td>
                 <strong>Neuer Service installiert</strong><br>
-                <span class="ecat">ServiceName, ImagePath — oft aus C:\Windows\Temp\ oder %APPDATA%</span>
+                <span class="ecat">ServiceName, ServiceFileName — oft aus C:\Windows\Temp\ oder %APPDATA%</span>
             </td>
             <td>Malicious Service Installation</td>
             <td><span class="sev-crit">CRITICAL</span></td>
@@ -578,7 +578,7 @@
 | <span class="kw">eval</span> <span class="fd">persist_type</span> = <span class="kw">if</span>(<span class="fd">EventCode</span>=<span class="nm">4698</span>, <span class="st">"Scheduled Task"</span>, <span class="st">"Neuer Service"</span>)
 | <span class="kw">eval</span> <span class="fd">suspicious</span> = <span class="kw">if</span>(
     <span class="kw">match</span>(<span class="fd">TaskContent</span>, <span class="st">"(?i)(EncodedCommand|FromBase64|WebClient|DownloadString)"</span>)
-    <span class="kw">OR</span> <span class="kw">match</span>(<span class="fd">ImagePath</span>, <span class="st">"(?i)(temp|appdata|programdata)"</span>), <span class="st">"JA"</span>, <span class="st">"nein"</span>
+    <span class="kw">OR</span> <span class="kw">match</span>(<span class="fd">ServiceFileName</span>, <span class="st">"(?i)(temp|appdata|programdata)"</span>), <span class="st">"JA"</span>, <span class="st">"nein"</span>
   )
 | <span class="kw">table</span> <span class="fd">_time</span>, <span class="fd">persist_type</span>, <span class="fd">suspicious</span>, <span class="fd">TaskName</span>, <span class="fd">SubjectUserName</span>, <span class="fd">ComputerName</span>
 | <span class="kw">sort</span> <span class="fd">_time</span></div>

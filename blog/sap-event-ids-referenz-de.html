@@ -352,15 +352,15 @@
             <span class="code-desc">Brute-Force Erkennung — AU2 Häufung → AUI Lockout</span>
         </div>
         <div class="code-body"><span class="cm">// Schritt 1: Fehlversuche zählen</span>
-<span class="fd">index</span>=sap_audit <span class="fd">msgid</span>=<span class="st">"AU2"</span>
+<span class="fd">index</span>=sap_audit <span class="fd">event_id</span>=<span class="st">"AU2"</span>
 | <span class="kw">bucket</span> <span class="fd">_time</span> <span class="kw">span</span>=<span class="nm">5m</span>
 | <span class="kw">stats</span> <span class="kw">count</span> <span class="kw">as</span> failed_logins <span class="kw">by</span> <span class="fd">_time</span>, <span class="fd">user</span>, <span class="fd">terminal</span>
 | <span class="kw">where</span> failed_logins &gt;= <span class="nm">5</span>
 | <span class="kw">sort</span> - failed_logins
 
 <span class="cm">// Schritt 2: Lockout bestätigen</span>
-<span class="fd">index</span>=sap_audit (<span class="fd">msgid</span>=<span class="st">"AU2"</span> <span class="kw">OR</span> <span class="fd">msgid</span>=<span class="st">"AUI"</span>)
-| <span class="kw">eval</span> <span class="fd">event_type</span>=<span class="kw">if</span>(<span class="fd">msgid</span>=<span class="st">"AU2"</span>,<span class="st">"Fehlversuch"</span>,<span class="st">"GESPERRT"</span>)
+<span class="fd">index</span>=sap_audit (<span class="fd">event_id</span>=<span class="st">"AU2"</span> <span class="kw">OR</span> <span class="fd">event_id</span>=<span class="st">"AUI"</span>)
+| <span class="kw">eval</span> <span class="fd">event_type</span>=<span class="kw">if</span>(<span class="fd">event_id</span>=<span class="st">"AU2"</span>,<span class="st">"Fehlversuch"</span>,<span class="st">"GESPERRT"</span>)
 | <span class="kw">table</span> <span class="fd">_time</span>, <span class="fd">event_type</span>, <span class="fd">user</span>, <span class="fd">terminal</span>, <span class="fd">client</span>
 | <span class="kw">sort</span> <span class="fd">_time</span></div>
     </div>
@@ -370,11 +370,11 @@
             <span class="code-lang">SPL</span>
             <span class="code-desc">Kompromittiertes Admin-Konto — After-Hours Login mit sensitiven T-Codes</span>
         </div>
-        <div class="code-body"><span class="fd">index</span>=sap_audit <span class="fd">msgid</span>=<span class="st">"AU1"</span>
+        <div class="code-body"><span class="fd">index</span>=sap_audit <span class="fd">event_id</span>=<span class="st">"AU1"</span>
 | <span class="kw">eval</span> hour=<span class="kw">strftime</span>(<span class="fd">_time</span>,<span class="st">"%H"</span>)
 | <span class="kw">where</span> (hour&lt;<span class="nm">6</span> <span class="kw">OR</span> hour&gt;=<span class="nm">22</span>)
 | <span class="kw">join</span> <span class="fd">user</span> [
-    <span class="kw">search</span> <span class="fd">index</span>=sap_audit <span class="fd">msgid</span>=<span class="st">"AU6"</span>
+    <span class="kw">search</span> <span class="fd">index</span>=sap_audit <span class="fd">event_id</span>=<span class="st">"AU6"</span>
     <span class="kw">match</span>(<span class="fd">transaction</span>, <span class="st">"(?i)(SE38|SU01|PFCG|SM59|SM30)"</span>)
     | <span class="kw">stats</span> <span class="kw">values</span>(<span class="fd">transaction</span>) <span class="kw">as</span> sensitive_tcodes <span class="kw">by</span> <span class="fd">user</span>
   ]
@@ -458,7 +458,7 @@
             <span class="code-lang">SPL</span>
             <span class="code-desc">AUB Storm Detection — Privilege Escalation via Authorization Failures</span>
         </div>
-        <div class="code-body"><span class="fd">index</span>=sap_audit <span class="fd">msgid</span>=<span class="st">"AUF"</span>
+        <div class="code-body"><span class="fd">index</span>=sap_audit <span class="fd">event_id</span>=<span class="st">"AUF"</span>
 | <span class="kw">bucket</span> <span class="fd">_time</span> <span class="kw">span</span>=<span class="nm">15m</span>
 | <span class="kw">stats</span> <span class="kw">count</span> <span class="kw">as</span> auth_failures,
          <span class="kw">dc</span>(<span class="fd">object</span>) <span class="kw">as</span> unique_tcodes,
@@ -518,7 +518,7 @@
             <span class="code-lang">SPL</span>
             <span class="code-desc">Kritische T-Code Überwachung — SU01, PFCG, SE38, SM59</span>
         </div>
-        <div class="code-body"><span class="fd">index</span>=sap_audit <span class="fd">msgid</span>=<span class="st">"AU6"</span>
+        <div class="code-body"><span class="fd">index</span>=sap_audit <span class="fd">event_id</span>=<span class="st">"AU6"</span>
 | <span class="kw">where</span> <span class="kw">match</span>(<span class="fd">transaction</span>, <span class="st">"(?i)^(SU01|PFCG|SE38|SM59|SM30|SE11|SM50|AL08|SUIM)$"</span>)
 | <span class="kw">stats</span> <span class="kw">count</span> <span class="kw">by</span> <span class="fd">user</span>, <span class="fd">transaction</span>, <span class="fd">terminal</span>
 | <span class="kw">sort</span> - <span class="fd">count</span></div>
@@ -581,7 +581,7 @@
             <span class="code-lang">SPL</span>
             <span class="code-desc">Externer RFC-Angriff — fehlgeschlagene RFC-Logins von externen IPs</span>
         </div>
-        <div class="code-body"><span class="fd">index</span>=sap_audit <span class="fd">msgid</span>=<span class="st">"AU4"</span>
+        <div class="code-body"><span class="fd">index</span>=sap_audit <span class="fd">event_id</span>=<span class="st">"AU4"</span>
 | <span class="kw">eval</span> is_external = <span class="kw">if</span>(
     <span class="kw">NOT</span> <span class="kw">match</span>(<span class="fd">terminal</span>, <span class="st">"^(10\.|192\.168\.|172\.)"</span>),
     <span class="st">"EXTERN"</span>, <span class="st">"intern"</span>
@@ -671,12 +671,12 @@
             <span class="code-lang">SPL</span>
             <span class="code-desc">Datenexfiltration via EU1 — massiver Tabellenzugriff in kurzer Zeit</span>
         </div>
-        <div class="code-body"><span class="fd">index</span>=sap_audit <span class="fd">msgid</span>=<span class="st">"EU1"</span>
-| <span class="kw">where</span> <span class="kw">match</span>(<span class="fd">object</span>, <span class="st">"(?i)(USR02|USR04|AGR_USERS|RFCDES|T000|ABAP_SOURCE)"</span>)
+        <div class="code-body"><span class="fd">index</span>=sap_audit <span class="fd">event_id</span>=<span class="st">"EU1"</span>
+| <span class="kw">where</span> <span class="kw">match</span>(<span class="fd">table</span>, <span class="st">"(?i)(USR02|USR04|AGR_USERS|RFCDES|T000|ABAP_SOURCE)"</span>)
 | <span class="kw">bucket</span> <span class="fd">_time</span> <span class="kw">span</span>=<span class="nm">60s</span>
 | <span class="kw">stats</span> <span class="kw">count</span> <span class="kw">as</span> table_reads,
-         <span class="kw">sum</span>(<span class="fd">record_count</span>) <span class="kw">as</span> total_records,
-         <span class="kw">values</span>(<span class="fd">object</span>) <span class="kw">as</span> tables_accessed
+         <span class="kw">sum</span>(<span class="fd">rows_read</span>) <span class="kw">as</span> total_records,
+         <span class="kw">values</span>(<span class="fd">table</span>) <span class="kw">as</span> tables_accessed
          <span class="kw">by</span> <span class="fd">_time</span>, <span class="fd">user</span>, <span class="fd">terminal</span>
 | <span class="kw">where</span> total_records &gt; <span class="nm">1000</span>
 | <span class="kw">sort</span> - total_records</div>
@@ -746,29 +746,29 @@
             <span class="code-desc">Alle kritischen SAP Security Events — Kill Chain Detection</span>
         </div>
         <div class="code-body"><span class="fd">index</span>=sap_audit (
-    <span class="fd">msgid</span>=<span class="st">"AU2"</span>   <span class="cm">← Brute-Force: fehlgeschlagener Login</span>
- <span class="kw">OR</span> <span class="fd">msgid</span>=<span class="st">"AUI"</span>   <span class="cm">← Brute-Force: Konto gesperrt</span>
- <span class="kw">OR</span> <span class="fd">msgid</span>=<span class="st">"AU4"</span>   <span class="cm">← RFC-Angriff: fehlgeschlagener RFC-Login</span>
- <span class="kw">OR</span> <span class="fd">msgid</span>=<span class="st">"AUF"</span>   <span class="cm">← PrivEsc: Authorization Failure (AUB Storm)</span>
- <span class="kw">OR</span> <span class="fd">msgid</span>=<span class="st">"AUA"</span>   <span class="cm">← Persistence: neues Konto angelegt</span>
- <span class="kw">OR</span> <span class="fd">msgid</span>=<span class="st">"AUB"</span>   <span class="cm">← PrivEsc: Benutzer/Rollen geändert</span>
- <span class="kw">OR</span> <span class="fd">msgid</span>=<span class="st">"AU6"</span>   <span class="cm">← Execution: sensitiver T-Code gestartet</span>
- <span class="kw">OR</span> <span class="fd">msgid</span>=<span class="st">"EU1"</span>)  <span class="cm">← Exfiltration: Tabellenzugriff ← SOFORT ALARM bei USR02</span>
+    <span class="fd">event_id</span>=<span class="st">"AU2"</span>   <span class="cm">← Brute-Force: fehlgeschlagener Login</span>
+ <span class="kw">OR</span> <span class="fd">event_id</span>=<span class="st">"AUI"</span>   <span class="cm">← Brute-Force: Konto gesperrt</span>
+ <span class="kw">OR</span> <span class="fd">event_id</span>=<span class="st">"AU4"</span>   <span class="cm">← RFC-Angriff: fehlgeschlagener RFC-Login</span>
+ <span class="kw">OR</span> <span class="fd">event_id</span>=<span class="st">"AUF"</span>   <span class="cm">← PrivEsc: Authorization Failure (AUB Storm)</span>
+ <span class="kw">OR</span> <span class="fd">event_id</span>=<span class="st">"AUA"</span>   <span class="cm">← Persistence: neues Konto angelegt</span>
+ <span class="kw">OR</span> <span class="fd">event_id</span>=<span class="st">"AUB"</span>   <span class="cm">← PrivEsc: Benutzer/Rollen geändert</span>
+ <span class="kw">OR</span> <span class="fd">event_id</span>=<span class="st">"AU6"</span>   <span class="cm">← Execution: sensitiver T-Code gestartet</span>
+ <span class="kw">OR</span> <span class="fd">event_id</span>=<span class="st">"EU1"</span>)  <span class="cm">← Exfiltration: Tabellenzugriff ← SOFORT ALARM bei USR02</span>
 | <span class="kw">eval</span> <span class="fd">phase</span> = <span class="kw">case</span>(
-    <span class="fd">msgid</span>=<span class="st">"AU2"</span> <span class="kw">OR</span> <span class="fd">msgid</span>=<span class="st">"AUI"</span>,  <span class="st">"1-Brute-Force"</span>,
-    <span class="fd">msgid</span>=<span class="st">"AU4"</span>,                  <span class="st">"1b-RFC-Angriff"</span>,
-    <span class="fd">msgid</span>=<span class="st">"AUF"</span>,                  <span class="st">"2-PrivEsc-Versuch"</span>,
-    <span class="fd">msgid</span>=<span class="st">"AUA"</span> <span class="kw">OR</span> <span class="fd">msgid</span>=<span class="st">"AUB"</span>,  <span class="st">"3-Account-Manipulation"</span>,
-    <span class="fd">msgid</span>=<span class="st">"AU6"</span>,                  <span class="st">"4-T-Code-Execution"</span>,
-    <span class="fd">msgid</span>=<span class="st">"EU1"</span>,                  <span class="st">"5-Datenexfiltration"</span>
+    <span class="fd">event_id</span>=<span class="st">"AU2"</span> <span class="kw">OR</span> <span class="fd">event_id</span>=<span class="st">"AUI"</span>,  <span class="st">"1-Brute-Force"</span>,
+    <span class="fd">event_id</span>=<span class="st">"AU4"</span>,                  <span class="st">"1b-RFC-Angriff"</span>,
+    <span class="fd">event_id</span>=<span class="st">"AUF"</span>,                  <span class="st">"2-PrivEsc-Versuch"</span>,
+    <span class="fd">event_id</span>=<span class="st">"AUA"</span> <span class="kw">OR</span> <span class="fd">event_id</span>=<span class="st">"AUB"</span>,  <span class="st">"3-Account-Manipulation"</span>,
+    <span class="fd">event_id</span>=<span class="st">"AU6"</span>,                  <span class="st">"4-T-Code-Execution"</span>,
+    <span class="fd">event_id</span>=<span class="st">"EU1"</span>,                  <span class="st">"5-Datenexfiltration"</span>
   )
 | <span class="kw">eval</span> <span class="fd">severity</span> = <span class="kw">case</span>(
-    <span class="fd">msgid</span>=<span class="st">"EU1"</span>, <span class="st">"CRITICAL"</span>,
-    <span class="fd">msgid</span>=<span class="st">"AUF"</span> <span class="kw">OR</span> <span class="fd">msgid</span>=<span class="st">"AUB"</span>, <span class="st">"CRITICAL"</span>,
-    <span class="fd">msgid</span>=<span class="st">"AUI"</span> <span class="kw">OR</span> <span class="fd">msgid</span>=<span class="st">"AU2"</span>, <span class="st">"HIGH"</span>,
+    <span class="fd">event_id</span>=<span class="st">"EU1"</span>, <span class="st">"CRITICAL"</span>,
+    <span class="fd">event_id</span>=<span class="st">"AUF"</span> <span class="kw">OR</span> <span class="fd">event_id</span>=<span class="st">"AUB"</span>, <span class="st">"CRITICAL"</span>,
+    <span class="fd">event_id</span>=<span class="st">"AUI"</span> <span class="kw">OR</span> <span class="fd">event_id</span>=<span class="st">"AU2"</span>, <span class="st">"HIGH"</span>,
     1=1, <span class="st">"MEDIUM"</span>
   )
-| <span class="kw">table</span> <span class="fd">_time</span>, <span class="fd">severity</span>, <span class="fd">phase</span>, <span class="fd">msgid</span>, <span class="fd">user</span>, <span class="fd">terminal</span>, <span class="fd">client</span>, <span class="fd">object</span>
+| <span class="kw">table</span> <span class="fd">_time</span>, <span class="fd">severity</span>, <span class="fd">phase</span>, <span class="fd">event_id</span>, <span class="fd">user</span>, <span class="fd">terminal</span>, <span class="fd">client</span>, <span class="fd">object</span>
 | <span class="kw">sort</span> <span class="fd">_time</span></div>
     </div>
 
