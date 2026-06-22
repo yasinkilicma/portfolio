@@ -456,13 +456,13 @@
         <div class="code-body">
 <span class="cmd">index</span>=botsv1 <span class="cmd">earliest</span>=<span class="number">0</span> <span class="cmd">sourcetype</span>=XmlWinEventLog:Microsoft-Windows-Sysmon/Operational
 <span class="comment"># EventID aus dem XML-Tag extrahieren</span>
-| <span class="cmd">rex</span> field=_raw <span class="string">"<EventID>(?<EventID>\d+)</EventID>"</span>
+| <span class="cmd">rex</span> field=_raw <span class="string">"&lt;EventID&gt;(?&lt;EventID&gt;\d+)&lt;/EventID&gt;"</span>
 <span class="comment"># Nur Process Creation (EventID=1)</span>
 | <span class="cmd">search</span> EventID=<span class="number">1</span>
 <span class="comment"># Image-Pfad aus dem XML-Data-Tag extrahieren</span>
-| <span class="cmd">rex</span> field=_raw <span class="string">"<Data Name='Image'>(?<Image>[^<]+)</Data>"</span>
+| <span class="cmd">rex</span> field=_raw <span class="string">"&lt;Data Name='Image'&gt;(?&lt;Image&gt;[^&lt;]+)&lt;/Data&gt;"</span>
 <span class="comment"># CommandLine aus dem XML-Data-Tag extrahieren</span>
-| <span class="cmd">rex</span> field=_raw <span class="string">"<Data Name='CommandLine'>(?<CommandLine>[^<]+)</Data>"</span>
+| <span class="cmd">rex</span> field=_raw <span class="string">"&lt;Data Name='CommandLine'&gt;(?&lt;CommandLine&gt;[^&lt;]+)&lt;/Data&gt;"</span>
 <span class="comment"># Aggregation nach Prozess und Kommandozeile</span>
 | <span class="cmd">stats</span> count <span class="keyword">by</span> Image, CommandLine
 | <span class="cmd">sort</span> -count
@@ -628,29 +628,29 @@
         <div class="code-body">
 <span class="comment"># 1. Alle Prozesse mit Image und CommandLine</span>
 <span class="cmd">index</span>=botsv1 <span class="cmd">earliest</span>=<span class="number">0</span> <span class="cmd">sourcetype</span>=XmlWinEventLog:Microsoft-Windows-Sysmon/Operational
-| <span class="cmd">rex</span> field=_raw <span class="string">"<EventID>(?<EventID>\d+)</EventID>"</span>
+| <span class="cmd">rex</span> field=_raw <span class="string">"&lt;EventID&gt;(?&lt;EventID&gt;\d+)&lt;/EventID&gt;"</span>
 | <span class="cmd">search</span> EventID=<span class="number">1</span>
-| <span class="cmd">rex</span> field=_raw <span class="string">"<Data Name='Image'>(?<Image>[^<]+)</Data>"</span>
-| <span class="cmd">rex</span> field=_raw <span class="string">"<Data Name='CommandLine'>(?<CommandLine>[^<]+)</Data>"</span>
+| <span class="cmd">rex</span> field=_raw <span class="string">"&lt;Data Name='Image'&gt;(?&lt;Image&gt;[^&lt;]+)&lt;/Data&gt;"</span>
+| <span class="cmd">rex</span> field=_raw <span class="string">"&lt;Data Name='CommandLine'&gt;(?&lt;CommandLine&gt;[^&lt;]+)&lt;/Data&gt;"</span>
 | <span class="cmd">stats</span> count <span class="keyword">by</span> Image, CommandLine
 | <span class="cmd">sort</span> -count
 | <span class="cmd">head</span> <span class="number">20</span>
 
 <span class="comment"># 2. Nur verdächtige Prozesse (Masquerading, ungewöhnliche Pfade)</span>
 <span class="cmd">index</span>=botsv1 <span class="cmd">earliest</span>=<span class="number">0</span> <span class="cmd">sourcetype</span>=XmlWinEventLog:Microsoft-Windows-Sysmon/Operational
-| <span class="cmd">rex</span> field=_raw <span class="string">"<EventID>(?<EventID>\d+)</EventID>"</span>
+| <span class="cmd">rex</span> field=_raw <span class="string">"&lt;EventID&gt;(?&lt;EventID&gt;\d+)&lt;/EventID&gt;"</span>
 | <span class="cmd">search</span> EventID=<span class="number">1</span>
-| <span class="cmd">rex</span> field=_raw <span class="string">"<Data Name='Image'>(?<Image>[^<]+)</Data>"</span>
-| <span class="cmd">rex</span> field=_raw <span class="string">"<Data Name='CommandLine'>(?<CommandLine>[^<]+)</Data>"</span>
+| <span class="cmd">rex</span> field=_raw <span class="string">"&lt;Data Name='Image'&gt;(?&lt;Image&gt;[^&lt;]+)&lt;/Data&gt;"</span>
+| <span class="cmd">rex</span> field=_raw <span class="string">"&lt;Data Name='CommandLine'&gt;(?&lt;CommandLine&gt;[^&lt;]+)&lt;/Data&gt;"</span>
 | <span class="cmd">search</span> Image=<span class="string">"*Users*"</span> <span class="cmd">OR</span> Image=<span class="string">"*AppData*"</span> <span class="cmd">OR</span> Image=<span class="string">"*Temp*"</span>
 | <span class="cmd">table</span> _time, Image, CommandLine
 
 <span class="comment"># 3. Parent-Child-Analyse</span>
 <span class="cmd">index</span>=botsv1 <span class="cmd">earliest</span>=<span class="number">0</span> <span class="cmd">sourcetype</span>=XmlWinEventLog:Microsoft-Windows-Sysmon/Operational
-| <span class="cmd">rex</span> field=_raw <span class="string">"<EventID>(?<EventID>\d+)</EventID>"</span>
+| <span class="cmd">rex</span> field=_raw <span class="string">"&lt;EventID&gt;(?&lt;EventID&gt;\d+)&lt;/EventID&gt;"</span>
 | <span class="cmd">search</span> EventID=<span class="number">1</span>
-| <span class="cmd">rex</span> field=_raw <span class="string">"<Data Name='Image'>(?<Image>[^<]+)</Data>"</span>
-| <span class="cmd">rex</span> field=_raw <span class="string">"<Data Name='ParentImage'>(?<ParentImage>[^<]+)</Data>"</span>
+| <span class="cmd">rex</span> field=_raw <span class="string">"&lt;Data Name='Image'&gt;(?&lt;Image&gt;[^&lt;]+)&lt;/Data&gt;"</span>
+| <span class="cmd">rex</span> field=_raw <span class="string">"&lt;Data Name='ParentImage'&gt;(?&lt;ParentImage&gt;[^&lt;]+)&lt;/Data&gt;"</span>
 | <span class="cmd">stats</span> count <span class="keyword">by</span> ParentImage, Image
 | <span class="cmd">sort</span> -count
         </div>
