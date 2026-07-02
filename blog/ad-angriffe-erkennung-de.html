@@ -7,115 +7,20 @@
     <meta name="description" content="AD-Angriffe erkennen: Kerberoasting, AS-REP Roasting, DCSync, Golden Ticket, Pass-the-Ticket. Kompaktes SOC Cheatsheet mit Event IDs, Splunk SPL und MITRE ATT&CK.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg:#0a0e1a; --bg2:#0f1525; --bg3:#161d30; --border:#1e2a42;
-            --accent:#00d4ff; --accent2:#ff4757; --accent3:#2ed573; --accent4:#ffaa00;
-            --text:#e0e6f0; --text-muted:#6b7a99; --code-bg:#0d1117;
-        }
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { background:var(--bg); color:var(--text); font-family:'Sora',sans-serif; font-size:15px; line-height:1.7; }
-
-        header { position:sticky; top:0; z-index:100; background:rgba(10,14,26,0.95); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); padding:14px 0; }
-        .header-inner { max-width:980px; margin:0 auto; padding:0 24px; display:flex; align-items:center; justify-content:space-between; }
-        .logo { font-family:'JetBrains Mono',monospace; font-weight:600; color:var(--accent); text-decoration:none; font-size:17px; }
-        .back-link { font-size:13px; color:var(--text-muted); text-decoration:none; transition:color 0.2s; }
-        .back-link:hover { color:var(--accent); }
-
-        .hero { max-width:980px; margin:0 auto; padding:48px 24px 40px; border-bottom:1px solid var(--border); }
-        .hero-meta { display:flex; align-items:center; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
-        .badge { font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:600; padding:3px 9px; border-radius:4px; letter-spacing:0.5px; }
-        .b-red  { background:rgba(255,71,87,0.15);  color:var(--accent2); border:1px solid rgba(255,71,87,0.3); }
-        .b-blue { background:rgba(0,212,255,0.10);  color:var(--accent);  border:1px solid rgba(0,212,255,0.2); }
-        .b-grn  { background:rgba(46,213,115,0.10); color:var(--accent3); border:1px solid rgba(46,213,115,0.2); }
-        h1 { font-size:clamp(24px,4vw,38px); font-weight:700; line-height:1.2; letter-spacing:-0.8px; margin-bottom:14px; }
-        h1 span { color:var(--accent2); }
-        .hero-sub { font-size:15px; color:var(--text-muted); max-width:680px; }
-
-        .content { max-width:980px; margin:0 auto; padding:40px 24px 60px; }
-
-        /* ── Master Ref Table ── */
-        .master-table { width:100%; border-collapse:collapse; font-size:12.5px; margin-bottom:48px; }
-        .master-table th { background:var(--bg3); color:var(--text-muted); font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.8px; text-transform:uppercase; padding:9px 14px; text-align:left; border-bottom:2px solid var(--border); white-space:nowrap; }
-        .master-table td { padding:9px 14px; border-bottom:1px solid var(--border); vertical-align:middle; }
-        .master-table tr:last-child td { border-bottom:none; }
-        .master-table tr:hover td { background:rgba(255,255,255,0.02); }
-        .attack-label { font-weight:700; font-size:13px; white-space:nowrap; }
-        .eid { font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--accent2); font-size:13px; white-space:nowrap; }
-        .eid-sec { font-family:'JetBrains Mono',monospace; color:var(--text-muted); font-size:12px; }
-        .field-key { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--accent3); background:rgba(46,213,115,0.08); border:1px solid rgba(46,213,115,0.15); padding:2px 7px; border-radius:3px; display:inline-block; white-space:nowrap; }
-        .mitre { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text-muted); background:var(--bg3); padding:2px 6px; border-radius:3px; border:1px solid var(--border); white-space:nowrap; }
-        .sev-crit { font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; padding:2px 8px; border-radius:3px; background:rgba(255,71,87,0.15); color:var(--accent2); border:1px solid rgba(255,71,87,0.3); white-space:nowrap; }
-        .sev-high { font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; padding:2px 8px; border-radius:3px; background:rgba(255,170,0,0.12); color:var(--accent4); border:1px solid rgba(255,170,0,0.3); white-space:nowrap; }
-
-        /* ── Section headers ── */
-        h2 { font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:var(--text-muted); margin:48px 0 20px; padding-bottom:8px; border-bottom:1px solid var(--border); font-family:'JetBrains Mono',monospace; }
-
-        /* ── Attack Cheatsheet Cards ── */
-        .cs-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
-        .cs-card { background:var(--bg2); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
-        .cs-card.full { grid-column:1/-1; }
-        .cs-head { padding:12px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--bg3); }
-        .cs-title { font-weight:700; font-size:14px; display:flex; align-items:center; gap:10px; }
-        .cs-eids { display:flex; gap:6px; flex-wrap:wrap; }
-        .cs-eid { font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700; color:var(--accent2); }
-        .cs-body { padding:14px 16px; }
-        .cs-row { display:flex; gap:6px; margin-bottom:6px; align-items:flex-start; font-size:12.5px; }
-        .cs-label { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text-muted); letter-spacing:0.5px; min-width:80px; flex-shrink:0; padding-top:2px; }
-        .cs-val { color:var(--text); line-height:1.5; }
-        .cs-val code { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--accent3); background:rgba(46,213,115,0.08); border:1px solid rgba(46,213,115,0.15); padding:0px 5px; border-radius:3px; }
-        .cs-val .warn { color:var(--accent2); font-family:'JetBrains Mono',monospace; font-size:11px; }
-
-        /* ── SPL Blocks ── */
-        .spl-wrap { margin-top:10px; }
-        .spl-label { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--accent); letter-spacing:0.5px; margin-bottom:5px; }
-        .spl { background:var(--code-bg); border:1px solid var(--border); border-radius:8px; padding:12px 14px; font-family:'JetBrains Mono',monospace; font-size:11.5px; line-height:1.75; color:#a8b8d8; overflow-x:auto; white-space:pre; }
-        .spl .kw { color:#ff79c6; }
-        .spl .fd { color:#bd93f9; }
-        .spl .nm { color:var(--accent3); }
-        .spl .cm { color:#44526a; font-style:italic; }
-        .spl .st { color:#f1fa8c; }
-        .spl .hl { color:var(--accent2); font-weight:700; }
-
-        /* ── Kerberos Flow ── */
-        .kflow { display:flex; align-items:center; gap:0; margin:16px 0; flex-wrap:wrap; }
-        .kflow-step { background:var(--bg3); border:1px solid var(--border); border-radius:6px; padding:7px 12px; font-family:'JetBrains Mono',monospace; font-size:11px; line-height:1.4; text-align:center; }
-        .kflow-step .ev { color:var(--accent2); font-weight:700; display:block; }
-        .kflow-step .lbl { color:var(--text-muted); font-size:10px; }
-        .kflow-arrow { color:var(--text-muted); padding:0 6px; font-size:14px; }
-
-        /* ── Kill Chain ── */
-        .kc-row { display:flex; gap:10px; align-items:stretch; margin-bottom:8px; }
-        .kc-phase { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text-muted); min-width:100px; text-align:right; padding-top:10px; flex-shrink:0; }
-        .kc-line { width:2px; background:var(--border); flex-shrink:0; border-radius:2px; position:relative; }
-        .kc-dot { width:10px; height:10px; background:var(--accent2); border-radius:50%; position:absolute; left:-4px; top:10px; border:2px solid var(--bg); }
-        .kc-content { background:var(--bg2); border:1px solid var(--border); border-radius:8px; padding:9px 14px; flex:1; font-size:12.5px; }
-        .kc-attack { font-weight:700; margin-bottom:3px; }
-        .kc-eids-row { display:flex; gap:5px; flex-wrap:wrap; }
-        .kc-eid { font-family:'JetBrains Mono',monospace; font-size:10px; padding:1px 7px; border-radius:3px; background:rgba(255,71,87,0.1); border:1px solid rgba(255,71,87,0.2); color:var(--accent2); }
-
-        /* ── Note box ── */
-        .note { border:1px solid rgba(0,212,255,0.2); background:rgba(0,212,255,0.04); border-radius:8px; padding:12px 16px; font-size:12.5px; color:var(--text-muted); margin:16px 0; }
-        .note strong { color:var(--text); }
-
-        footer { border-top:1px solid var(--border); padding:32px 24px; text-align:center; }
-        footer a { font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--accent); text-decoration:none; }
-
-        @media(max-width:680px) {
-            .cs-grid { grid-template-columns:1fr; }
-            .cs-card.full { grid-column:1; }
-            .kflow { gap:4px; }
-            .master-table { font-size:11px; }
-        }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="blog.css">
 </head>
 <body>
 
-<header>
-    <div class="header-inner">
-        <a class="logo" href="../index.html">yk://portfolio</a>
-        <a class="back-link" href="index.html">← Blog</a>
+<header class="header">
+    <div class="container">
+        <h1 class="site-name"><a href="../index.html">Yasin Kilic</a></h1>
+        <nav class="nav">
+            <ul class="nav-list">
+                <li><a href="../index.html" class="nav-link">Home</a></li>
+                <li><a href="index.html" class="nav-link active">Blog</a></li>
+            </ul>
+        </nav>
     </div>
 </header>
 
