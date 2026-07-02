@@ -744,6 +744,7 @@ code.inline {
 .kc-phase, .jc-phase {
     font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, monospace;
     font-size: 0.72rem; color: var(--accent); margin-bottom: 4px;
+    padding-right: 64px;
 }
 .kc-title, .jc-title { font-weight: 600; font-size: 1rem; margin-bottom: 8px; }
 .kc-title a, .jc-title a { color: var(--text); }
@@ -1003,4 +1004,7 @@ a.scenario-card:hover { border-color: var(--accent); }
     .kflow-arrow, .chain-arrow { transform: rotate(90deg); align-self: center; }
     .cs-row { flex-direction: column; gap: 2px; }
     .cs-label { width: auto; }
+    .kc-row { flex-direction: column; gap: 6px; }
+    .kc-row .kc-phase { width: auto; }
+    .kc-row .kc-line { display: none; }
 }
