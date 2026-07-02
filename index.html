@@ -71,263 +71,68 @@
     <!-- Projects Section -->
     <section class="section projects" id="projects">
         <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">Projects</h2>
-                <div class="section-line"></div>
-            </div>
-            <div class="projects-grid">
+            <p class="section-label">Projects</p>
+            <div class="projects-list">
 
-                <article class="project-card">
-                    <div class="project-image"><div class="project-placeholder"><span>LAB</span></div></div>
-                    <div class="project-info">
-                        <h3 class="project-title">Home-Lab Architektur — FortiGate + Splunk SOC auf einem Mac</h3>
-                        <p class="project-description">
-                            Komplette Übersicht der gesamten Lab-Infrastruktur: FortiGate-VM 7.4.12 (ARM64) in UTM,
-                            Debian-Kali-Client via QEMU Socket-Networking und Splunk Enterprise in Docker — alles
-                            gleichzeitig auf einem Mac mini M4. Mit ASCII-Diagrammen erklärt, einfach genug für jeden.
-                            <em>(Blog post in German.)</em>
-                        </p>
-                        <div class="project-tags">
-                            <span class="tag">FortiGate</span>
-                            <span class="tag">Splunk</span>
-                            <span class="tag">UTM</span>
-                            <span class="tag">QEMU</span>
-                            <span class="tag">Apple Silicon</span>
-                        </div>
-                        <div class="project-links">
-                            <a href="blog/lab-architektur-uebersicht-de.html" class="project-link">Read Blog Post →</a>
-                        </div>
-                    </div>
-                </article>
+                <a href="blog/lab-architektur-uebersicht-de.html" class="project-row">
+                    <span class="project-row-title">Home-Lab Architektur — FortiGate + Splunk SOC</span>
+                    <span class="project-row-dots"></span>
+                    <span class="project-row-tag">FortiGate</span>
+                </a>
 
-                <article class="project-card">
-                    <div class="project-image"><div class="project-placeholder"><span>FGT</span></div></div>
-                    <div class="project-info">
-                        <h3 class="project-title">FortiGate-VM Lab on Apple Silicon (UTM)</h3>
-                        <p class="project-description">
-                            Ran a native ARM64 FortiGate-VM 7.4.12 on a Mac mini M4 in UTM with full Apple Hypervisor
-                            acceleration. Built a complete edge-firewall lab (WAN/NAT, internal LAN with DHCP, LAN→WAN
-                            policy) for NSE4 prep — documenting the gotchas no tutorial mentions: UTM won't load
-                            hand-built VMs, the serial console runs over TCP, and an unlicensed FortiOS locks the GUI.
-                            <em>(Blog post in German.)</em>
-                        </p>
-                        <div class="project-tags">
-                            <span class="tag">FortiGate</span>
-                            <span class="tag">UTM / QEMU</span>
-                            <span class="tag">Apple Silicon</span>
-                            <span class="tag">ARM64</span>
-                            <span class="tag">NSE4</span>
-                        </div>
-                        <div class="project-links">
-                            <a href="blog/fortigate-vm-lab-apple-silicon.html" class="project-link">Read Blog Post →</a>
-                            <a href="https://github.com/yasinkilicma/fortigate-vm-lab-apple-silicon" target="_blank" class="project-link">GitHub →</a>
-                        </div>
-                    </div>
-                </article>
+                <a href="blog/fortigate-vm-lab-apple-silicon.html" class="project-row">
+                    <span class="project-row-title">FortiGate-VM Lab on Apple Silicon (UTM)</span>
+                    <span class="project-row-dots"></span>
+                    <span class="project-row-tag">UTM / QEMU</span>
+                </a>
 
-                <article class="project-card">
-                    <div class="project-image"><div class="project-placeholder"><span>FW+C</span></div></div>
-                    <div class="project-info">
-                        <h3 class="project-title">Attacker-Client behind FortiGate — QEMU Socket Networking</h3>
-                        <p class="project-description">
-                            Hung a Linux client behind the FortiGate so all its traffic is inspected by the firewall.
-                            After the Kali installer failed at every layer, pivoted to a directly-bootable Debian ARM64
-                            cloud image (cloud-init) and bridged it to the UTM-hosted FortiGate over a real isolated L2
-                            segment via QEMU socket networking. Verified: client → internet through the firewall (NAT,
-                            inspected), nmap/DNS working. <em>(Blog post in German.)</em>
-                        </p>
-                        <div class="project-tags">
-                            <span class="tag">QEMU Socket Net</span>
-                            <span class="tag">cloud-init</span>
-                            <span class="tag">FortiGate</span>
-                            <span class="tag">UTM</span>
-                            <span class="tag">NSE4</span>
-                        </div>
-                        <div class="project-links">
-                            <a href="blog/fortigate-lab-attacker-client-socket.html" class="project-link">Read Blog Post →</a>
-                            <a href="https://github.com/yasinkilicma/fortigate-vm-lab-apple-silicon" target="_blank" class="project-link">GitHub →</a>
-                        </div>
-                    </div>
-                </article>
+                <a href="blog/fortigate-lab-attacker-client-socket.html" class="project-row">
+                    <span class="project-row-title">Attacker-Client behind FortiGate — QEMU Socket Networking</span>
+                    <span class="project-row-dots"></span>
+                    <span class="project-row-tag">QEMU</span>
+                </a>
 
-                <article class="project-card">
-                    <div class="project-image"><div class="project-placeholder"><span>IPS</span></div></div>
-                    <div class="project-info">
-                        <h3 class="project-title">FortiGate IPS Test with a Custom Signature</h3>
-                        <p class="project-description">
-                            A deterministic IPS demo: wrote an F-SBID custom signature that matches a unique pattern in
-                            the HTTP traffic of a client behind the FortiGate. Control request → 200, attack request
-                            (with the pattern) → dropped, confirmed in the IPS event log (NSE4.IPS.Test, Critical,
-                            src 192.0.2.50). Covers custom signatures, flow-based inspection and eval-license limits.
-                            <em>(Blog post in German.)</em>
-                        </p>
-                        <div class="project-tags">
-                            <span class="tag">IPS</span>
-                            <span class="tag">F-SBID</span>
-                            <span class="tag">FortiGate</span>
-                            <span class="tag">NSE4</span>
-                            <span class="tag">Security Profiles</span>
-                        </div>
-                        <div class="project-links">
-                            <a href="blog/fortigate-ips-custom-signature-test.html" class="project-link">Read Blog Post →</a>
-                            <a href="https://github.com/yasinkilicma/fortigate-vm-lab-apple-silicon" target="_blank" class="project-link">GitHub →</a>
-                        </div>
-                    </div>
-                </article>
+                <a href="blog/fortigate-ips-custom-signature-test.html" class="project-row">
+                    <span class="project-row-title">FortiGate IPS Test with a Custom Signature</span>
+                    <span class="project-row-dots"></span>
+                    <span class="project-row-tag">IPS / NSE4</span>
+                </a>
 
-                <article class="project-card">
-                    <div class="project-image"><div class="project-placeholder"><span>AV</span></div></div>
-                    <div class="project-info">
-                        <h3 class="project-title">FortiGate AntiVirus Test with EICAR</h3>
-                        <p class="project-description">
-                            Proved the AntiVirus scan on the FortiGate using the EICAR test file: a client behind the
-                            firewall downloads it over plaintext HTTP — the clean file passes (200), EICAR is blocked
-                            mid-transfer (connection reset, 0 bytes), confirmed in the AV event log (EICAR_TEST_FILE,
-                            blocked). Covers flow-based AV, plaintext vs. HTTPS, and eval-license limits.
-                            <em>(Blog post in German.)</em>
-                        </p>
-                        <div class="project-tags">
-                            <span class="tag">AntiVirus</span>
-                            <span class="tag">EICAR</span>
-                            <span class="tag">FortiGate</span>
-                            <span class="tag">NSE4</span>
-                            <span class="tag">Security Profiles</span>
-                        </div>
-                        <div class="project-links">
-                            <a href="blog/fortigate-antivirus-eicar-test.html" class="project-link">Read Blog Post →</a>
-                            <a href="https://github.com/yasinkilicma/fortigate-vm-lab-apple-silicon" target="_blank" class="project-link">GitHub →</a>
-                        </div>
-                    </div>
-                </article>
+                <a href="blog/fortigate-antivirus-eicar-test.html" class="project-row">
+                    <span class="project-row-title">FortiGate AntiVirus Test with EICAR</span>
+                    <span class="project-row-dots"></span>
+                    <span class="project-row-tag">AntiVirus</span>
+                </a>
 
+                <a href="blog/soc-lab-splunk-ransomware-analyse-de.html" class="project-row">
+                    <span class="project-row-title">SOC Home Lab — Splunk SIEM &amp; Full Cerber Kill Chain</span>
+                    <span class="project-row-dots"></span>
+                    <span class="project-row-tag">Splunk</span>
+                </a>
 
-                <article class="project-card">
-                    <div class="project-image"><div class="project-placeholder"><span>SOC</span></div></div>
-                    <div class="project-info">
-                        <h3 class="project-title">SOC Home Lab — Splunk SIEM &amp; Full Cerber Kill Chain</h3>
-                        <p class="project-description">
-                            End-to-end SOC lab: Splunk Enterprise in Docker (Terraform), real-time FortiGate log
-                            forwarding via Python UDP→HEC bridge, and deep-dive analysis of the BOTS v1 dataset
-                            (955,807 events). Built 8 custom dashboards — SOC Home, FortiGate SOC, Port-Scan-Erkennung,
-                            BOTS v1 Cerber Overview, Suricata IDS, SMB Lateral Movement, Sysmon Process Creation,
-                            Registry Persistence. Full Cerber ransomware kill chain reconstructed: Acunetix scanner
-                            → XSS/SQLi/XXE/Shellshock → infection → osk.exe masquerading → SMB lateral movement
-                            (250.100→250.20) → Run-Key persistence → DNS C2.
-                            <em>(Blog posts in German.)</em>
-                        </p>
-                        <div class="project-tags">
-                            <span class="tag">Splunk</span>
-                            <span class="tag">Terraform</span>
-                            <span class="tag">Docker</span>
-                            <span class="tag">Suricata IDS</span>
-                            <span class="tag">BOTS v1</span>
-                            <span class="tag">Incident Response</span>
-                        </div>
-                        <div class="project-links">
-                            <a href="blog/soc-lab-splunk-ransomware-analyse-de.html" class="project-link">Cerber-Analyse →</a>
-                            <a href="blog/soc-suricata-ids-de.html" class="project-link">Suricata IDS →</a>
-                            <a href="https://github.com/yasinkilicma/terraform-splunk-demo" target="_blank" class="project-link">GitHub →</a>
-                        </div>
-                    </div>
-                </article>
+                <a href="blog/win-security-overview-de.html" class="project-row">
+                    <span class="project-row-title">Windows Security Event Log — 5-Scenario Kill Chain</span>
+                    <span class="project-row-dots"></span>
+                    <span class="project-row-tag">Active Directory</span>
+                </a>
 
-                <article class="project-card">
-                    <div class="project-image"><div class="project-placeholder"><span>WIN</span></div></div>
-                    <div class="project-info">
-                        <h3 class="project-title">Windows Security Event Log Analysis — 5-Scenario Kill Chain</h3>
-                        <p class="project-description">
-                            Built a simulated Active Directory environment (4 Windows hosts, corp.local domain) and
-                            generated 175 realistic Windows Security events across a complete attacker kill chain:
-                            Brute-Force (4625/4740) → Lateral Movement (4624) → Privilege Escalation (4720/4732/4728)
-                            → Persistence (4698/7045) → Macro Malware (4688 process chain). All 5 scenarios
-                            investigated with SPL queries in Splunk.
-                            <em>(Blog posts in German.)</em>
-                        </p>
-                        <div class="project-tags">
-                            <span class="tag">Windows Security</span>
-                            <span class="tag">Splunk</span>
-                            <span class="tag">Active Directory</span>
-                            <span class="tag">Event ID Analysis</span>
-                            <span class="tag">MITRE ATT&amp;CK</span>
-                        </div>
-                        <div class="project-links">
-                            <a href="blog/win-security-overview-de.html" class="project-link">Series Overview →</a>
-                            <a href="blog/win-bruteforce-erkennung-de.html" class="project-link">Scenario 1: Brute-Force →</a>
-                        </div>
-                    </div>
-                </article>
+                <a href="blog/sap-security-overview-de.html" class="project-row">
+                    <span class="project-row-title">SAP Security Audit Log — Insider Threat &amp; Privilege Abuse</span>
+                    <span class="project-row-dots"></span>
+                    <span class="project-row-tag">SAP / Splunk</span>
+                </a>
 
-                <article class="project-card">
-                    <div class="project-image"><div class="project-placeholder"><span>SAP</span></div></div>
-                    <div class="project-info">
-                        <h3 class="project-title">SAP Security Audit Log Analysis — Insider Threat &amp; Privilege Abuse</h3>
-                        <p class="project-description">
-                            Analyzed SAP Security Audit Log events (AU1/AU2/AU4/AU6/AUB/AUI/EU1/DU9) with Splunk
-                            across 5 scenarios: Failed Logins, Privilege Escalation, Table Access, RFC Backdoor,
-                            and Mass Data Export. Mapped all findings to the MITRE ATT&amp;CK framework and built
-                            a Master-SPL query covering the full insider-threat kill chain in an ERP environment.
-                            <em>(Blog posts in German.)</em>
-                        </p>
-                        <div class="project-tags">
-                            <span class="tag">SAP</span>
-                            <span class="tag">Splunk</span>
-                            <span class="tag">Insider Threat</span>
-                            <span class="tag">Audit Log</span>
-                            <span class="tag">ERP Security</span>
-                        </div>
-                        <div class="project-links">
-                            <a href="blog/sap-security-overview-de.html" class="project-link">Series Overview →</a>
-                        </div>
-                    </div>
-                </article>
+                <a href="blog/soc-port-scan-detection-de.html" class="project-row">
+                    <span class="project-row-title">Port-Scan-Erkennung mit FortiGate &amp; Splunk</span>
+                    <span class="project-row-dots"></span>
+                    <span class="project-row-tag">nmap</span>
+                </a>
 
-                <article class="project-card">
-                    <div class="project-image"><div class="project-placeholder"><span>PScan</span></div></div>
-                    <div class="project-info">
-                        <h3 class="project-title">Port-Scan-Erkennung mit FortiGate &amp; Splunk</h3>
-                        <p class="project-description">
-                            Detected nmap SYN-scans using FortiGate traffic logs forwarded to Splunk in real time.
-                            Identified the nmap fingerprint (action=client-rst, sentbyte=164, rcvdbyte=60) and built
-                            a German-language Splunk dashboard with scanner profiling, port timelines, and
-                            tool-detection logic for SYN/FIN/NULL/Xmas scans.
-                            <em>(Blog post in German.)</em>
-                        </p>
-                        <div class="project-tags">
-                            <span class="tag">nmap</span>
-                            <span class="tag">FortiGate</span>
-                            <span class="tag">Splunk</span>
-                            <span class="tag">Port Scan Detection</span>
-                            <span class="tag">Network Security</span>
-                        </div>
-                        <div class="project-links">
-                            <a href="blog/soc-port-scan-detection-de.html" class="project-link">Read Blog Post →</a>
-                        </div>
-                    </div>
-                </article>
-
-                <article class="project-card">
-                    <div class="project-image"><div class="project-placeholder"><span>IDS</span></div></div>
-                    <div class="project-info">
-                        <h3 class="project-title">Suricata IDS — Web-Angriffs-Analyse (BOTS v1)</h3>
-                        <p class="project-description">
-                            Analyzed 125,584 Suricata events from the BOTS v1 dataset: 1,360 IDS alerts across
-                            15+ signatures, 741 DNS anomalies (Cerber C2 beacon), Acunetix web scanner fingerprinting,
-                            and XSS/SQLi/XXE/Shellshock detection. Full attacker profile reconstructed and mapped
-                            to the Cerber ransomware kill chain.
-                            <em>(Blog post in German.)</em>
-                        </p>
-                        <div class="project-tags">
-                            <span class="tag">Suricata</span>
-                            <span class="tag">IDS</span>
-                            <span class="tag">BOTS v1</span>
-                            <span class="tag">Splunk</span>
-                            <span class="tag">Web Attack Analysis</span>
-                        </div>
-                        <div class="project-links">
-                            <a href="blog/soc-suricata-ids-de.html" class="project-link">Read Blog Post →</a>
-                        </div>
-                    </div>
-                </article>
+                <a href="blog/soc-suricata-ids-de.html" class="project-row">
+                    <span class="project-row-title">Suricata IDS — Web-Angriffs-Analyse (BOTS v1)</span>
+                    <span class="project-row-dots"></span>
+                    <span class="project-row-tag">Suricata</span>
+                </a>
 
             </div>
         </div>
