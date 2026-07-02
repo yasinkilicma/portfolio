@@ -7,134 +7,20 @@
     <meta name="description" content="Komplette Lab-Architektur: FortiGate-VM auf Mac mini M4 (UTM), Debian-Kali-Client via QEMU Socket-Networking und Splunk SOC mit BOTS v1 Datensatz — alles auf einem einzigen Gerät.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #0a0e1a; --bg2: #0f1525; --bg3: #161d30;
-            --border: #1e2a42; --accent: #00d4ff; --accent2: #ff4757;
-            --accent3: #2ed573; --accent4: #ffa502;
-            --text: #e0e6f0; --text-muted: #6b7a99;
-            --code-bg: #0d1117;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: var(--bg); color: var(--text); font-family: 'Sora', sans-serif; font-size: 16px; line-height: 1.8; }
-        header { position: sticky; top: 0; z-index: 100; background: rgba(10,14,26,0.9); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 16px 0; }
-        .header-inner { max-width: 860px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; }
-        .logo { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--accent); text-decoration: none; font-size: 18px; }
-        .back-link { font-size: 13px; color: var(--text-muted); text-decoration: none; }
-        .back-link:hover { color: var(--accent); }
-        .hero { max-width: 860px; margin: 0 auto; padding: 64px 24px 48px; border-bottom: 1px solid var(--border); }
-        .hero-meta { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
-        .badge { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 4px; letter-spacing: 0.5px; }
-        .badge-blue  { background: rgba(0,212,255,0.1);  color: var(--accent);  border: 1px solid rgba(0,212,255,0.2); }
-        .badge-green { background: rgba(46,213,115,0.1); color: var(--accent3); border: 1px solid rgba(46,213,115,0.2); }
-        .badge-orange{ background: rgba(255,165,2,0.1);  color: var(--accent4); border: 1px solid rgba(255,165,2,0.2); }
-        .hero-title { font-size: clamp(26px,4vw,38px); font-weight: 700; line-height: 1.2; margin-bottom: 16px; }
-        .hero-subtitle { font-size: 17px; color: var(--text-muted); max-width: 680px; }
-        article { max-width: 860px; margin: 0 auto; padding: 48px 24px 80px; }
-        h2 { font-size: 22px; font-weight: 700; margin: 52px 0 20px; padding-left: 16px; border-left: 3px solid var(--accent); }
-        h3 { font-size: 17px; font-weight: 600; color: var(--accent); margin: 36px 0 14px; font-family: 'JetBrains Mono', monospace; }
-        p { margin-bottom: 16px; color: #c8d4e8; }
-        ul, ol { margin: 0 0 16px 20px; color: #c8d4e8; }
-        li { margin-bottom: 6px; }
-        strong { color: var(--text); }
-        code { font-family: 'JetBrains Mono', monospace; font-size: 13px; background: var(--bg3); padding: 2px 7px; border-radius: 4px; color: var(--accent); }
-
-        /* ── Diyagram Kutular ─────────────────────────────────────────── */
-        .arch-box {
-            background: var(--bg2);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 28px 28px;
-            margin: 24px 0;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 13px;
-            color: #a8b8d8;
-            white-space: pre;
-            overflow-x: auto;
-            line-height: 1.7;
-        }
-        .arch-box .node-host    { color: #ffa502; font-weight: 600; }
-        .arch-box .node-fw      { color: #00d4ff; font-weight: 600; }
-        .arch-box .node-client  { color: #2ed573; font-weight: 600; }
-        .arch-box .node-soc     { color: #ff4757; font-weight: 600; }
-        .arch-box .node-net     { color: #a29bfe; font-weight: 600; }
-        .arch-box .node-data    { color: #fd79a8; font-weight: 600; }
-        .arch-box .dim          { color: #3d4f6e; }
-        .arch-box .label        { color: #6b7a99; font-size: 12px; }
-
-        /* ── Komponenten-Karten ───────────────────────────────────────── */
-        .component-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 24px 0; }
-        @media (max-width: 600px) { .component-grid { grid-template-columns: 1fr; } }
-        .component-card {
-            background: var(--bg2);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 20px;
-        }
-        .component-card.blue   { border-left: 3px solid var(--accent); }
-        .component-card.green  { border-left: 3px solid var(--accent3); }
-        .component-card.red    { border-left: 3px solid var(--accent2); }
-        .component-card.orange { border-left: 3px solid var(--accent4); }
-        .comp-title { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; margin-bottom: 10px; }
-        .comp-title.blue   { color: var(--accent); }
-        .comp-title.green  { color: var(--accent3); }
-        .comp-title.red    { color: var(--accent2); }
-        .comp-title.orange { color: var(--accent4); }
-        .comp-desc { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin: 0; }
-        .comp-spec { font-size: 12px; font-family: 'JetBrains Mono', monospace; color: #3d5a80; margin-top: 8px; }
-
-        /* ── Daten-Flow ──────────────────────────────────────────────── */
-        .flow-step {
-            display: flex;
-            align-items: flex-start;
-            gap: 16px;
-            margin-bottom: 20px;
-        }
-        .flow-num {
-            width: 32px; height: 32px;
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 13px; font-weight: 600;
-            flex-shrink: 0;
-        }
-        .flow-num.blue   { background: rgba(0,212,255,0.15);  color: var(--accent); }
-        .flow-num.green  { background: rgba(46,213,115,0.15); color: var(--accent3); }
-        .flow-num.red    { background: rgba(255,71,87,0.15);  color: var(--accent2); }
-        .flow-num.orange { background: rgba(255,165,2,0.15);  color: var(--accent4); }
-        .flow-body { flex: 1; }
-        .flow-title { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
-        .flow-desc  { font-size: 14px; color: var(--text-muted); }
-
-        /* ── Callout ─────────────────────────────────────────────────── */
-        .callout { background: rgba(0,212,255,0.05); border: 1px solid rgba(0,212,255,0.2); border-radius: 10px; padding: 16px 20px; margin: 20px 0; display: flex; gap: 12px; }
-        .callout-green { background: rgba(46,213,115,0.05); border-color: rgba(46,213,115,0.2); }
-        .callout-orange { background: rgba(255,165,2,0.05); border-color: rgba(255,165,2,0.2); }
-        .callout-icon { font-size: 18px; flex-shrink: 0; padding-top: 1px; }
-        .callout-text { font-size: 14px; color: #a8b8d8; margin: 0; line-height: 1.7; }
-
-        /* ── Tabelle ─────────────────────────────────────────────────── */
-        .data-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px; }
-        .data-table th { background: var(--bg3); color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
-        .data-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: #c8d4e8; vertical-align: top; }
-        .data-table tr:last-child td { border-bottom: none; }
-        .data-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--accent3); }
-
-        /* ── Screenshot ──────────────────────────────────────────────── */
-        .screenshot { width: 100%; border-radius: 12px; border: 1px solid var(--border); margin: 20px 0; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
-        .screenshot-caption { font-size: 13px; color: var(--text-muted); text-align: center; margin: -12px 0 24px; }
-
-        /* ── Footer ──────────────────────────────────────────────────── */
-        footer { border-top: 1px solid var(--border); padding: 32px 0; text-align: center; color: var(--text-muted); font-size: 13px; }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="blog.css">
 </head>
 <body>
 
-<header>
-    <div class="header-inner">
-        <a href="../index.html" class="logo">YK</a>
-        <a href="index.html" class="back-link">← Alle Blog-Posts</a>
+<header class="header">
+    <div class="container">
+        <h1 class="site-name"><a href="../index.html">Yasin Kilic</a></h1>
+        <nav class="nav">
+            <ul class="nav-list">
+                <li><a href="../index.html" class="nav-link">Home</a></li>
+                <li><a href="index.html" class="nav-link active">Blog</a></li>
+            </ul>
+        </nav>
     </div>
 </header>
 
