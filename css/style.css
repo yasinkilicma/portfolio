@@ -272,6 +272,7 @@ ul {
     font-weight: 500;
     color: var(--text-muted);
     transition: var(--transition);
+    margin-right: 16px;
 }
 
 .contact-linkedin:hover {
