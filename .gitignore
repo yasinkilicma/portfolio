@@ -19,3 +19,6 @@ build/
 # Logs
 *.log
 index.html.backup
+
+# Internal working docs (specs/plans) - keep local only
+docs/superpowers/
