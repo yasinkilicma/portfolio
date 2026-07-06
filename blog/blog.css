@@ -169,8 +169,9 @@ ul { list-style: none; }
 .tab-panel { display: none; }
 .tab-panel.active { display: block; }
 
-/* Section headers within blog index */
-.content h2 {
+/* Section headers within blog index — scoped to .tab-panel so the
+   article-page .content h2 rule further down cannot override them */
+.content .tab-panel h2 {
     font-size: 0.72rem;
     font-weight: 600;
     letter-spacing: 0.12em;
@@ -181,7 +182,7 @@ ul { list-style: none; }
     border: none;
 }
 
-.content h2:first-child { margin-top: 40px; }
+.content .tab-panel h2:first-child { margin-top: 40px; }
 
 .posts {
     display: flex;
