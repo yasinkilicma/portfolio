@@ -208,9 +208,10 @@
         sind in praktisch jedem SAP-Angriffstool hardcodiert und gehören als nicht benötigte
         Standard-User sofort gesperrt. Der Zugriff auf RFC_READ_TABLE sollte über das
         Berechtigungsobjekt S_RFC auf autorisierte RFC-Benutzer beschränkt werden, alternativ
-        über Tabellenpuffer oder andere Schnittstellen laufen. Und die IP 185.220.101.5, ein
-        bekannter Tor-Exit-Node, gehört sofort auf Firewall- und WAF-Ebene blockiert, während
-        alle weiteren Aktivitäten dieser Adresse in Firewall-, IDS- und Web-Logs geprüft werden.
+        über Tabellenpuffer oder andere Schnittstellen laufen. Die vierte Maßnahme betrifft die
+        IP 185.220.101.5 — ein bekannter Tor-Exit-Node, der sofort auf Firewall- und WAF-Ebene
+        blockiert gehört, während alle weiteren Aktivitäten dieser Adresse in Firewall-, IDS-
+        und Web-Logs geprüft werden.
     </p>
 
     <div class="callout callout-blue">

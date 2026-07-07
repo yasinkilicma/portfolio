@@ -329,16 +329,15 @@
     <!-- ERKENNTNISSE -->
     <h2>Wichtigste Erkenntnisse</h2>
     <p>
-        Vier Dinge bleiben aus diesem Lab hängen: Terraform und Docker als Infrastructure-as-Code
-        bedeuten, dass die gesamte SOC-Umgebung in Minuten von Null aufgebaut werden kann, ohne
-        manuelles Setup und ohne Configuration Drift. Lateral Movement ist dabei erstaunlich
-        lautlos — der kompromittierte interne Rechner 192.168.250.100 erzeugte mehr Alarme als
-        der externe Angreifer selbst, ein Hinweis darauf, dass interner Traffic oft zu wenig
-        überwacht wird. Keine einzelne Log-Quelle erzählte die ganze Geschichte; die Angriffskette
-        wurde erst durch die Korrelation von Nessus-Scans, Suricata-Alarmen und Windows Event Logs
-        sichtbar. Und DNS ist ein Warnsignal: 2.038 Anfragen an 8.8.8.8 sowie fehlerhafte
-        DNS-Antworten sind klassische C2-Muster von Ransomware, weshalb DNS-Traffic immer
-        mitüberwacht gehört.
+        Terraform und Docker als Infrastructure-as-Code bedeuten, dass die gesamte SOC-Umgebung
+        in Minuten von Null aufgebaut werden kann — ohne manuelles Setup, ohne Configuration
+        Drift. Lateral Movement erwies sich dabei als erstaunlich lautlos: Der kompromittierte
+        interne Rechner 192.168.250.100 erzeugte mehr Alarme als der externe Angreifer selbst,
+        ein Hinweis darauf, dass interner Traffic oft zu wenig überwacht wird. Keine einzelne
+        Log-Quelle erzählte die ganze Geschichte; die Angriffskette wurde erst durch die
+        Korrelation von Nessus-Scans, Suricata-Alarmen und Windows Event Logs sichtbar. DNS
+        schließlich ist ein Warnsignal: 2.038 Anfragen an 8.8.8.8 sowie fehlerhafte DNS-Antworten
+        sind klassische C2-Muster von Ransomware, weshalb DNS-Traffic immer mitüberwacht gehört.
     </p>
 
     <div class="callout callout-green">

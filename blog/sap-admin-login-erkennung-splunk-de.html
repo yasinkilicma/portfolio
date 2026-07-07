@@ -298,9 +298,10 @@
         Privilegierte Benutzer sollten sich nur aus definierten IP-Ranges oder Ländern anmelden
         können, durchgesetzt über SAP Logon Groups und Netzwerk-ACLs. Eine SIEM-Regel, die SE38,
         SU01, SU10 oder PFCG von einer nicht-internen IP sofort als P1-Alert einstuft, sollte
-        keine Ausnahme für "Notfall-Zugang" kennen. Und privilegierte Aktionen außerhalb der
-        Kernarbeitszeiten, etwa 22:00 bis 06:00 Uhr, gehören automatisch eskaliert — legitime
-        Notfall-Arbeiten laufen stattdessen über einen genehmigten Change-Prozess.
+        keine Ausnahme für "Notfall-Zugang" kennen. Dazu kommt ein festes Zeitfenster für
+        Admin-Aktivitäten: privilegierte Aktionen außerhalb der Kernarbeitszeiten, etwa 22:00
+        bis 06:00 Uhr, gehören automatisch eskaliert — legitime Notfall-Arbeiten laufen
+        stattdessen über einen genehmigten Change-Prozess.
     </p>
 
     <div class="callout callout-blue">

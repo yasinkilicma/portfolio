@@ -215,16 +215,17 @@
     <h2>Was jetzt zu tun ist</h2>
 
     <p>
-        TKURT muss sofort gesperrt und untersucht werden — alle aktiven Sessions beenden, Passwort
-        zurücksetzen, letzte Logins und IP-Adressen prüfen und mit dem echten TKURT klären, ob er
-        diese Aktionen überhaupt durchgeführt hat. Least-Privilege muss konsequent gelten: normale
-        Geschäftsbenutzer dürfen nie Sichtbarkeit auf Admin-TCodes haben, was eine Überprüfung des
-        Berechtigungskonzepts verlangt, bei der das S_TCODE-Objekt für kritische Transaktionen
-        explizit vergeben wird. Ein automatischer SIEM-Alert bei mehr als drei AUB-Events
-        desselben Benutzers gegen die Admin-Whitelist PFCG, SE38, SU01, SM59 und SM30 innerhalb
-        von 15 Minuten fängt den nächsten Versuch ab. Und alle SM59-Verbindungen sollten auf
-        unbekannte externe Ziele geprüft werden — neue RFC-Destinations seit dem Vorfallszeitpunkt
-        sind verdächtig und gehören sofort entfernt.
+        Der erste Schritt ist die sofortige Sperrung und Untersuchung des Kontos TKURT: alle
+        aktiven Sessions beenden, Passwort zurücksetzen, letzte Logins und IP-Adressen prüfen —
+        und mit dem echten TKURT klären, ob er diese Aktionen überhaupt durchgeführt hat.
+        Least-Privilege muss konsequent gelten: normale Geschäftsbenutzer dürfen nie Sichtbarkeit
+        auf Admin-TCodes haben, was eine Überprüfung des Berechtigungskonzepts verlangt, bei der
+        das S_TCODE-Objekt für kritische Transaktionen explizit vergeben wird. Ein automatischer
+        SIEM-Alert bei mehr als drei AUB-Events desselben Benutzers gegen die Admin-Whitelist
+        PFCG, SE38, SU01, SM59 und SM30 innerhalb von 15 Minuten fängt den nächsten Versuch ab.
+        Zuletzt gehören alle SM59-Verbindungen auf unbekannte externe Ziele geprüft — neue
+        RFC-Destinations seit dem Vorfallszeitpunkt sind verdächtig und müssen sofort entfernt
+        werden.
     </p>
 
     <div class="callout callout-blue">
