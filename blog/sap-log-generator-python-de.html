@@ -90,8 +90,7 @@
     </p>
 
     <div class="callout blue">
-        <div class="callout-icon">→</div>
-        <div class="callout-body">
+                <div class="callout-body">
             <p><strong>Ziel:</strong> Splunk-Dashboard mit SAP-Daten füllen, ohne Zugang zu einem
             echten SAP-System zu benötigen — reproduzierbar, kontrolliert, anpassbar.</p>
         </div>
@@ -414,8 +413,7 @@ Total events: <span class="nm">128</span>
     <h2>Erkenntnisse &amp; Hinweise</h2>
 
     <div class="callout red">
-        <div class="callout-icon">⚠</div>
-        <div class="callout-body">
+                <div class="callout-body">
             <p><strong>HTTPS Pflicht:</strong> Splunk HEC erfordert HTTPS (Port 8088 mit SSL).
             HTTP-Requests werden mit <em>RemoteDisconnected</em> abgelehnt.
             Im Lab: <code style="font-family:monospace;color:#bd93f9">verify=False</code> in requests.post() zum Ignorieren
@@ -424,8 +422,7 @@ Total events: <span class="nm">128</span>
     </div>
 
     <div class="callout blue">
-        <div class="callout-icon">→</div>
-        <div class="callout-body">
+                <div class="callout-body">
             <p><strong>Field-Namen prüfen:</strong> Splunk extrahiert Fields aus dem JSON automatisch.
             Das Feld <code style="font-family:monospace;color:#bd93f9">terminal</code> landet als eigenes Splunk-Field — aber nicht als
             <code style="font-family:monospace;color:#bd93f9">src_ip</code>. Immer mit
@@ -434,8 +431,7 @@ Total events: <span class="nm">128</span>
     </div>
 
     <div class="callout green">
-        <div class="callout-icon">✓</div>
-        <div class="callout-body">
+                <div class="callout-body">
             <p><strong>Erweiterbar:</strong> Neue Szenarien lassen sich einfach als eigene Funktion
             hinzufügen und in <code style="font-family:monospace;color:#50fa7b">main()</code> einbinden.
             Die Event-ID-Tabelle <code style="font-family:monospace;color:#50fa7b">SAP_EVENTS</code>

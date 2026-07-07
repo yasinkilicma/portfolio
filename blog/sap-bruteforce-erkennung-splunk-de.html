@@ -27,7 +27,7 @@
 
 <section class="hero">
     <div class="hero-meta">
-        <span class="badge badge-red">🔴 ANGRIFFSERKENNUNG</span>
+        <span class="badge badge-red">ANGRIFFSERKENNUNG</span>
         <span class="badge badge-blue">SOC LAB</span>
         <span class="badge badge-green">SAP SECURITY</span>
         <span class="meta-date">Juni 2026</span>
@@ -118,8 +118,7 @@
     </p>
 
     <div class="callout callout-blue">
-        <span class="callout-icon">ℹ️</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Warum SAP-Logs im SOC entscheidend sind:</strong> SAP-ERP-Systeme speichern
             die sensibelsten Unternehmensdaten — Finanzdaten, HR-Informationen, Kundendaten.
             Ein Angreifer mit SAP-Zugang kann alles extrahieren, ohne einen einzigen Endpoint
@@ -198,8 +197,7 @@
     </p>
 
     <div class="callout callout-red">
-        <span class="callout-icon">🚨</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Angreifer-IP:</strong> 45.33.32.156 — eine bekannte Scan-IP-Adresse außerhalb des Unternehmensnetzwerks.
             Kein VPN, keine interne IP — dies ist ein direkter Angriff auf ein internet-exponiertes SAP-System.
         </p>
@@ -337,28 +335,28 @@
 
     <div class="findings">
         <div class="finding-card">
-            <div class="finding-icon icon-red">🔴</div>
+            <div class="finding-icon icon-red"></div>
             <div>
                 <div class="finding-title">Externe IP greift direkt auf Produktiv-SAP zu</div>
                 <p class="finding-desc">45.33.32.156 ist eine bekannte Scan-IP ohne Geschäftsbeziehung zur Organisation. Direkter Internet-Zugang zum SAP-GUI-Port ist eine kritische Fehlkonfiguration — SAP sollte niemals direkt im Internet exponiert sein, ohne WAF oder SAP Web Dispatcher.</p>
             </div>
         </div>
         <div class="finding-card">
-            <div class="finding-icon icon-red">🔒</div>
+            <div class="finding-icon icon-red"></div>
             <div>
                 <div class="finding-title">Kontosperrung als DoS-Vektor</div>
                 <p class="finding-desc">Obwohl die Sperrrichtlinie den Brute-Force gestoppt hat, war auch der legitime Benutzer JSCHMIDT ausgesperrt. Ein Angreifer kann dies gezielt einsetzen, um wichtige SAP-Benutzer (Buchhaltung, HR) während kritischer Geschäftszeiten zu sperren.</p>
             </div>
         </div>
         <div class="finding-card">
-            <div class="finding-icon icon-yellow">⚠️</div>
+            <div class="finding-icon icon-yellow"></div>
             <div>
                 <div class="finding-title">Risiko der Benutzer-Enumeration</div>
                 <p class="finding-desc">Der Angreifer wusste, dass JSCHMIDT ein gültiger Benutzername ist. SAPs Standard-Fehlermeldung unterscheidet zwar nicht zwischen "falscher Benutzer" und "falsches Passwort", aber Antwortzeit-Unterschiede können für die Enumeration ausgenutzt werden.</p>
             </div>
         </div>
         <div class="finding-card">
-            <div class="finding-icon icon-green">✅</div>
+            <div class="finding-icon icon-green"></div>
             <div>
                 <div class="finding-title">Sperrrichtlinie hat funktioniert — aber Alerting fehlte</div>
                 <p class="finding-desc">Die Kontosperrung hat nach 12 Versuchen korrekt ausgelöst. Ohne SIEM-Integration hätte dieses Event jedoch still im SM20-Log gelebt — unbemerkt, bis jemand manuell nachgeschaut hätte.</p>
@@ -393,8 +391,7 @@
     </div>
 
     <div class="callout callout-blue">
-        <span class="callout-icon">🔗</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Nächster Teil dieser Serie:</strong> Admin-Login außerhalb der Arbeitszeiten —
             ein privilegierter SAP-Benutzer (SAPABAP1) meldet sich um 02:30 Uhr von einer externen IP
             am Produktivsystem an und führt SE38, SU01 und PFCG aus. Alles detektiert mit Splunk SPL.

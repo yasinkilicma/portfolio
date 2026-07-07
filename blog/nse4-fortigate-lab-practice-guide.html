@@ -27,7 +27,7 @@
 
 <section class="hero">
     <div class="hero-meta">
-        <span class="badge badge-red">🎯 NSE4 VORBEREITUNG</span>
+        <span class="badge badge-red">NSE4 VORBEREITUNG</span>
         <span class="badge badge-blue">FORTIOS CLI</span>
         <span class="badge badge-yellow">EVALUATION LICENSE</span>
         <span class="meta-date">Juni 2026</span>
@@ -102,8 +102,7 @@
     </div>
 
     <div class="callout callout-yellow">
-        <span class="callout-icon">⚠️</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Evaluation-Lizenz:</strong> Die GUI ist ohne Lizenz gesperrt. Die kostenlose Eval-Lizenz
             schaltet sie frei — innerhalb fester Grenzen (1 CPU, 3 Policies, 3 Routen). Für ein Lernlabor
             reicht das völlig aus.
@@ -144,8 +143,7 @@
     </div>
 
     <div class="callout callout-blue">
-        <span class="callout-icon">💡</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>NSE4 Merke:</strong> <code class="inline">get</code> zeigt immer den aktuellen Zustand —
             inklusive per DHCP bezogener IP, Lease-Zeit, Gateway und MAC-Adresse. <code class="inline">show</code>
             zeigt nur das, was der Admin explizit konfiguriert hat.
@@ -204,8 +202,7 @@
     </div>
 
     <div class="callout callout-green">
-        <span class="callout-icon">✅</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Praktischer Nebeneffekt:</strong> <code class="inline">fortilink</code> hat die IP
             <code class="inline">10.255.1.1/24</code> und ist standardmäßig aktiv. Damit können FortiSwitch-
             Geräte per Plug-and-Play erkannt werden (VCI-Match auf <code class="inline">FortiSwitch</code> und
@@ -297,8 +294,7 @@ end</div>
     </div>
 
     <div class="callout callout-red">
-        <span class="callout-icon">🚫</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Der Lizenz-Limit-Test:</strong> Beim Versuch, eine 4. Policy zu erstellen, liefert die
             CLI: <code class="inline">return code -4 (reached the maximum number of entries)</code>.
             Genau das ist ein typischer NSE4-Prüfungsfall.
@@ -372,8 +368,7 @@ C  = Connected</div>
     </div>
 
     <div class="callout callout-blue">
-        <span class="callout-icon">📊</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Administrative Distance (NSE4!):</strong>
             <code class="inline">Connected = 0</code>,
             <code class="inline">DHCP-Route = 5</code>,
@@ -453,8 +448,7 @@ C       198.51.100.0/24 is directly connected, port1</div>
     </div>
 
     <div class="callout callout-green">
-        <span class="callout-icon">✅</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Erfolg:</strong> Nach <code class="inline">set utm-status enable</code> und
             <code class="inline">set ips-sensor "Basic-IPS"</code> zeigt die Policy <code class="inline">utm-status: enable</code>.
             Ein Warning "non-inspection profile doesn't perform SSL inspection" ist normal und kein Fehler.
@@ -476,8 +470,7 @@ C       198.51.100.0/24 is directly connected, port1</div>
     </table>
 
     <div class="callout callout-yellow">
-        <span class="callout-icon">📝</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>NSE4 Merke:</strong> IPS und Application Control sind <strong>immer flow-based</strong>.
             AntiVirus, Web Filter und DLP unterstützen <strong>beide Modi</strong> — gesteuert per Policy
             (<code class="inline">set inspection-mode flow|proxy</code>). Proxy bietet tiefere Analyse
@@ -651,8 +644,7 @@ name=VPN-to-Lab2 ver=<span class="number">2</span> serial=<span class="number">1
     </div>
 
     <div class="callout callout-blue">
-        <span class="callout-icon">🔐</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>NSE4 Merke:</strong> Phase 1 = IKE (Authentication, DH Group, Key Exchange).
             Phase 2 = IPsec (ESP/AH, Traffic Selector, SA). <code class="inline">ike-version 2</code> ist
             moderner und sicherer als IKEv1. <code class="inline">dhgrp 14</code> = 2048-bit MODP Group.
@@ -837,8 +829,7 @@ name=VPN-to-Lab2 ver=2 serial=1 198.51.100.2:0->203.0.113.1:0 nexthop=198.51.100
     </div>
 
     <div class="callout callout-green">
-        <span class="callout-icon">🎯</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Letzter Tipp:</strong> In der NSE4-Prüfung werden viele Szenarien mit der CLI abgefragt.
             Es reicht nicht, die GUI zu kennen — man muss wissen, welcher <code class="inline">get</code>-Befehl
             welche Information liefert, und wie man Policies, Routes und VPNs über die serielle Konsole
@@ -847,8 +838,7 @@ name=VPN-to-Lab2 ver=2 serial=1 198.51.100.2:0->203.0.113.1:0 nexthop=198.51.100
     </div>
 
     <div class="callout callout-blue">
-        <span class="callout-icon">📚</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Weiterführende Links:</strong>
             <a href="https://www.fortinet.com/training/nse4" target="_blank" style="color:var(--accent);text-decoration:none;">Fortinet NSE4 Offizielle Seite</a> ·
             <a href="https://docs.fortinet.com/document/fortigate/7.4.12/cli-reference" target="_blank" style="color:var(--accent);text-decoration:none;">FortiOS 7.4.12 CLI Reference</a>

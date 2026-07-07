@@ -85,8 +85,7 @@
     </p>
 
     <div class="callout orange">
-        <div class="callout-icon">⚠</div>
-        <div class="callout-body">
+                <div class="callout-body">
             <p><strong>Taktik:</strong> Angreifer legen oft neue Konten an (statt das kompromittierte
             zu verwenden), um nach einem Passwortwechsel weiterhin Zugang zu behalten.
             Ein unauffälliger Name wie <strong>hacker_svc</strong> (oder in der Realität z.B.
@@ -161,8 +160,7 @@
     <p class="screenshot-caption">// EventID 4720 — hacker_svc von jsmith auf DC01.corp.local angelegt — Severity: HIGH</p>
 
     <div class="callout red">
-        <div class="callout-icon">⚠</div>
-        <div class="callout-body">
+                <div class="callout-body">
             <p><strong>Befund:</strong> <strong>jsmith</strong> (normaler Benutzer) legt ein neues
             Konto <strong>hacker_svc</strong> direkt auf dem Domain Controller an. In einer
             normalen Umgebung hat kein Standard-User diese Berechtigung — das setzt voraus,
@@ -195,8 +193,7 @@
     <p class="screenshot-caption">// EventID 4732 — CORP\hacker_svc in lokale Administrators-Gruppe aufgenommen — jsmith — Severity: HIGH</p>
 
     <div class="callout red">
-        <div class="callout-icon">⚠</div>
-        <div class="callout-body">
+                <div class="callout-body">
             <p><strong>Kritischer Befund:</strong> Das frisch angelegte Konto <strong>hacker_svc</strong>
             wird sofort in die lokale Administrators-Gruppe des Domain Controllers aufgenommen.
             Lokale Admin-Rechte auf einem DC bedeuten de facto bereits vollständige Kontrolle
@@ -229,8 +226,7 @@
     <p class="screenshot-caption">// EventID 4728 — CORP\hacker_svc in Domain Admins aufgenommen — Severity: CRITICAL</p>
 
     <div class="callout" style="border-color:rgba(255,165,0,0.4); background:rgba(255,165,0,0.06);">
-        <div class="callout-icon">!</div>
-        <div class="callout-body">
+                <div class="callout-body">
             <p><strong>Domain vollständig kompromittiert:</strong> Mit der Aufnahme in
             <strong>Domain Admins</strong> hat der Angreifer die höchste Berechtigungsstufe
             in Active Directory erreicht. Er kann nun Kennwörter aller Benutzer zurücksetzen,
@@ -267,8 +263,7 @@
     <p class="screenshot-caption">// Eskalationskette: 4720 → 4732 → 4728 in 2 Minuten — jsmith / hacker_svc / DC01.corp.local</p>
 
     <div class="callout blue">
-        <div class="callout-icon">→</div>
-        <div class="callout-body">
+                <div class="callout-body">
             <p><strong>Pattern-Erkennung:</strong> Drei Group-Management-Events vom gleichen
             <strong>SubjectUserName (jsmith)</strong> in unter 2 Minuten auf dem Domain Controller
             — das ist eine klare Privilege Escalation Sequenz. In einem echten SIEM würde hier
@@ -307,8 +302,7 @@
     </div>
 
     <div class="callout green">
-        <div class="callout-icon">✓</div>
-        <div class="callout-body">
+                <div class="callout-body">
             <p><strong>Prävention:</strong> Mit <strong>Microsoft Defender for Identity</strong>
             (früher ATA) oder ähnlichen Lösungen werden solche Konto-Eskalationen in
             Echtzeit erkannt. Im SIEM reicht eine Correlation Rule:

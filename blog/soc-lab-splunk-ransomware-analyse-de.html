@@ -104,8 +104,7 @@
     </p>
 
     <div class="callout callout-blue">
-        <span class="callout-icon">ℹ️</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>955.807 Events</strong> aus 22 Quell-Typen — darunter Suricata IDS, Windows Event Logs,
             FortiGate-Firewall, IIS-Webserver-Logs, Netzwerk-Streams (DNS, HTTP, SMB, TCP) und Nessus-Vulnerability-Scans.
         </p>
@@ -208,8 +207,7 @@
     <p class="screenshot-caption">Abb. 2 — Top 10 Suricata-Alarm-Signaturen: DNS-Manipulation und Web Application Attacks dominieren</p>
 
     <div class="callout callout-red">
-        <span class="callout-icon">🚨</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Kritischer Fund:</strong> Die Signatur <em>"ETPRO TROJAN Ransomware/Cerber Onion Domain Lookup"</em>
             bestätigt, dass der Rechner <code>192.168.250.20</code> mit <strong>Cerber Ransomware</strong> infiziert war
             und aktiv mit einem Tor-basierten Command-&amp;-Control-Server kommunizierte.
@@ -235,21 +233,21 @@
 
     <div class="findings">
         <div class="finding-card">
-            <div class="finding-icon icon-red">🔴</div>
+            <div class="finding-icon icon-red"></div>
             <div>
                 <div class="finding-title">192.168.250.100 — Kompromittierter interner Rechner</div>
                 <p class="finding-desc">2.907 Alarme — die höchste Anzahl aller Quellen. Ein interner Rechner führt laterale Bewegung durch: Die Infektion hat sich bereits im Netzwerk ausgebreitet.</p>
             </div>
         </div>
         <div class="finding-card">
-            <div class="finding-icon icon-yellow">⚠️</div>
+            <div class="finding-icon icon-yellow"></div>
             <div>
                 <div class="finding-title">192.168.2.50 — Externer Angreifer</div>
                 <p class="finding-desc">2.250 Alarme. Dies ist die IP-Adresse des ursprünglichen Bedrohungsakteurs — der Einstiegspunkt des Angriffs von außen.</p>
             </div>
         </div>
         <div class="finding-card">
-            <div class="finding-icon icon-blue">ℹ️</div>
+            <div class="finding-icon icon-blue"></div>
             <div>
                 <div class="finding-title">8.8.8.8 — Google DNS</div>
                 <p class="finding-desc">2.038 DNS-Anfragen an Googles öffentlichen DNS — typisches Verhalten des Domain Generation Algorithm (DGA) von Ransomware für die C2-Kommunikation.</p>
@@ -299,28 +297,28 @@
 
     <div class="findings">
         <div class="finding-card">
-            <div class="finding-icon icon-blue">📊</div>
+            <div class="finding-icon icon-blue"></div>
             <div>
                 <div class="finding-title">Panel 1 — Top 10 Angriffs-Signaturen</div>
                 <p class="finding-desc">Balkendiagramm der häufigsten Suricata-IDS-Signaturen. Zeigt sofort DNS-Manipulation und XSS-Versuche als dominante Angriffsvektoren.</p>
             </div>
         </div>
         <div class="finding-card">
-            <div class="finding-icon icon-red">🎯</div>
+            <div class="finding-icon icon-red"></div>
             <div>
                 <div class="finding-title">Panel 2 — Top 10 Angreifer-IPs</div>
                 <p class="finding-desc">Zeigt 192.168.250.100 als aktivste Quelle — eine unerwartete interne IP, die sofort auf Lateral Movement hinweist.</p>
             </div>
         </div>
         <div class="finding-card">
-            <div class="finding-icon icon-yellow">🏹</div>
+            <div class="finding-icon icon-yellow"></div>
             <div>
                 <div class="finding-title">Panel 3 — Top 10 Zielsysteme</div>
                 <p class="finding-desc">Tortendiagramm mit 192.168.250.70 als meistangegriffenem System — hilft, Eindämmungsmaßnahmen zu priorisieren.</p>
             </div>
         </div>
         <div class="finding-card">
-            <div class="finding-icon icon-green">📈</div>
+            <div class="finding-icon icon-green"></div>
             <div>
                 <div class="finding-title">Panel 4 — Angriffs-Timeline</div>
                 <p class="finding-desc">Liniendiagramm der Angriffs-Aktivität über Zeit (August 2016) — zeigt Dauer und Intensitäts-Spitzen der Kampagne.</p>
@@ -354,8 +352,7 @@
     </div>
 
     <div class="callout callout-green">
-        <span class="callout-icon">✅</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Quellcode auf GitHub:</strong> Sowohl die Terraform-Infrastruktur als auch die Splunk-Konfiguration
             sind vollständig dokumentiert und versionskontrolliert.
             <a href="https://github.com/yasinkilicma/terraform-splunk-demo" target="_blank"

@@ -88,8 +88,7 @@
     </p>
 
     <div class="callout yellow">
-        <div class="callout-icon">!</div>
-        <div class="callout-body">
+                <div class="callout-body">
             <p><strong>Warum zwei Mechanismen?</strong> Redundanz ist Absicht. Wird der
             Scheduled Task entdeckt und entfernt, bleibt der Service aktiv — und umgekehrt.
             Professionelle Angreifer setzen immer mehrere Backdoors gleichzeitig.</p>
@@ -164,8 +163,7 @@
     <p class="screenshot-caption">// EventID 4698 — Scheduled Task mit -EncodedCommand PowerShell Payload — Administrator — DC01.corp.local — Severity: HIGH</p>
 
     <div class="callout red">
-        <div class="callout-icon">⚠</div>
-        <div class="callout-body">
+                <div class="callout-body">
             <p><strong>Drei Red Flags gleichzeitig:</strong><br>
             (1) <strong>-WindowStyle Hidden</strong> — kein Fenster, kein sichtbarer Prozess<br>
             (2) <strong>-EncodedCommand</strong> — Base64-obfuskierter Payload, umgeht String-basierte Erkennung<br>
@@ -199,8 +197,7 @@ echo <span class="st">"cwB0AGEAcgB0AC0AcAByAG8AYWJsAHMAcw=="</span> | base64 -d 
     </div>
 
     <div class="callout blue">
-        <div class="callout-icon">→</div>
-        <div class="callout-body">
+                <div class="callout-body">
             <p><strong>SOC-Regel:</strong> Jeder Scheduled Task mit <strong>-EncodedCommand</strong>
             oder <strong>-enc</strong> in den Arguments sollte automatisch einen Alert auslösen.
             Legitime Windows-Tasks verwenden niemals Base64-kodierte Befehle.</p>
@@ -235,8 +232,7 @@ echo <span class="st">"cwB0AGEAcgB0AC0AcAByAG8AYWJsAHMAcw=="</span> | base64 -d 
     <p class="screenshot-caption">// EventID 7045 — WinHttpSvc · svch0st.exe (typosquatting) · C:\Windows\Temp · auto start — Severity: CRITICAL</p>
 
     <div class="callout red">
-        <div class="callout-icon">⚠</div>
-        <div class="callout-body">
+                <div class="callout-body">
             <p><strong>Vier CRITICAL Red Flags:</strong><br>
             (1) <strong>C:\Windows\Temp\</strong> — legitime Services laufen nie aus Temp<br>
             (2) <strong>svch0st.exe</strong> (0 statt o) — klassisches Typosquatting<br>
@@ -308,8 +304,7 @@ echo <span class="st">"cwB0AGEAcgB0AC0AcAByAG8AYWJsAHMAcw=="</span> | base64 -d 
     <p class="screenshot-caption">// Persistence-Kette: 4698 (Scheduled Task) → 7045 (Malicious Service) — 2 Minuten — DC01.corp.local</p>
 
     <div class="callout yellow">
-        <div class="callout-icon">!</div>
-        <div class="callout-body">
+                <div class="callout-body">
             <p><strong>Automatisiertes Angriffsskript:</strong> Zwei Persistence-Mechanismen
             in 2 Minuten weisen auf ein <strong>Post-Exploitation-Framework</strong> hin —
             z.B. Cobalt Strike, Metasploit oder ein Custom Implant. Der Angreifer führt
@@ -354,8 +349,7 @@ echo <span class="st">"cwB0AGEAcgB0AC0AcAByAG8AYWJsAHMAcw=="</span> | base64 -d 
     </div>
 
     <div class="callout green">
-        <div class="callout-icon">✓</div>
-        <div class="callout-body">
+                <div class="callout-body">
             <p><strong>Prävention — Application Allowlisting:</strong>
             Mit <strong>Windows Defender Application Control (WDAC)</strong> oder
             <strong>AppLocker</strong> kann verhindert werden, dass Binaries aus

@@ -27,7 +27,7 @@
 
 <section class="hero">
     <div class="hero-meta">
-        <span class="badge badge-green">🛡️ FIREWALL LAB</span>
+        <span class="badge badge-green">FIREWALL LAB</span>
         <span class="badge badge-blue">NETWORK SECURITY</span>
         <span class="meta-date">Juni 2026</span>
     </div>
@@ -79,8 +79,7 @@
     </p>
 
     <div class="callout callout-blue">
-        <span class="callout-icon">💡</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Die Überraschung:</strong> Fortinet veröffentlicht inzwischen ein natives
             <strong>ARM64-KVM-Image</strong> (<code class="inline" style="font-size:12px;">FGT_ARM64_KVM-v7.4.12...out.kvm.zip</code>).
             Auf dem M4 läuft es über Apples Hypervisor.framework mit voller Geschwindigkeit — keine x86-Emulation,
@@ -200,8 +199,7 @@ $PB -c <span class="string">"Add :Serial:0:TcpPort integer 4555"</span> config.p
     </div>
 
     <div class="callout callout-red">
-        <span class="callout-icon">⚠️</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Die Falle:</strong> UTM hält die VM-Konfiguration im Speicher. Editiert man die Datei, während
             UTM läuft, startet <code class="inline" style="font-size:12px;">utmctl start</code> trotzdem mit der
             <em>alten</em> Config — meine CPU-Begrenzung verpuffte zunächst (QEMU bekam weiter <code class="inline" style="font-size:12px;">-smp 4</code>).
@@ -247,8 +245,7 @@ $PB -c <span class="string">"Add :Serial:0:TcpPort integer 4555"</span> config.p
     </div>
 
     <div class="callout callout-blue">
-        <span class="callout-icon">🧰</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Praktischer Nebeneffekt:</strong> Mit einer TCP-Seriellen lässt sich die gesamte
             FortiGate-Grundkonfiguration <em>automatisieren</em> — ideal für reproduzierbare Labs. Erster Befehl
             nach dem Login sollte immer <code class="inline" style="font-size:12px;">config system console / set output standard</code>
@@ -355,8 +352,7 @@ $ curl -k -o /dev/null -w <span class="string">"%{http_code}\n"</span> https://1
     </table>
 
     <div class="callout callout-blue">
-        <span class="callout-icon">ℹ️</span>
-        <p class="callout-text">
+                <p class="callout-text">
             Die kostenlose <strong>Evaluation-Lizenz</strong> wird im FortiCare-Konto aktiviert, ist aber
             <em>einmalig pro Konto</em> und bringt harte Limits mit: <strong>1 vCPU, 2 GB RAM, max. 3 Interfaces /
             3 Policies / 3 Routen</strong>. Für ein Lernlabor reicht das — man sollte sich der Grenzen nur bewusst sein.
@@ -405,8 +401,7 @@ $ curl -k -o /dev/null -w <span class="string">"%{http_code}\n"</span> https://1
     </p>
 
     <div class="callout callout-green">
-        <span class="callout-icon">✅</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Quellcode &amp; vollständige Anleitung auf GitHub:</strong> Konfiguration, Skripte und alle
             Stolpersteine sind dokumentiert und versioniert.
             <a href="https://github.com/yasinkilicma/fortigate-vm-lab-apple-silicon" target="_blank"

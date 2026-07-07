@@ -27,7 +27,7 @@
 
 <section class="hero">
     <div class="hero-meta">
-        <span class="badge badge-red">🛡️ IPS</span>
+        <span class="badge badge-red">IPS</span>
         <span class="badge badge-blue">NSE4</span>
         <span class="meta-date">Juni 2026</span>
     </div>
@@ -67,8 +67,7 @@
     </p>
 
     <div class="callout callout-blue">
-        <span class="callout-icon">🧪</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Aufbau:</strong> Der <a href="fortigate-lab-attacker-client-socket.html" style="color:var(--accent);text-decoration:none;">Client hängt hinter der FortiGate</a>
             (LAN-Segment via QEMU Socket-Networking). Sein HTTP-Verkehr läuft durch die LAN→WAN-Policy — genau dort
             greift die flow-basierte IPS-Inspektion.
@@ -93,8 +92,7 @@
 
     <h2>2 — Signatur in einen Sensor, Sensor an die Policy</h2>
     <div class="callout callout-red">
-        <span class="callout-icon">⚠️</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Eval-Limit:</strong> Die kostenlose Lizenz deckelt die IPS-Sensor-Tabelle bei <strong>10</strong> —
             voll mit Default-Sensoren. Ein neuer Sensor scheitert mit <code class="inline" style="font-size:12px;">Return code -4 (reached the maximum number of entries)</code>.
             Lösung: einen <em>bestehenden</em> Sensor wiederverwenden und einen Eintrag ergänzen.
@@ -162,8 +160,7 @@
     </table>
 
     <div class="callout callout-blue">
-        <span class="callout-icon">📝</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Logging-Detail:</strong> Auf einer disklosen FortiGate-VM landen Logs im RAM. Tauchte zunächst
             kein IPS-Event auf, half <code class="inline" style="font-size:12px;">set log enable</code> am Sensor-Eintrag
             plus <code class="inline" style="font-size:12px;">config log memory filter / set severity information</code>.
@@ -191,8 +188,7 @@
     </div>
 
     <div class="callout callout-green">
-        <span class="callout-icon">✅</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Konfiguration auf GitHub:</strong> die Custom-Signatur, der Sensor-Eintrag und die Policy-Anbindung
             sind dokumentiert.
             <a href="https://github.com/yasinkilicma/fortigate-vm-lab-apple-silicon" target="_blank" style="color:var(--accent3);text-decoration:none;"> → fortigate-vm-lab-apple-silicon</a>

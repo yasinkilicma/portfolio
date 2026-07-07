@@ -27,7 +27,7 @@
 
 <section class="hero">
     <div class="hero-meta">
-        <span class="badge badge-red">🔴 EXTERNER ANGRIFF</span>
+        <span class="badge badge-red">EXTERNER ANGRIFF</span>
         <span class="badge badge-blue">SOC LAB</span>
         <span class="badge badge-green">SAP SECURITY</span>
         <span class="meta-date">Juni 2026</span>
@@ -85,8 +85,7 @@
     </p>
 
     <div class="callout callout-red">
-        <span class="callout-icon">🚨</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Angreifer-IP 185.220.101.5</strong> ist ein bekannter Tor-Exit-Node.
             Der Angreifer verschleiert seinen echten Standort über das Tor-Netzwerk —
             ein starkes Indiz für einen gezielten, professionellen Angriff.
@@ -133,8 +132,7 @@
     </table>
 
     <div class="callout callout-blue">
-        <span class="callout-icon">ℹ️</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>RFC_READ_TABLE</strong> ist der gefährlichste Funktionsbaustein in dieser Liste.
             Mit einem einzigen RFC-Aufruf kann ein Angreifer die gesamte Tabelle
             <code>USR02</code> (Passwort-Hashes aller SAP-Benutzer) oder
@@ -172,28 +170,28 @@
 
     <div class="findings">
         <div class="finding-card">
-            <div class="finding-icon icon-red">🔴</div>
+            <div class="finding-icon icon-red"></div>
             <div>
                 <div class="finding-title">SAP RFC-Port direkt aus dem Internet erreichbar</div>
                 <p class="finding-desc">Der SAP Message Server (Port 3600) und der Application Server (Port 33xx) dürfen niemals direkt aus dem Internet erreichbar sein. Hier ist das offensichtlich der Fall — ein kritischer Konfigurationsfehler.</p>
             </div>
         </div>
         <div class="finding-card">
-            <div class="finding-icon icon-red">🛠️</div>
+            <div class="finding-icon icon-red"></div>
             <div>
                 <div class="finding-title">Spezialisiertes SAP-Angriffs-Tool erkannt</div>
                 <p class="finding-desc">Die Kombination RFC_READ_TABLE + RFCPING + SAPMSSY1 ist das typische Scan-Muster von Tools wie Bizploit oder metasploit-SAP-Modulen. Der Angreifer verfügt über SAP-spezifisches Fachwissen.</p>
             </div>
         </div>
         <div class="finding-card">
-            <div class="finding-icon icon-yellow">⚠️</div>
+            <div class="finding-icon icon-yellow"></div>
             <div>
                 <div class="finding-title">Default-Benutzernamen noch aktiv?</div>
                 <p class="finding-desc">Der Angreifer testet RFC*, ADMIN und SAPUSER — SAP-Standard-Benutzernamen. Wenn diese Konten noch existieren und aktiv sind, ist ein erfolgreicher Login bei einem weiteren Versuch realistisch.</p>
             </div>
         </div>
         <div class="finding-card">
-            <div class="finding-icon icon-green">✅</div>
+            <div class="finding-icon icon-green"></div>
             <div>
                 <div class="finding-title">AU4 als zuverlässiger Frühindikator</div>
                 <p class="finding-desc">AU4-Events sind in normalen SAP-Betrieb selten — RFC-Authentifizierungsfehler von externen IPs sollten in Echtzeit alarmieren. Kein False-Positive-Risiko bei externer Quell-IP.</p>
@@ -227,8 +225,7 @@
     </div>
 
     <div class="callout callout-blue">
-        <span class="callout-icon">🔗</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Letzter Teil dieser Serie:</strong> Sensitive Tabellenzugriffe —
             ein interner Benutzer liest in kurzer Zeit mehrere hochsensible SAP-Tabellen
             (USR02, AGR_USERS) mit tausenden Datensätzen. EU1-Analyse als

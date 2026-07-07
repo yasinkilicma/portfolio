@@ -72,8 +72,7 @@
     </div>
 
     <div class="callout blue">
-        <div class="callout-icon">→</div>
-        <div class="callout-body">
+                <div class="callout-body">
             <p><strong>Warum Event IDs?</strong> Windows protokolliert Sicherheitsereignisse im Security Event Log (eventvwr.msc → Windows Logs → Security). Jedes Ereignis hat eine eindeutige ID. SOC-Analysten filtern gezielt nach diesen IDs, um Angriffe zu erkennen — manuell oder per SIEM.</p>
         </div>
     </div>
@@ -366,8 +365,7 @@
     <p>Prozess-Events zeigen, welche Programme gestartet wurden. Besonders wertvoll: die Parent-Child-Beziehung. Ein Word-Dokument, das cmd.exe startet, ist sofort verdächtig.</p>
 
     <div class="callout orange">
-        <div class="callout-icon">⚠</div>
-        <div class="callout-body">
+                <div class="callout-body">
             <p><strong>Voraussetzung:</strong> Process Creation Auditing muss aktiviert sein: <code>gpedit.msc → Computer Configuration → Windows Settings → Security Settings → Advanced Audit Policy → Detailed Tracking → Audit Process Creation → Success</code></p>
         </div>
     </div>
@@ -561,8 +559,7 @@
     </table>
 
     <div class="callout red">
-        <div class="callout-icon">!</div>
-        <div class="callout-body">
+                <div class="callout-body">
             <p><strong>EventID 1102 = sofortiger Alarm.</strong> Kein legitimer Admin löscht den Security Log ohne Ticket. Wenn dieser Event erscheint: Incident Response sofort einleiten, da vorherige Spuren vernichtet wurden.</p>
         </div>
     </div>
@@ -714,8 +711,7 @@
     </div>
 
     <div class="callout green">
-        <div class="callout-icon">→</div>
-        <div class="callout-body">
+                <div class="callout-body">
             <p><strong>Nächste Schritte:</strong> Diese Event IDs wurden in der Praxis in einer vollständigen Kill-Chain-Analyse eingesetzt. Die detaillierten Szenarien — von Brute-Force über Pass-the-Hash bis Macro Malware — findest du in der <a href="win-security-overview-de.html" style="color:var(--accent);">Windows Security Event Log Analysis Series</a>.</p>
         </div>
     </div>

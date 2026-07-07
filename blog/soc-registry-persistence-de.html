@@ -27,7 +27,7 @@
 
 <section class="hero">
     <div class="hero-meta">
-        <span class="badge badge-red">🔴 PERSISTENCE</span>
+        <span class="badge badge-red">PERSISTENCE</span>
         <span class="badge badge-blue">REGISTRY</span>
         <span class="badge badge-green">RUN KEYS</span>
     </div>
@@ -90,8 +90,7 @@
     </ul>
 
     <div class="callout callout-blue">
-        <span class="callout-icon">ℹ️</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Warum Run-Keys?</strong> Einmal in die Registry geschrieben, läuft die Malware 
             bei jedem Systemstart automatisch — ohne dass der Benutzer etwas bemerkt. 
             Das ist die <strong>am häufigsten verwendete Persistence-Methode</strong> für Windows-Malware.
@@ -129,7 +128,7 @@
 
     <h2>Die Erkenntnisse</h2>
 
-    <h3>🔴 Kritisch: osk.exe in Run-Keys</h3>
+    <h3>Kritisch: osk.exe in Run-Keys</h3>
     <p>
         <strong>Was wir sehen:</strong>
     </p>
@@ -146,8 +145,7 @@
     </p>
 
     <div class="callout callout-red">
-        <span class="callout-icon">🚨</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Persistence erkannt:</strong> <code>osk.exe</code> ist in die Registry-Run-Keys eingetragen. 
             Das bedeutet: Selbst wenn der Benutzer die Malware-Prozesse killt, wird sie beim nächsten 
             Login automatisch neu gestartet. <strong>Die einzige Lösung ist die Registry-Bereinigung 
@@ -155,7 +153,7 @@
         </p>
     </div>
 
-    <h3>🟡 internat.exe — System-Weite Persistence</h3>
+    <h3>internat.exe — System-Weite Persistence</h3>
     <p>
         <strong>HKCU\...\Run\internat.exe</strong> (5 Events) ist ein weiterer Indikator. 
         <code>internat.exe</code> (International Settings) ist ein legitimer Windows-Prozess, 
@@ -168,7 +166,7 @@
         dass die Malware einen weiteren legitimen Prozessnamen für Persistence missbraucht.
     </p>
 
-    <h3>🟡 Command Processor AutoRun</h3>
+    <h3>Command Processor AutoRun</h3>
     <p>
         <strong>HKCU\...\Command Processor\AutoRun</strong> (2 Events) ist besonders gefährlich. 
         Dieser Key führt automatisch einen Befehl aus, sobald der Benutzer eine CMD-Konsole öffnet.
@@ -281,8 +279,7 @@
     </p>
 
     <div class="callout callout-blue">
-        <span class="callout-icon">📚</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Next Steps:</strong> File-Integrity-Monitoring (Sysmon EventID 11/12) und 
             Scheduled-Task-Analyse für weitere Persistence-Mechanismen.
         </p>

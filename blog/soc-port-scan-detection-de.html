@@ -27,7 +27,7 @@
 
 <section class="hero">
     <div class="hero-meta">
-        <span class="badge badge-red">🔴 NETWORK FORENSICS</span>
+        <span class="badge badge-red">NETWORK FORENSICS</span>
         <span class="badge badge-blue">FORTIGATE</span>
         <span class="badge badge-green">SPLUNK</span>
     </div>
@@ -97,8 +97,7 @@ Syslog UDP 5514  →  Python HEC Bridge  →  Splunk index=fortigate
     </ul>
 
     <div class="callout callout-blue">
-        <span class="callout-icon">ℹ️</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Der entscheidende Fingerabdruck:</strong> Bei einem nmap SYN-Scan gegen einen
             geschlossenen Port sendet nmap genau <strong>64 Bytes</strong> (SYN-Paket mit Options).
             Die Firewall leitet dieses Paket weiter (164 Bytes mit Ethernet/IP-Header) und empfängt
@@ -167,8 +166,7 @@ Syslog UDP 5514  →  Python HEC Bridge  →  Splunk index=fortigate
     </p>
 
     <div class="callout callout-red">
-        <span class="callout-icon">🚨</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Befund:</strong> FortiGate erkennt nmap-Scans zuverlässig anhand des
             TCP-RST-Fingerabdrucks — <em>ohne</em> IPS-Modul, allein auf Basis der Traffic-Logs.
             Das Byte-Muster <code>sentbyte=164 / rcvdbyte=60</code> ist tool-spezifisch für
@@ -245,8 +243,7 @@ SOURCETYPE  = <span class="string">"fgt_log"</span>
     </ol>
 
     <div class="callout callout-blue">
-        <span class="callout-icon">📚</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Weiterführend:</strong> FortiGate IPS-Sensor-Integration für automatische
             Blockierung erkannter Scanner sowie Splunk-Alerts für Echtzeit-Benachrichtigung
             bei Port-Scan-Aktivität.

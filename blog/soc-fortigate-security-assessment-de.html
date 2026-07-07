@@ -27,7 +27,7 @@
 
 <section class="hero">
     <div class="hero-meta">
-        <span class="badge badge-red">🔴 SECURITY ASSESSMENT</span>
+        <span class="badge badge-red">SECURITY ASSESSMENT</span>
         <span class="badge badge-orange">FIREWALL GAPS</span>
         <span class="badge badge-blue">FORTIGATE</span>
     </div>
@@ -72,8 +72,7 @@
     </p>
 
     <div class="callout callout-red">
-        <span class="callout-icon">🚨</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Kurz gesagt: Nein.</strong> Die Fortigate hat nur 20% der erwarteten 
             Sicherheitsfunktionen erfüllt. C2-DNS-Traffic passierte ungehindert, SMB-Lateral-Movement 
             war vollständig unsichtbar, und die einzigen blockierten Pakete waren Broadcasts — 
@@ -81,7 +80,7 @@
         </p>
     </div>
 
-    <h2>GAP 1: C2-DNS-Bypass 🔴</h2>
+    <h2>GAP 1: C2-DNS-Bypass</h2>
 
     <h3>Das Problem</h3>
     <p>
@@ -101,8 +100,7 @@
     </ul>
 
     <div class="callout callout-red">
-        <span class="callout-icon">❌</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Fortigate Versagen:</strong> Eine moderne Firewall muss DNS-Filtering 
             beherrschen — nicht nur Port-basiertes Blocking. Ohne DNS-Filter ist jede Malware 
             mit C2-Domain-Kommunikation unsichtbar, selbst wenn sie über "vertrauenswürdige" 
@@ -144,7 +142,7 @@
         </div>
     </div>
 
-    <h2>GAP 2: SMB Blind Spot 🔴</h2>
+    <h2>GAP 2: SMB Blind Spot</h2>
 
     <h3>Das Problem</h3>
     <p>
@@ -164,8 +162,7 @@
     </ul>
 
     <div class="callout callout-red">
-        <span class="callout-icon">❌</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Fortigate Versagen:</strong> Eine Firewall, die nur am Perimeter steht, 
             ist für Lateral-Movement-Detection nutzlos. SMB-Exploits (EternalBlue, MS17-010) 
             müssen an <strong>jedem Segment-Gateway</strong> erkannt werden — nicht nur am WAN.
@@ -218,7 +215,7 @@
         </div>
     </div>
 
-    <h2>GAP 3: Nur Broadcast-Denies 🟡</h2>
+    <h2>GAP 3: Nur Broadcast-Denies</h2>
 
     <h3>Was funktionierte?</h3>
     <p>
@@ -238,21 +235,21 @@
             <td>192.168.69.255</td>
             <td>deny</td>
             <td>1.498</td>
-            <td>🟢 Standard-Verhalten</td>
+            <td>Standard-Verhalten</td>
         </tr>
         <tr>
             <td>192.168.69.104</td>
             <td>224.0.0.1</td>
             <td>deny</td>
             <td>1.472</td>
-            <td>🟢 Standard-Verhalten</td>
+            <td>Standard-Verhalten</td>
         </tr>
         <tr>
             <td>192.168.69.103</td>
             <td>255.255.255.255</td>
             <td>deny</td>
             <td>356</td>
-            <td>🟢 Standard-Verhalten</td>
+            <td>Standard-Verhalten</td>
         </tr>
     </table>
 
@@ -262,8 +259,7 @@
     </p>
 
     <div class="callout callout-orange">
-        <span class="callout-icon">⚠️</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Falsche Sicherheit:</strong> Ein SOC-Team, das nur auf Firewall-Denies schaut, 
             würde denken: "Alles gut, die Firewall blockiert ja." Tatsächlich wurde der <strong>wichtigste 
             Traffic (C2-DNS und SMB)</strong> vollständig verpasst.
@@ -280,23 +276,23 @@
         </tr>
         <tr>
             <td><strong>C2 DNS (8.8.8.8)</strong></td>
-            <td>❌ ACCEPT</td>
-            <td>🔴 <strong>Versagt</strong> — DNS-Filter fehlt</td>
+            <td>ACCEPT</td>
+            <td><strong>Versagt</strong> — DNS-Filter fehlt</td>
         </tr>
         <tr>
             <td><strong>SMB Lateral Movement</strong></td>
-            <td>❌ Unsichtbar</td>
-            <td>🔴 <strong>Versagt</strong> — East-West blind</td>
+            <td>Unsichtbar</td>
+            <td><strong>Versagt</strong> — East-West blind</td>
         </tr>
         <tr>
             <td><strong>Masquerading (osk.exe)</strong></td>
-            <td>❌ Unsichtbar</td>
-            <td>🔴 <strong>Versagt</strong> — Endpoint blind</td>
+            <td>Unsichtbar</td>
+            <td><strong>Versagt</strong> — Endpoint blind</td>
         </tr>
         <tr>
             <td><strong>Broadcast Traffic</strong></td>
-            <td>✅ DENY</td>
-            <td>🟢 <strong>Baseline</strong> — Standard-Verhalten</td>
+            <td>DENY</td>
+            <td><strong>Baseline</strong> — Standard-Verhalten</td>
         </tr>
     </table>
 
@@ -316,8 +312,7 @@
     </ol>
 
     <div class="callout callout-green">
-        <span class="callout-icon">✅</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Defense-in-Depth:</strong> Keine einzelne Sicherheitsmaßnahme ist ausreichend. 
             Die Kombination aus Firewall, IDS, EDR und NDR deckt die Lücken, die jeweils andere 
             hinterlassen. Genau das ist der Grund, warum ein SOC <strong>mehrere Datenquellen</strong> 
@@ -370,8 +365,7 @@
     </ol>
 
     <div class="callout callout-blue">
-        <span class="callout-icon">📚</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Next Steps:</strong> UTM-Analyse (fgt_utm) für IPS/AV-Signatures und 
             eine Gap-Analyse der Firewall-Policy-Regeln.
         </p>

@@ -86,8 +86,7 @@
     </p>
 
     <div class="callout red">
-        <div class="callout-icon">⚠</div>
-        <div class="callout-body">
+                <div class="callout-body">
             <p><strong>Erkennungsmerkmal:</strong> Kerberos ist das Standardprotokoll in einer
             Windows-Domain. Taucht <strong>NTLM</strong> bei einem Netzwerk-Logon (Type 3) auf einen
             Domain Controller auf — vor allem von einem unbekannten Subnetz — ist das ein starker
@@ -164,8 +163,7 @@
     <p class="screenshot-caption">// EventID 4776 — NTLM-Validierung für Administrator von WS01.corp.local auf DC01</p>
 
     <div class="callout blue">
-        <div class="callout-icon">→</div>
-        <div class="callout-body">
+                <div class="callout-body">
             <p><strong>Befund:</strong> Der DC validiert NTLM-Credentials für <strong>Administrator</strong>
             — initiiert von <strong>WS01.corp.local</strong>. In normalen Abläufen würde ein
             Administrator sich interaktiv anmelden, nicht per NTLM von einer Workstation aus.</p>
@@ -196,8 +194,7 @@
     <p class="screenshot-caption">// EventID 4648 — jsmith loggt sich als Administrator auf DC01 ein — von 10.10.5.55 — Severity: HIGH</p>
 
     <div class="callout red">
-        <div class="callout-icon">⚠</div>
-        <div class="callout-body">
+                <div class="callout-body">
             <p><strong>Kritischer Befund:</strong> <strong>jsmith</strong> (normaler Benutzer)
             meldet sich als <strong>Administrator</strong> auf dem Domain Controller an.
             Das ist in keinem legitimen Szenario erklärbar — klares Zeichen für einen
@@ -232,8 +229,7 @@
     <p class="screenshot-caption">// EventID 4624 · Type 3 · NTLM — Administrator auf DC01 von 10.10.5.55 — Severity: HIGH</p>
 
     <div class="callout red">
-        <div class="callout-icon">⚠</div>
-        <div class="callout-body">
+                <div class="callout-body">
             <p><strong>Pass-the-Hash bestätigt:</strong> Die Kombination aus
             <strong>Logon Type 3 + NTLM + unbekannte IP (10.10.5.55) + Administrator auf DC</strong>
             ist das klassische Vier-Indikator-Muster eines PtH-Angriffs.
@@ -264,8 +260,7 @@
     <p class="screenshot-caption">// EventID 4672 — Administrator erhält SeDebugPrivilege + SeTcbPrivilege auf DC01 — Severity: HIGH</p>
 
     <div class="callout red">
-        <div class="callout-icon">⚠</div>
-        <div class="callout-body">
+                <div class="callout-body">
             <p><strong>SeDebugPrivilege + SeTcbPrivilege:</strong> Mit diesen Rechten kann der
             Angreifer jeden Prozess lesen (inkl. lsass.exe), als SYSTEM agieren und
             die gesamte Domain übernehmen. Das ist der <strong>Endpunkt der Lateral Movement

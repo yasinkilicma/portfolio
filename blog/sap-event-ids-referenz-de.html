@@ -72,8 +72,7 @@
     </div>
 
     <div class="callout purple">
-        <div class="callout-icon">→</div>
-        <div class="callout-body">
+                <div class="callout-body">
             <p><strong>SAP vs. Windows Event IDs:</strong> Windows verwendet numerische Event IDs (4625, 4688…). SAP verwendet alphanumerische <strong>Message IDs</strong> im Security Audit Log (SM20/RSAU_READ_LOG). Format: 2 Buchstaben + 1-3 Zeichen — z.B. <strong>AU2</strong> (fehlgeschlagener Login), <strong>AUB</strong> (Benutzeränderung), <strong>EU1</strong> (Tabellenzugriff).</p>
         </div>
     </div>
@@ -357,8 +356,7 @@
     </table>
 
     <div class="callout red">
-        <div class="callout-icon">!</div>
-        <div class="callout-body">
+                <div class="callout-body">
             <p><strong>AUB Storm:</strong> Wenn ein Benutzer innerhalb kurzer Zeit viele AUF-Ereignisse (Authorization Failures) produziert — auf verschiedenen T-Codes wie PFCG, SE11, SM30, SM59, SU01 — spricht man von einem AUB Storm. Das ist ein klares Zeichen für systematische Privilege Escalation.</p>
         </div>
     </div>
@@ -480,8 +478,7 @@
     </table>
 
     <div class="callout orange">
-        <div class="callout-icon">⚠</div>
-        <div class="callout-body">
+                <div class="callout-body">
             <p><strong>Bekannte Angriffs-Funktionsbausteine:</strong> <code>RFC_READ_TABLE</code> (Tabellen auslesen), <code>RFCPING</code> (Erreichbarkeit testen), <code>SAPMSSY1</code> (System-Info), <code>TH_WPINFO</code> (Work-Process-Info). Diese werden von SAP-Exploit-Tools wie SAP Metasploit-Modulen verwendet.</p>
         </div>
     </div>
@@ -683,8 +680,7 @@
     </div>
 
     <div class="callout green">
-        <div class="callout-icon">→</div>
-        <div class="callout-body">
+                <div class="callout-body">
             <p><strong>Praxis-Anwendung:</strong> Diese Event IDs wurden in vollständigen SAP-Angriffsszenarien mit simulierten Logs eingesetzt. Die detaillierten Analysen mit Splunk-Dashboards und 128 Events findest du in der <a href="sap-security-overview-de.html" style="color:var(--accent4);">SAP Security Audit Log Analysis Series</a>.</p>
         </div>
     </div>

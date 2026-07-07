@@ -27,7 +27,7 @@
 
 <section class="hero">
     <div class="hero-meta">
-        <span class="badge badge-red">🔴 INCIDENT REPORT</span>
+        <span class="badge badge-red">INCIDENT REPORT</span>
         <span class="badge badge-blue">SOC LAB</span>
         <span class="meta-date">May 2026</span>
     </div>
@@ -100,8 +100,7 @@
     </p>
 
     <div class="callout callout-blue">
-        <span class="callout-icon">ℹ️</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>955,807 events</strong> across 22 source types including Suricata IDS, Windows Event Logs,
             Fortigate firewall, IIS web server logs, network streams (DNS, HTTP, SMB, TCP), and Nessus vulnerability scans.
         </p>
@@ -205,8 +204,7 @@
     <img src="images/attacker-ips.png" alt="Top Attacker IPs in Splunk" style="width:100%;border-radius:12px;border:1px solid #1e2a42;margin:20px 0;">
     <!-- CRITICAL FINDING -->
     <div class="callout callout-red">
-        <span class="callout-icon">🚨</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Critical Finding:</strong> The signature <em>"ETPRO TROJAN Ransomware/Cerber Onion Domain Lookup"</em>
             confirms that the machine at 192.168.250.20 was infected with <strong>Cerber ransomware</strong> and
             actively communicating with a Tor-based Command & Control server.
@@ -233,21 +231,21 @@
     <!-- FINDINGS -->
     <div class="findings">
         <div class="finding-card">
-            <div class="finding-icon icon-red">🔴</div>
+            <div class="finding-icon icon-red"></div>
             <div>
                 <div class="finding-title">192.168.250.100 — Compromised Internal Machine</div>
                 <p class="finding-desc">Generated 2,907 alerts — the highest of any source. This is an internal machine performing lateral movement, indicating the infection had already spread within the network.</p>
             </div>
         </div>
         <div class="finding-card">
-            <div class="finding-icon icon-yellow">⚠️</div>
+            <div class="finding-icon icon-yellow"></div>
             <div>
                 <div class="finding-title">192.168.2.50 — External Attacker</div>
                 <p class="finding-desc">Generated 2,250 alerts. This is the original threat actor's IP address — the entry point of the attack from outside the network.</p>
             </div>
         </div>
         <div class="finding-card">
-            <div class="finding-icon icon-blue">ℹ️</div>
+            <div class="finding-icon icon-blue"></div>
             <div>
                 <div class="finding-title">8.8.8.8 — Google DNS</div>
                 <p class="finding-desc">2,038 DNS queries to Google's public DNS — consistent with ransomware's domain generation algorithm (DGA) behavior for C2 communication.</p>
@@ -294,28 +292,28 @@
 
     <div class="findings">
         <div class="finding-card">
-            <div class="finding-icon icon-blue">📊</div>
+            <div class="finding-icon icon-blue"></div>
             <div>
                 <div class="finding-title">Panel 1 — Top 10 Attack Signatures</div>
                 <p class="finding-desc">Bar chart of most frequent Suricata IDS signatures. Immediately highlights DNS manipulation and XSS attempts as dominant attack vectors.</p>
             </div>
         </div>
         <div class="finding-card">
-            <div class="finding-icon icon-red">🎯</div>
+            <div class="finding-icon icon-red"></div>
             <div>
                 <div class="finding-title">Panel 2 — Top 10 Attacker IPs</div>
                 <p class="finding-desc">Reveals 192.168.250.100 as the most active source — an unexpected internal IP, immediately flagging lateral movement.</p>
             </div>
         </div>
         <div class="finding-card">
-            <div class="finding-icon icon-yellow">🏹</div>
+            <div class="finding-icon icon-yellow"></div>
             <div>
                 <div class="finding-title">Panel 3 — Top 10 Targeted Systems</div>
                 <p class="finding-desc">Pie chart showing 192.168.250.70 as the most targeted system, helping prioritize containment efforts.</p>
             </div>
         </div>
         <div class="finding-card">
-            <div class="finding-icon icon-green">📈</div>
+            <div class="finding-icon icon-green"></div>
             <div>
                 <div class="finding-title">Panel 4 — Attack Timeline</div>
                 <p class="finding-desc">Line chart of attack activity over time (August 2016), showing the attack campaign duration and intensity peaks.</p>
@@ -349,8 +347,7 @@
     </div>
 
     <div class="callout callout-green">
-        <span class="callout-icon">✅</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Source code available on GitHub:</strong> Both the Terraform infrastructure and Splunk configuration
             are fully documented and version-controlled.
             <a href="https://github.com/yasinkilicma/terraform-splunk-demo" target="_blank"

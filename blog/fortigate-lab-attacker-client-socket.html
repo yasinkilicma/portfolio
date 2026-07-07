@@ -27,7 +27,7 @@
 
 <section class="hero">
     <div class="hero-meta">
-        <span class="badge badge-green">🛡️ FIREWALL LAB</span>
+        <span class="badge badge-green">FIREWALL LAB</span>
         <span class="badge badge-blue">QEMU NETWORKING</span>
         <span class="meta-date">Juni 2026</span>
     </div>
@@ -96,8 +96,7 @@
     </table>
 
     <div class="callout callout-blue">
-        <span class="callout-icon">💡</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Die Einsicht:</strong> Ein interaktiver OS-Installer ist in einer headless QEMU/UTM-Umgebung
             auf Apple Silicon der schwierigste Weg. <strong>Cloud-Images</strong> dagegen sind genau dafür gebaut:
             direkt bootbar, serielle Konsole an, Konfiguration via cloud-init. Und: <em>Kali = Debian + Security-Tools</em>
@@ -167,8 +166,7 @@ runcmd:
     </p>
 
     <div class="callout callout-green">
-        <span class="callout-icon">🔑</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Der Trick mit UTM:</strong> Socket-Argumente enthalten <em>keine Leerzeichen</em>
             (<code class="inline" style="font-size:12px;">socket,id=lan,listen=127.0.0.1:4700</code>), überleben also UTMs
             Whitespace-Split. Und ein TCP-Socket ist kein Dateizugriff — die Sandbox erlaubt ihn. So bekommt die
@@ -198,8 +196,7 @@ runcmd:
     </div>
 
     <div class="callout callout-blue">
-        <span class="callout-icon">⏱️</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Reihenfolge zählt:</strong> Die FortiGate (UTM) muss laufen und auf <code class="inline" style="font-size:12px;">:4700</code>
             lauschen, <em>bevor</em> der Client-QEMU startet — sonst schlägt <code class="inline" style="font-size:12px;">connect</code> fehl.
         </p>
@@ -228,8 +225,7 @@ runcmd:
     </div>
 
     <div class="callout callout-red">
-        <span class="callout-icon">⚠️</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Stolperstein:</strong> <code class="inline" style="font-size:12px;">Subnets overlap</code> — erst die alte
             IP von port2 entfernen/ändern, <em>dann</em> 192.0.2.99 auf port3 setzen. Sonst lehnt FortiOS die doppelte IP ab.
         </p>
@@ -264,8 +260,7 @@ runcmd:
     </div>
 
     <div class="callout callout-green">
-        <span class="callout-icon">✅</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Skripte &amp; Konfiguration auf GitHub:</strong> cloud-init-Seed, QEMU-Startskripte, FortiGate-CLI
             und der Lab-Launcher sind dokumentiert.
             <a href="https://github.com/yasinkilicma/fortigate-vm-lab-apple-silicon" target="_blank" style="color:var(--accent3);text-decoration:none;"> → fortigate-vm-lab-apple-silicon</a>

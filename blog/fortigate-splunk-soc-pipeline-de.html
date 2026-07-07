@@ -27,7 +27,7 @@
 
 <section class="hero">
     <div class="hero-meta">
-        <span class="badge badge-red">📊 SOC / SIEM</span>
+        <span class="badge badge-red">SOC / SIEM</span>
         <span class="badge badge-blue">SPLUNK</span>
         <span class="badge badge-blue">FORTIGATE</span>
         <span class="meta-date">Juni 2026</span>
@@ -82,8 +82,7 @@
     </p>
 
     <div class="callout callout-blue">
-        <span class="callout-icon">💡</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Lösung:</strong> Splunk hat bereits <strong>Port 8088 (HEC)</strong> offen —
             HTTP Event Collector. Statt den Container anzufassen, baut eine schlanke
             Python-Bridge eine Brücke: FortiGate → UDP-Syslog → Bridge → HTTPS-HEC → Splunk.
@@ -230,8 +229,7 @@ _ctx.verify_mode    = ssl.CERT_NONE   <span class="comment"># self-signed Splunk
 <span class="cmd">end</span></div>
     </div>
     <div class="callout callout-blue">
-        <span class="callout-icon">📌</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Warum ein eigenes Profil nötig war:</strong> FortiOS schützt <code class="inline" style="font-size:12px;">default</code>-Objekte
             vor Änderungen (<em>read-only factory default</em>). Port&nbsp;8080 ist kein Standard-HTTP-Port — FortiGate
             hätte den Traffic durchgelassen, ohne ihn zu scannen. Das neue Profil <code class="inline" style="font-size:12px;">lab-http</code>
@@ -379,8 +377,7 @@ index=fortigate type=utm subtype=ips
     </div>
 
     <div class="callout callout-blue">
-        <span class="callout-icon">🔍</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Automatische Feldextraktion:</strong> FortiOS schreibt Logs im
             <code class="inline" style="font-size:12px;">key=value</code>-Format
             (<code class="inline" style="font-size:12px;">srcip=192.0.2.50 dstip=… action=blocked</code>).
@@ -443,8 +440,7 @@ index=fortigate type=utm subtype=ips
     </div>
 
     <div class="callout callout-green">
-        <span class="callout-icon">✅</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Teil der FortiGate-Lab-Serie:</strong> Setup, QEMU-Client-Anbindung, IPS-Custom-Signatur, EICAR-AV-Test und jetzt die Splunk-SOC-Pipeline sind vollständig dokumentiert.
             <a href="https://github.com/yasinkilicma/fortigate-vm-lab-apple-silicon" target="_blank" style="color:var(--accent3);text-decoration:none;"> → fortigate-vm-lab-apple-silicon auf GitHub</a>
         </p>

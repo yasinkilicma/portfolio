@@ -27,7 +27,7 @@
 
 <section class="hero">
     <div class="hero-meta">
-        <span class="badge badge-red">🔴 ENDPOINT FORENSICS</span>
+        <span class="badge badge-red">ENDPOINT FORENSICS</span>
         <span class="badge badge-blue">SYSMON</span>
         <span class="badge badge-green">PROCESS CREATION</span>
     </div>
@@ -94,8 +94,7 @@
     </ul>
 
     <div class="callout callout-blue">
-        <span class="callout-icon">ℹ️</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Warum ist Sysmon EventID 1 so wichtig?</strong> Jeder Malware-Ausführung beginnt 
             mit der Erstellung eines Prozesses. Sysmon erfasst diesen Moment mit unerreichtem Detailgrad: 
             nicht nur <em>was</em> ausgeführt wurde, sondern auch <em>von wem</em>, <em>woher</em> und 
@@ -163,47 +162,47 @@
             <td>C:\Windows\System32\wbem\WmiPrvSE.exe</td>
             <td>C:\Windows\system32\wbem\wmiprvse.exe -secured -Embedding</td>
             <td>44</td>
-            <td>🟢 Normal (WMI Provider)</td>
+            <td>Normal (WMI Provider)</td>
         </tr>
         <tr>
             <td>C:\Program Files (x86)\PHP\v5.5\php-cgi.exe</td>
             <td>"C:\Program Files (x86)\PHP\v5.5\php-cgi.exe"</td>
             <td>33</td>
-            <td>🟡 Web Server (PHP CGI)</td>
+            <td>Web Server (PHP CGI)</td>
         </tr>
         <tr>
             <td>C:\Windows\System32\conhost.exe</td>
             <td>\??\C:\Windows\system32\conhost.exe 0xffffffff</td>
             <td>28</td>
-            <td>🟢 Normal (Console Host)</td>
+            <td>Normal (Console Host)</td>
         </tr>
         <tr>
             <td>C:\Windows\SysWOW64\dllhost.exe</td>
             <td>C:\Windows\SysWOW64\DllHost.exe /Processid:{...}</td>
             <td>22</td>
-            <td>🟢 Normal (COM Surrogate)</td>
+            <td>Normal (COM Surrogate)</td>
         </tr>
         <tr>
             <td>C:\Windows\SysWOW64\cmd.exe</td>
             <td>cmd.exe /c "dir 2&gt;&amp;1"</td>
             <td>8</td>
-            <td>🟡 CMD-Output-Redirection</td>
+            <td>CMD-Output-Redirection</td>
         </tr>
         <tr>
             <td>C:\Windows\explorer.exe</td>
             <td>"C:\Windows\explorer.exe"</td>
             <td>5</td>
-            <td>🟢 Normal (Explorer)</td>
+            <td>Normal (Explorer)</td>
         </tr>
         <tr>
             <td><strong>C:\Users\bob.smith...\osk.exe</strong></td>
             <td><strong>"C:\Users\bob.smith...\osk.exe"</strong></td>
             <td><strong>4</strong></td>
-            <td><strong>🔴 MASQUERADING!</strong></td>
+            <td><strong>MASQUERADING!</strong></td>
         </tr>
     </table>
 
-    <h2>🔴 Critical Finding: Masquerading (osk.exe)</h2>
+    <h2>Critical Finding: Masquerading (osk.exe)</h2>
 
     <p>
         <strong>Masquerading</strong> ist eine Tarnungstechnik, bei der Malware einen harmlosen 
@@ -222,8 +221,7 @@
     </ul>
 
     <div class="callout callout-red">
-        <span class="callout-icon">🚨</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Masquerading erkannt:</strong> <code>osk.exe</code> (On-Screen Keyboard) ist ein legitimer 
             Windows-Prozess, der normalerweise in <code>C:\Windows\System32\</code> liegt. Die Tatsache, 
             dass er hier aus <code>C:\Users\...\AppData\Roaming\...</code> ausgeführt wird, ist ein 
@@ -233,8 +231,7 @@
     </div>
 
     <div class="callout callout-orange">
-        <span class="callout-icon">⚠️</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Warum funktioniert Masquerading?</strong> Viele Endpoint-Protection-Tools vertrauen 
             auf Prozessnamen und Pfad-Whitelisten. Ein <code>osk.exe</code> aus dem System32-Verzeichnis 
             wäre vertrauenswürdig — aber das gleiche <code>osk.exe</code> aus einem Roaming-Profil ist es nicht. 
@@ -242,7 +239,7 @@
         </p>
     </div>
 
-    <h2>🟡 Weitere Auffälligkeiten</h2>
+    <h2>Weitere Auffälligkeiten</h2>
 
     <h3>PHP-CGI (php-cgi.exe)</h3>
     <p>
@@ -336,8 +333,7 @@
     </p>
 
     <div class="callout callout-blue">
-        <span class="callout-icon">📚</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Next Steps:</strong> WinRegistry-Analyse für Persistence-Mechanismen 
             (Run-Keys, Scheduled Tasks) und File-Integrity-Monitoring mit Sysmon EventID 11 (FileCreate).
         </p>

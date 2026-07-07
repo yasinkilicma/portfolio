@@ -27,7 +27,7 @@
 
 <section class="hero">
     <div class="hero-meta">
-        <span class="badge badge-red">🔴 DATENEXFILTRATION</span>
+        <span class="badge badge-red">DATENEXFILTRATION</span>
         <span class="badge badge-blue">SOC LAB</span>
         <span class="badge badge-green">SAP SECURITY</span>
         <span class="meta-date">Juni 2026</span>
@@ -86,8 +86,7 @@
     </p>
 
     <div class="callout callout-red">
-        <span class="callout-icon">🚨</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Warum USR02 der schlimmste Fund ist:</strong> Die Tabelle USR02 enthält
             die Passwort-Hashes <em>aller</em> SAP-Benutzer des Systems. Wer diese Tabelle
             ausliest, kann die Hashes offline cracken — und erhält danach Zugang zu jedem
@@ -148,8 +147,7 @@
     </table>
 
     <div class="callout callout-blue">
-        <span class="callout-icon">ℹ️</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>RFCDES ist oft unterschätzt:</strong> Diese Tabelle enthält die gespeicherten
             Passwörter für alle RFC-Verbindungen zu anderen SAP-Systemen, Datenbanken und
             externen Services. Wer RFCDES ausliest, bekommt nicht nur Zugang zu diesem System —
@@ -187,28 +185,28 @@
 
     <div class="findings">
         <div class="finding-card">
-            <div class="finding-icon icon-red">🔴</div>
+            <div class="finding-icon icon-red"></div>
             <div>
                 <div class="finding-title">Vollständiger SAP-Schlüsselbund exfiltriert</div>
                 <p class="finding-desc">USR02 + USR04 + AGR_USERS + RFCDES zusammen ergeben: alle Passwort-Hashes, alle Berechtigungen, alle Rollen und alle Zugangsdaten zu Fremdsystemen. Das ist der vollständigste mögliche SAP-Datensatz für einen Angreifer.</p>
             </div>
         </div>
         <div class="finding-card">
-            <div class="finding-icon icon-red">⚡</div>
+            <div class="finding-icon icon-red"></div>
             <div>
                 <div class="finding-title">Automatisiertes Tool — kein manueller Zugriff</div>
                 <p class="finding-desc">Sechs Tabellen in einer Sekunde — das ist physisch nicht manuell möglich. SDEMIR verwendet ein Skript oder ein SAP-Angriffs-Tool (z.B. ein RFC_READ_TABLE-Wrapper). Das deutet auf einen geplanten, vorbereiteten Angriff hin.</p>
             </div>
         </div>
         <div class="finding-card">
-            <div class="finding-icon icon-yellow">⚠️</div>
+            <div class="finding-icon icon-yellow"></div>
             <div>
                 <div class="finding-title">Interne IP — Insider Threat oder Lateral Movement</div>
                 <p class="finding-desc">Der Zugriff erfolgt von 10.10.2.100 — einer internen IP-Adresse. Entweder ist SDEMIR ein böswilliger Insider, oder ein Angreifer hat SDEMIRs Workstation bereits kompromittiert und agiert von dort aus.</p>
             </div>
         </div>
         <div class="finding-card">
-            <div class="finding-icon icon-green">✅</div>
+            <div class="finding-icon icon-green"></div>
             <div>
                 <div class="finding-title">EU1 + hohe Zeilenzahl = zuverlässiger Alert</div>
                 <p class="finding-desc">Ein normaler Benutzer liest niemals USR02 oder RFCDES. Ein Alert auf EU1-Events für diese Tabellen hat eine Falsch-Positiv-Rate von nahezu null — jeder Treffer ist ein echter Vorfall.</p>
@@ -242,8 +240,7 @@
     </div>
 
     <div class="callout callout-green">
-        <span class="callout-icon">✅</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>SAP Security Serie abgeschlossen:</strong> Diese fünf Szenarien decken die
             wichtigsten SAP-Angriffsvektoren ab — von Brute-Force über kompromittierte Admin-Konten
             und Privilege Escalation bis hin zu externem RFC-Angriff und Datenexfiltration.

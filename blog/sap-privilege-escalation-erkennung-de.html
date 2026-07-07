@@ -27,7 +27,7 @@
 
 <section class="hero">
     <div class="hero-meta">
-        <span class="badge badge-red">🔴 PRIVILEGE ESCALATION</span>
+        <span class="badge badge-red">PRIVILEGE ESCALATION</span>
         <span class="badge badge-blue">SOC LAB</span>
         <span class="badge badge-green">SAP SECURITY</span>
         <span class="meta-date">Juni 2026</span>
@@ -86,8 +86,7 @@
     </p>
 
     <div class="callout callout-red">
-        <span class="callout-icon">🚨</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Warum das gefährlich ist:</strong> Privilege Escalation ist oft der
             zweite Schritt nach einem Initial Access. Der Angreifer hat bereits ein
             normales Benutzerkonto kompromittiert (z. B. über Phishing) und versucht nun,
@@ -172,8 +171,7 @@
     </p>
 
     <div class="callout callout-blue">
-        <span class="callout-icon">ℹ️</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>3 Versuche pro Transaktion:</strong> Dies ist kein Zufall. Angreifer testen
             häufig mehrfach, ob ein Berechtigungsfehler konsistent zurückgegeben wird oder ob
             ein zweiter Versuch nach kurzer Zeit erfolgreich ist — etwa nach einer
@@ -185,28 +183,28 @@
 
     <div class="findings">
         <div class="finding-card">
-            <div class="finding-icon icon-red">🔴</div>
+            <div class="finding-icon icon-red"></div>
             <div>
                 <div class="finding-title">Systematisches Reconnaissance-Muster</div>
                 <p class="finding-desc">TKURT hat nicht zufällig falsche TCodes eingegeben — er hat gezielt die kritischsten Admin-Transaktionen angesteuert. Das setzt Vorkenntnisse über SAP-Transaktionen voraus und deutet auf einen informierten Angreifer hin.</p>
             </div>
         </div>
         <div class="finding-card">
-            <div class="finding-icon icon-red">🔗</div>
+            <div class="finding-icon icon-red"></div>
             <div>
                 <div class="finding-title">SM59 — Exfiltrations-Kanal vorbereitet?</div>
                 <p class="finding-desc">Der Versuch, SM59 (RFC-Verbindungen) zu öffnen, ist besonders alarmierend. Eine neue RFC-Verbindung zu einem externen Server wäre ein unsichtbarer Datenexfiltrations-Kanal — schwer zu erkennen, da RFC-Traffic legitim aussieht.</p>
             </div>
         </div>
         <div class="finding-card">
-            <div class="finding-icon icon-yellow">⚠️</div>
+            <div class="finding-icon icon-yellow"></div>
             <div>
                 <div class="finding-title">Kompromittiertes Benutzerkonto wahrscheinlich</div>
                 <p class="finding-desc">TKURT ist ein normaler Geschäftsbenutzer (Buchhaltung/Einkauf). Solche Benutzer kennen PFCG oder SM59 typischerweise nicht. Der echte TKURT führt diese Versuche wahrscheinlich nicht durch — sein Konto ist kompromittiert.</p>
             </div>
         </div>
         <div class="finding-card">
-            <div class="finding-icon icon-green">✅</div>
+            <div class="finding-icon icon-green"></div>
             <div>
                 <div class="finding-title">AUB allein reicht als Alert-Trigger</div>
                 <p class="finding-desc">&gt;5 AUB-Events desselben Benutzers gegen Transaktionen der Kategorie S_TCODE (Admin) innerhalb von 30 Minuten ist ein zuverlässiger, rauscharmer Alert. Keine False Positives bei normalen Benutzern.</p>
@@ -240,8 +238,7 @@
     </div>
 
     <div class="callout callout-blue">
-        <span class="callout-icon">🔗</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Nächster Teil dieser Serie:</strong> Externer RFC-Angriff —
             eine unbekannte externe IP versucht wiederholt, sich über die RFC-Schnittstelle
             des SAP-Produktivsystems zu authentifizieren. AU4-Events als Erkennungsmerkmal.

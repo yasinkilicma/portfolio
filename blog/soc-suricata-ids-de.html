@@ -27,7 +27,7 @@
 
 <section class="hero">
     <div class="hero-meta">
-        <span class="badge badge-red">🔴 NETWORK IDS</span>
+        <span class="badge badge-red">NETWORK IDS</span>
         <span class="badge badge-blue">SURICATA</span>
         <span class="badge badge-green">BOTS v1</span>
     </div>
@@ -83,8 +83,7 @@
     </p>
 
     <div class="callout callout-blue">
-        <span class="callout-icon">ℹ️</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Was ist Suricata?</strong> Suricata ist ein Open-Source-Network-IDS/IPS
             (Intrusion Detection/Prevention System). Es analysiert Netzwerkpakete in Echtzeit,
             erkennt bekannte Angriffsmuster anhand von Signaturen und protokolliert Alarme
@@ -133,9 +132,9 @@
 <span class="cmd">index</span>=botsv1 <span class="cmd">earliest</span>=<span class="number">0</span> <span class="cmd">sourcetype</span>=suricata event_type=alert
 | <span class="cmd">stats</span> count <span class="keyword">by</span> alert.signature alert.category alert.severity src_ip dest_ip
 | <span class="cmd">eval</span> schweregrad=<span class="cmd">case</span>(
-    alert.severity=<span class="number">1</span>, <span class="string">"🔴 Kritisch"</span>,
-    alert.severity=<span class="number">2</span>, <span class="string">"🟡 Hoch"</span>,
-    alert.severity=<span class="number">3</span>, <span class="string">"🔵 Mittel"</span>,
+    alert.severity=<span class="number">1</span>, <span class="string">"Kritisch"</span>,
+    alert.severity=<span class="number">2</span>, <span class="string">"Hoch"</span>,
+    alert.severity=<span class="number">3</span>, <span class="string">"Mittel"</span>,
     <span class="keyword">true</span>(), <span class="string">"Niedrig"</span>
   )
 | <span class="cmd">sort</span> -count
@@ -158,8 +157,7 @@
     </p>
 
     <div class="callout callout-red">
-        <span class="callout-icon">🚨</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>C2-Indikator:</strong> 741 fehlerhafte DNS-Anfragen von
             <code>192.168.250.20</code> (dem infizierten Host) bestätigen die
             Cerber-C2-Kommunikation. In Kombination mit dem SMB-Lateral-Movement
@@ -185,43 +183,43 @@
         <tr>
             <td>ET WEB_SERVER Script tag in URI — XSS</td>
             <td>Web Application Attack</td>
-            <td>🔴 1</td>
+            <td>1</td>
             <td>103</td>
         </tr>
         <tr>
             <td>ET WEB_SERVER Onmouseover= in URI — XSS</td>
             <td>Web Application Attack</td>
-            <td>🔴 1</td>
+            <td>1</td>
             <td>48</td>
         </tr>
         <tr>
             <td>ET SCAN Acunetix Version 6 Detected</td>
             <td>Attempted Information Leak</td>
-            <td>🟡 2</td>
+            <td>2</td>
             <td>45</td>
         </tr>
         <tr>
             <td>ET WEB_SERVER Possible XXE SYSTEM ENTITY</td>
             <td>A Network Trojan was detected</td>
-            <td>🔴 1</td>
+            <td>1</td>
             <td>41</td>
         </tr>
         <tr>
             <td>ET WEB_SERVER SQL Injection SELECT FROM</td>
             <td>Web Application Attack</td>
-            <td>🔴 1</td>
+            <td>1</td>
             <td>33</td>
         </tr>
         <tr>
             <td>ET WEB_SERVER SQL Injection Sleep Delay</td>
             <td>Web Application Attack</td>
-            <td>🔴 1</td>
+            <td>1</td>
             <td>32</td>
         </tr>
         <tr>
             <td>ET WEB_SERVER CVE-2014-6271 (Shellshock)</td>
             <td>Attempted Admin Privilege Gain</td>
-            <td>🔴 1</td>
+            <td>1</td>
             <td>18</td>
         </tr>
     </table>
@@ -235,8 +233,7 @@
     </p>
 
     <div class="callout callout-orange">
-        <span class="callout-icon">⚠️</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Shellshock-Mechanismus:</strong> Ein HTTP-Request mit dem Header
             <code>() &#123; :; &#125;; /bin/bash -c 'whoami'</code> würde auf ungepatchten Systemen
             beliebige Befehle als Webserver-Prozess ausführen. Suricata erkennt dieses Muster
@@ -354,8 +351,7 @@ alert http any any -> any any (
     </ol>
 
     <div class="callout callout-blue">
-        <span class="callout-icon">📚</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Weiterführend:</strong> Suricata-Alarme lassen sich mit Sysmon-Events
             (Process Creation auf dem Zielsystem) und Registry-Logs (Persistence) korrelieren,
             um eine vollständige Kill-Chain-Analyse zu erstellen.

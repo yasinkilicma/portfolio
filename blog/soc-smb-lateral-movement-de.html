@@ -27,7 +27,7 @@
 
 <section class="hero">
     <div class="hero-meta">
-        <span class="badge badge-red">🔴 LATERAL MOVEMENT</span>
+        <span class="badge badge-red">LATERAL MOVEMENT</span>
         <span class="badge badge-blue">SMB</span>
         <span class="badge badge-green">SPLUNK</span>
     </div>
@@ -93,8 +93,7 @@
     </ol>
 
     <div class="callout callout-red">
-        <span class="callout-icon">🚨</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Warum ist SMB so gefährlich?</strong> SMB verbindet nahezu alle Windows-Systeme 
             in einem Unternehmen. Wenn ein einzelner Host mit lokalen Admin-Rechten kompromittiert wird, 
             kann die Ransomware über SMB <strong>das gesamte Netzwerk</strong> erreichen — 
@@ -104,8 +103,7 @@
     </div>
 
     <div class="callout callout-blue">
-        <span class="callout-icon">ℹ️</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Technische Details:</strong> SMB verwendet NTLM-Authentifizierung (Challenge-Response). 
             Ein gestohlener NTLM-Hash erlaubt direkte Authentifizierung auf anderen Hosts, 
             ohne das Klartext-Passwort zu benötigen. Das ist der Grund, warum 
@@ -164,13 +162,13 @@
             <td>192.168.250.100</td>
             <td>192.168.250.20</td>
             <td>39.204</td>
-            <td>🔴 <strong>Ransomware Spread!</strong></td>
+            <td><strong>Ransomware Spread!</strong></td>
         </tr>
         <tr>
             <td>192.168.69.103</td>
             <td>192.168.250.20</td>
             <td>16.159</td>
-            <td>🟡 Externe IP → Ziel</td>
+            <td>Externe IP → Ziel</td>
         </tr>
         <tr>
             <td>192.168.250.100</td>
@@ -219,8 +217,7 @@
     </p>
 
     <div class="callout callout-red">
-        <span class="callout-icon">🚨</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Critical Finding:</strong> Die SMB-Verbindung 
             192.168.250.100 → 192.168.250.20 (39.204 Events) ist der Haupthinweis 
             auf Ransomware-Lateral-Movement. In einer realen Umgebung wäre hier 
@@ -295,8 +292,7 @@
     </p>
 
     <div class="callout callout-blue">
-        <span class="callout-icon">📚</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Next Steps:</strong> Windows Sysmon Process Creation Analyse, 
             um die exakten Prozesse und Kommandozeilen-Argumente der Ransomware 
             zu identifizieren.

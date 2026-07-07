@@ -27,7 +27,7 @@
 
 <section class="hero">
     <div class="hero-meta">
-        <span class="badge badge-red">🔴 INSIDER THREAT</span>
+        <span class="badge badge-red">INSIDER THREAT</span>
         <span class="badge badge-blue">SOC LAB</span>
         <span class="badge badge-green">SAP SECURITY</span>
         <span class="meta-date">Juni 2026</span>
@@ -81,8 +81,7 @@
     </p>
 
     <div class="callout callout-red">
-        <span class="callout-icon">🚨</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Warum SAPABAP1 kritisch ist:</strong> SAPABAP1 ist der Standard-ABAP-Entwicklungsbenutzer
             in SAP-Systemen. Mit diesem Konto kann ein Angreifer beliebigen ABAP-Code schreiben und ausführen,
             alle Benutzerkonten manipulieren und sich dauerhaft im System verankern —
@@ -115,8 +114,7 @@
     </div>
 
     <div class="callout callout-red">
-        <span class="callout-icon">⚠️</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Kill Chain:</strong> SE38 (Code einschleusen) → SU01 (Backdoor-User erstellen) →
             PFCG (Backdoor-User mit Admin-Rechten ausstatten). In drei Transaktionen hat der Angreifer
             dauerhaften Zugang zum System gesichert.
@@ -263,28 +261,28 @@
 
     <div class="findings">
         <div class="finding-card">
-            <div class="finding-icon icon-red">🔴</div>
+            <div class="finding-icon icon-red"></div>
             <div>
                 <div class="finding-title">Kompromittiertes Privileged Account — sofortige Sperrung erforderlich</div>
                 <p class="finding-desc">SAPABAP1 darf nicht aus dem Internet erreichbar sein. Das Passwort muss sofort zurückgesetzt, alle aktiven Sessions beendet und alle Aktivitäten des Kontos seit dem letzten bekannten sicheren Zeitpunkt geprüft werden.</p>
             </div>
         </div>
         <div class="finding-card">
-            <div class="finding-icon icon-red">💻</div>
+            <div class="finding-icon icon-red"></div>
             <div>
                 <div class="finding-title">Backdoor-Benutzer möglicherweise angelegt</div>
                 <p class="finding-desc">SU01 + PFCG wurden ausgeführt — es muss sofort geprüft werden, ob neue Benutzer oder Rollen angelegt wurden. Ein Angreifer hinterlässt sich immer einen zweiten Eingang.</p>
             </div>
         </div>
         <div class="finding-card">
-            <div class="finding-icon icon-yellow">⚠️</div>
+            <div class="finding-icon icon-yellow"></div>
             <div>
                 <div class="finding-title">ABAP-Code auf Manipulation prüfen</div>
                 <p class="finding-desc">SE38 wurde geöffnet — alle kürzlich geänderten ABAP-Programme müssen auf eingeschleusten Code geprüft werden. Besonders kritisch: Exits, BAdIs und User-Exits in Finanz- und HR-Prozessen.</p>
             </div>
         </div>
         <div class="finding-card">
-            <div class="finding-icon icon-green">✅</div>
+            <div class="finding-icon icon-green"></div>
             <div>
                 <div class="finding-title">SIEM hat den Angriff in Echtzeit erkannt</div>
                 <p class="finding-desc">Ohne SIEM-Integration wäre dieser Angriff erst beim nächsten manuellen SM20-Audit aufgefallen — Tage oder Wochen später. Die SIEM-Anbindung ist der entscheidende Unterschied zwischen Detection und einem vollständigen Compromise.</p>
@@ -318,8 +316,7 @@
     </div>
 
     <div class="callout callout-blue">
-        <span class="callout-icon">🔗</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Nächster Teil dieser Serie:</strong> Privilege Escalation Detection —
             ein normaler SAP-Benutzer versucht wiederholt, auf administrative Transaktionen
             zuzugreifen und löst dabei einen Sturm von AUB-Events aus.

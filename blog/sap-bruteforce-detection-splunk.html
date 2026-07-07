@@ -27,7 +27,7 @@
 
 <section class="hero">
     <div class="hero-meta">
-        <span class="badge badge-red">🔴 ATTACK DETECTION</span>
+        <span class="badge badge-red">ATTACK DETECTION</span>
         <span class="badge badge-blue">SOC LAB</span>
         <span class="badge badge-green">SAP SECURITY</span>
         <span class="meta-date">June 2026</span>
@@ -115,8 +115,7 @@
     </p>
 
     <div class="callout callout-blue">
-        <span class="callout-icon">ℹ️</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Why SAP logs matter for SOC:</strong> SAP ERP systems store the most sensitive business data —
             financial records, HR data, customer information. An attacker who gains SAP access can extract
             everything without touching any endpoint, bypassing traditional EDR and network-based detection entirely.
@@ -194,8 +193,7 @@
     </p>
 
     <div class="callout callout-red">
-        <span class="callout-icon">🚨</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Attacker IP:</strong> 45.33.32.156 — a known scanning IP address originating outside the corporate network.
             No VPN, no internal IP — this is a direct internet-facing SAP system attack.
         </p>
@@ -332,28 +330,28 @@
 
     <div class="findings">
         <div class="finding-card">
-            <div class="finding-icon icon-red">🔴</div>
+            <div class="finding-icon icon-red"></div>
             <div>
                 <div class="finding-title">External IP Targeting Production SAP</div>
                 <p class="finding-desc">45.33.32.156 is a known scanning IP with no business relationship to the organization. Direct internet access to SAP GUI port is a critical misconfiguration — SAP should never be internet-facing without a WAF or SAP Web Dispatcher.</p>
             </div>
         </div>
         <div class="finding-card">
-            <div class="finding-icon icon-red">🔒</div>
+            <div class="finding-icon icon-red"></div>
             <div>
                 <div class="finding-title">Account Lockout as a DoS Vector</div>
                 <p class="finding-desc">While the lockout policy stopped the brute-force, it also made the legitimate user JSCHMIDT unable to work. An attacker can weaponize this to lock out key SAP users (finance, HR) during critical business hours.</p>
             </div>
         </div>
         <div class="finding-card">
-            <div class="finding-icon icon-yellow">⚠️</div>
+            <div class="finding-icon icon-yellow"></div>
             <div>
                 <div class="finding-title">Username Enumeration Risk</div>
                 <p class="finding-desc">The attacker knew JSCHMIDT was a valid username — SAP's default error message doesn't differentiate between "wrong user" and "wrong password," but error timing differences can be exploited for enumeration.</p>
             </div>
         </div>
         <div class="finding-card">
-            <div class="finding-icon icon-green">✅</div>
+            <div class="finding-icon icon-green"></div>
             <div>
                 <div class="finding-title">Lockout Policy Worked — But Alerting Was Missing</div>
                 <p class="finding-desc">The account lockout policy correctly fired after 12 attempts. However, without SIEM integration, this event would have lived silently in the SM20 log — unnoticed until someone manually checked.</p>
@@ -388,8 +386,7 @@
     </div>
 
     <div class="callout callout-blue">
-        <span class="callout-icon">🔗</span>
-        <p class="callout-text">
+                <p class="callout-text">
             <strong>Next in this series:</strong> After-hours admin login detection — a privileged SAP user
             (SAPABAP1) logs into production at 02:30 AM from an external IP and runs SE38, SU01, and PFCG.
             All detected via Splunk SPL.
