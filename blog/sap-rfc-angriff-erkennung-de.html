@@ -201,28 +201,17 @@
 
     <h2>Empfehlungen</h2>
 
-    <div class="lessons">
-        <div class="lesson-card">
-            <div class="lesson-number">01</div>
-            <div class="lesson-title">RFC-Port sofort schließen</div>
-            <p class="lesson-desc">SAP-Ports (3200-3299, 3600-3699, 4800) dürfen nicht aus dem Internet erreichbar sein. Firewall-Regeln prüfen und korrigieren — RFC-Zugang nur über VPN oder SAP Cloud Connector.</p>
-        </div>
-        <div class="lesson-card">
-            <div class="lesson-number">02</div>
-            <div class="lesson-title">Default-User sperren</div>
-            <p class="lesson-desc">RFC*, ADMIN, SAPUSER, SAP*, DDIC — alle nicht benötigten Standard-User sofort sperren. Diese Benutzernamen sind in jedem SAP-Angriffs-Tool hardcodiert.</p>
-        </div>
-        <div class="lesson-card">
-            <div class="lesson-number">03</div>
-            <div class="lesson-title">RFC_READ_TABLE einschränken</div>
-            <p class="lesson-desc">Den Zugriff auf RFC_READ_TABLE über Berechtigungsobjekt S_RFC auf autorisierte RFC-Benutzer beschränken. Alternativ: Tabellenpuffer und alternative Schnittstellen nutzen.</p>
-        </div>
-        <div class="lesson-card">
-            <div class="lesson-number">04</div>
-            <div class="lesson-title">IP 185.220.101.5 sofort blockieren</div>
-            <p class="lesson-desc">Bekannter Tor-Exit-Node — auf Firewall- und WAF-Ebene blockieren. Alle weiteren Aktivitäten dieser IP in allen Logs (Firewall, IDS, Web) prüfen.</p>
-        </div>
-    </div>
+    <p>
+        Am Ende bleiben vier klare Maßnahmen: Die SAP-Ports 3200–3299, 3600–3699 und 4800 dürfen
+        nicht aus dem Internet erreichbar sein — die Firewall-Regeln müssen das ausschließen,
+        RFC-Zugang nur über VPN oder SAP Cloud Connector. RFC*, ADMIN, SAPUSER, SAP* und DDIC
+        sind in praktisch jedem SAP-Angriffstool hardcodiert und gehören als nicht benötigte
+        Standard-User sofort gesperrt. Der Zugriff auf RFC_READ_TABLE sollte über das
+        Berechtigungsobjekt S_RFC auf autorisierte RFC-Benutzer beschränkt werden, alternativ
+        über Tabellenpuffer oder andere Schnittstellen laufen. Und die IP 185.220.101.5, ein
+        bekannter Tor-Exit-Node, gehört sofort auf Firewall- und WAF-Ebene blockiert, während
+        alle weiteren Aktivitäten dieser Adresse in Firewall-, IDS- und Web-Logs geprüft werden.
+    </p>
 
     <div class="callout callout-blue">
                 <p class="callout-text">

@@ -53,24 +53,10 @@
 
 <main class="content">
 
-    <div class="stat-bar">
-        <div class="stat-item">
-            <span class="stat-number red">6</span>
-            <span class="stat-label">Sensible Tabellen gelesen</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-number red">20.000+</span>
-            <span class="stat-label">Datensätze extrahiert</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-number">1</span>
-            <span class="stat-label">Benutzer (SDEMIR)</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-number red">&lt;1s</span>
-            <span class="stat-label">Zeitfenster</span>
-        </div>
-    </div>
+    <p>
+        In weniger als einer Sekunde liest der Benutzer SDEMIR sechs sensible Tabellen aus und
+        extrahiert dabei über 20.000 Datensätze.
+    </p>
 
     <h2>Das EU1-Event — Generischer Tabellenzugriff</h2>
     <p>
@@ -216,28 +202,18 @@
 
     <h2>Empfehlungen</h2>
 
-    <div class="lessons">
-        <div class="lesson-card">
-            <div class="lesson-number">01</div>
-            <div class="lesson-title">SDEMIR sofort sperren und forensisch untersuchen</div>
-            <p class="lesson-desc">Workstation 10.10.2.100 isolieren, Memory-Dump erstellen, alle Netzwerkverbindungen zum Tatzeitpunkt analysieren. Wohin wurden die Daten übertragen?</p>
-        </div>
-        <div class="lesson-card">
-            <div class="lesson-number">02</div>
-            <div class="lesson-title">Alle SAP-Passwörter zurücksetzen</div>
-            <p class="lesson-desc">Da USR02 ausgelesen wurde, müssen alle SAP-Benutzerpasswörter als kompromittiert betrachtet werden — systemweiter Passwort-Reset aller Konten, beginnend mit Admin-Usern.</p>
-        </div>
-        <div class="lesson-card">
-            <div class="lesson-number">03</div>
-            <div class="lesson-title">RFC-Verbindungspasswörter ändern</div>
-            <p class="lesson-desc">Da RFCDES ausgelesen wurde, müssen alle RFC-Verbindungspasswörter in der gesamten SAP-Landschaft sofort geändert werden — alle verbundenen Systeme sind potenziell kompromittiert.</p>
-        </div>
-        <div class="lesson-card">
-            <div class="lesson-number">04</div>
-            <div class="lesson-title">SE16/EU1-Zugriff auf sensible Tabellen einschränken</div>
-            <p class="lesson-desc">USR02, USR04, AGR_USERS, RFCDES dürfen nur von autorisierten Basis-Administratoren lesbar sein. Berechtigungsobjekt S_TABU_DIS konsequent einsetzen und regelmäßig auditieren.</p>
-        </div>
-    </div>
+    <p>
+        SDEMIR muss sofort gesperrt und forensisch untersucht werden: Workstation 10.10.2.100
+        isolieren, einen Memory-Dump erstellen und alle Netzwerkverbindungen zum Tatzeitpunkt
+        analysieren, um herauszufinden, wohin die Daten übertragen wurden. Weil USR02 ausgelesen
+        wurde, müssen sämtliche SAP-Passwörter als kompromittiert gelten — ein systemweiter Reset
+        aller Konten, beginnend bei den Admin-Usern, ist unausweichlich. Ebenso müssen, weil
+        RFCDES betroffen ist, alle RFC-Verbindungspasswörter in der gesamten SAP-Landschaft sofort
+        geändert werden, da jedes verbundene System potenziell kompromittiert ist. Langfristig
+        gehört der SE16/EU1-Zugriff auf sensible Tabellen wie USR02, USR04, AGR_USERS und RFCDES
+        auf autorisierte Basis-Administratoren beschränkt, durchgesetzt über das
+        Berechtigungsobjekt S_TABU_DIS und regelmäßige Audits.
+    </p>
 
     <div class="callout callout-green">
                 <p class="callout-text">

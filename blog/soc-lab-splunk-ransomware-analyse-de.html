@@ -328,28 +328,18 @@
 
     <!-- ERKENNTNISSE -->
     <h2>Wichtigste Erkenntnisse</h2>
-    <div class="lessons">
-        <div class="lesson-card">
-            <div class="lesson-number">01</div>
-            <div class="lesson-title">IaC macht Labs reproduzierbar</div>
-            <p class="lesson-desc">Terraform + Docker bedeutet: Die gesamte SOC-Umgebung kann in Minuten von Null aufgebaut werden. Kein manuelles Setup, kein Configuration Drift.</p>
-        </div>
-        <div class="lesson-card">
-            <div class="lesson-number">02</div>
-            <div class="lesson-title">Lateral Movement ist lautlos</div>
-            <p class="lesson-desc">Der kompromittierte interne Rechner (192.168.250.100) erzeugte mehr Alarme als der externe Angreifer — interner Traffic wird oft zu wenig überwacht.</p>
-        </div>
-        <div class="lesson-card">
-            <div class="lesson-number">03</div>
-            <div class="lesson-title">Mehrere Quellen korrelieren</div>
-            <p class="lesson-desc">Keine einzelne Log-Quelle erzählte die ganze Geschichte. Die Angriffskette wurde erst sichtbar durch die Korrelation von Nessus-Scans, Suricata-Alarmen und Windows Event Logs.</p>
-        </div>
-        <div class="lesson-card">
-            <div class="lesson-number">04</div>
-            <div class="lesson-title">DNS ist ein Warnsignal</div>
-            <p class="lesson-desc">2.038 DNS-Anfragen an 8.8.8.8 und fehlerhafte DNS-Antworten sind klassische C2-Kommunikationsmuster von Ransomware — DNS-Traffic immer überwachen.</p>
-        </div>
-    </div>
+    <p>
+        Vier Dinge bleiben aus diesem Lab hängen: Terraform und Docker als Infrastructure-as-Code
+        bedeuten, dass die gesamte SOC-Umgebung in Minuten von Null aufgebaut werden kann, ohne
+        manuelles Setup und ohne Configuration Drift. Lateral Movement ist dabei erstaunlich
+        lautlos — der kompromittierte interne Rechner 192.168.250.100 erzeugte mehr Alarme als
+        der externe Angreifer selbst, ein Hinweis darauf, dass interner Traffic oft zu wenig
+        überwacht wird. Keine einzelne Log-Quelle erzählte die ganze Geschichte; die Angriffskette
+        wurde erst durch die Korrelation von Nessus-Scans, Suricata-Alarmen und Windows Event Logs
+        sichtbar. Und DNS ist ein Warnsignal: 2.038 Anfragen an 8.8.8.8 sowie fehlerhafte
+        DNS-Antworten sind klassische C2-Muster von Ransomware, weshalb DNS-Traffic immer
+        mitüberwacht gehört.
+    </p>
 
     <div class="callout callout-green">
                 <p class="callout-text">

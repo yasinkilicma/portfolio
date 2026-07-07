@@ -159,12 +159,15 @@ echo 'clean' > www/clean.txt
     </table>
 
     <h2>Erkenntnisse (NSE4)</h2>
-    <div class="lessons">
-        <div class="lesson-card"><div class="lesson-number">01</div><div class="lesson-title">EICAR ist deterministisch</div><p class="lesson-desc">Der 68-Byte-Standard liegt in der mitgelieferten AV-DB — testet AV ohne echte Malware und ohne FortiGuard-Abo.</p></div>
-        <div class="lesson-card"><div class="lesson-number">02</div><div class="lesson-title">Klartext vs. HTTPS</div><p class="lesson-desc">Flow-AV sieht nur unverschlüsselten Inhalt. Für HTTPS bräuchte es SSL-Deep-Inspection (eigener Test).</p></div>
-        <div class="lesson-card"><div class="lesson-number">03</div><div class="lesson-title">Block = Connection Reset</div><p class="lesson-desc">Flow-basierte AV setzt bei einem Treffer die Verbindung zurück → Client bekommt 0 Byte (curl exit 56).</p></div>
-        <div class="lesson-card"><div class="lesson-number">04</div><div class="lesson-title">Eingebaute Profile nutzen</div><p class="lesson-desc">Das <code class="inline" style="font-size:11px;">default</code>-AV-Profil reicht und schont das Eval-Limit für eigene Objekte.</p></div>
-    </div>
+    <p>
+        Vier Punkte bleiben aus diesem Test hängen: Der 68-Byte-EICAR-Standard steckt schon in
+        der mitgelieferten AV-Datenbank, die Engine testet also ohne echte Malware und ohne
+        FortiGuard-Abo. Flow-basiertes AV sieht dabei nur unverschlüsselten Inhalt — für HTTPS
+        bräuchte es SSL-Deep-Inspection, ein eigener Test. Beim Treffer setzt die FortiGate die
+        Verbindung zurück, der Client bekommt 0 Byte und curl bricht mit Exit-Code 56 ab. Und
+        für den Test reicht das eingebaute <code class="inline" style="font-size:11px;">default</code>-AV-Profil
+        völlig aus, was das Eval-Limit für eigene Objekte schont.
+    </p>
 
     <div class="callout callout-green">
                 <p class="callout-text">

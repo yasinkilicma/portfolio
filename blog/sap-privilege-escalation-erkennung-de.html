@@ -212,30 +212,20 @@
         </div>
     </div>
 
-    <h2>Empfehlungen</h2>
+    <h2>Was jetzt zu tun ist</h2>
 
-    <div class="lessons">
-        <div class="lesson-card">
-            <div class="lesson-number">01</div>
-            <div class="lesson-title">TKURT sofort sperren und untersuchen</div>
-            <p class="lesson-desc">Alle aktiven Sessions beenden, Passwort zurücksetzen, letzte Logins und IP-Adressen prüfen. Mit dem echten TKURT sprechen — hat er diese Aktionen durchgeführt?</p>
-        </div>
-        <div class="lesson-card">
-            <div class="lesson-number">02</div>
-            <div class="lesson-title">Least-Privilege konsequent umsetzen</div>
-            <p class="lesson-desc">Normale Geschäftsbenutzer dürfen nie Sichtbarkeit auf Admin-TCodes haben. SAP-Berechtigungskonzept überprüfen: S_TCODE-Objekt für kritische Transaktionen muss explizit vergeben werden.</p>
-        </div>
-        <div class="lesson-card">
-            <div class="lesson-number">03</div>
-            <div class="lesson-title">SIEM-Alert: AUB-Häufung auf Admin-TCodes</div>
-            <p class="lesson-desc">Automatischer Alert bei &gt;3 AUB-Events desselben Benutzers gegen TCodes der Admin-Whitelist (PFCG, SE38, SU01, SM59, SM30) innerhalb von 15 Minuten.</p>
-        </div>
-        <div class="lesson-card">
-            <div class="lesson-number">04</div>
-            <div class="lesson-title">RFC-Verbindungen auditieren</div>
-            <p class="lesson-desc">Alle SM59-Verbindungen auf unbekannte externe Ziele prüfen. Neue RFC-Destinations seit dem Vorfallszeitpunkt sind verdächtig und müssen sofort entfernt werden.</p>
-        </div>
-    </div>
+    <p>
+        TKURT muss sofort gesperrt und untersucht werden — alle aktiven Sessions beenden, Passwort
+        zurücksetzen, letzte Logins und IP-Adressen prüfen und mit dem echten TKURT klären, ob er
+        diese Aktionen überhaupt durchgeführt hat. Least-Privilege muss konsequent gelten: normale
+        Geschäftsbenutzer dürfen nie Sichtbarkeit auf Admin-TCodes haben, was eine Überprüfung des
+        Berechtigungskonzepts verlangt, bei der das S_TCODE-Objekt für kritische Transaktionen
+        explizit vergeben wird. Ein automatischer SIEM-Alert bei mehr als drei AUB-Events
+        desselben Benutzers gegen die Admin-Whitelist PFCG, SE38, SU01, SM59 und SM30 innerhalb
+        von 15 Minuten fängt den nächsten Versuch ab. Und alle SM59-Verbindungen sollten auf
+        unbekannte externe Ziele geprüft werden — neue RFC-Destinations seit dem Vorfallszeitpunkt
+        sind verdächtig und gehören sofort entfernt.
+    </p>
 
     <div class="callout callout-blue">
                 <p class="callout-text">

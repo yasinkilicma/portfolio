@@ -365,30 +365,20 @@
     </div>
 
     <!-- EMPFEHLUNGEN -->
-    <h2>Empfehlungen</h2>
+    <h2>Handlungsempfehlungen</h2>
 
-    <div class="lessons">
-        <div class="lesson-card">
-            <div class="lesson-number">01</div>
-            <div class="lesson-title">SAP nie direkt ins Internet exponieren</div>
-            <p class="lesson-desc">Einen SAP Web Dispatcher oder WAF vor alle SAP-Systeme schalten. Direkter Internet-Zugang zum SAP Router oder DIAG-Port ist ein kritisches Sicherheitsrisiko.</p>
-        </div>
-        <div class="lesson-card">
-            <div class="lesson-number">02</div>
-            <div class="lesson-title">Echtzeit-Alert bei AU2-Häufung</div>
-            <p class="lesson-desc">SIEM-Alert konfigurieren: &gt;5 AU2-Events von derselben IP innerhalb von 10 Minuten = sofortiger P1-Alert. Nicht auf AUI warten — die Sperrung ist bereits zu spät.</p>
-        </div>
-        <div class="lesson-card">
-            <div class="lesson-number">03</div>
-            <div class="lesson-title">Sperrschwellenwert reduzieren</div>
-            <p class="lesson-desc">SAP-Standard liegt oft bei 5–12 Versuchen. Für privilegierte Benutzer (SAPABAP1, DDIC, SAP*) auf 3 reduzieren. Hochwertige Konten brauchen engeren Schutz.</p>
-        </div>
-        <div class="lesson-card">
-            <div class="lesson-number">04</div>
-            <div class="lesson-title">Angreifer-IPs automatisch blockieren</div>
-            <p class="lesson-desc">AU2-Quell-IPs in die Firewall-Automatisierung einspeisen. Eine IP, die SAP-Login-Fehler generiert, sollte innerhalb von Minuten gesperrt werden — nicht Stunden.</p>
-        </div>
-    </div>
+    <p>
+        Rückblickend waren vier Punkte wichtig: SAP darf nie direkt im Internet exponiert sein —
+        ein SAP Web Dispatcher oder eine WAF gehört vor jedes SAP-System, denn direkter Zugriff
+        auf SAP Router oder DIAG-Port ist ein kritisches Risiko. Ein SIEM-Alert, der bei mehr als
+        5 AU2-Events derselben IP innerhalb von 10 Minuten sofort als P1 auslöst, darf nicht auf
+        AUI warten — die Sperrung kommt dann bereits zu spät. Der Sperrschwellenwert, im
+        SAP-Standard oft bei 5 bis 12 Versuchen, sollte für privilegierte Benutzer wie SAPABAP1,
+        DDIC oder SAP* auf 3 reduziert werden, denn hochwertige Konten brauchen engeren Schutz.
+        Und Angreifer-IPs aus den AU2-Events gehören automatisiert in die Firewall eingespeist —
+        eine IP, die SAP-Login-Fehler erzeugt, sollte innerhalb von Minuten gesperrt sein, nicht
+        Stunden.
+    </p>
 
     <div class="callout callout-blue">
                 <p class="callout-text">

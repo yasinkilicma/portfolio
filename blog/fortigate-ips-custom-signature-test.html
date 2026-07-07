@@ -180,12 +180,16 @@
     </div>
 
     <h2>Erkenntnisse (NSE4)</h2>
-    <div class="lessons">
-        <div class="lesson-card"><div class="lesson-number">A</div><div class="lesson-title">F-SBID-Syntax</div><p class="lesson-desc"><code class="inline" style="font-size:11px;">--pattern</code>, <code class="inline" style="font-size:11px;">--service</code>, <code class="inline" style="font-size:11px;">--flow</code> definieren eine eigene Signatur — deterministisch testbar.</p></div>
-        <div class="lesson-card"><div class="lesson-number">B</div><div class="lesson-title">set rule = ID</div><p class="lesson-desc">Im Sensor-Eintrag referenziert <code class="inline" style="font-size:11px;">set rule</code> die <em>numerische</em> Signatur-ID, nicht den Namen.</p></div>
-        <div class="lesson-card"><div class="lesson-number">C</div><div class="lesson-title">Flow-based IPS</div><p class="lesson-desc">IPS und Application Control sind flow-based; aktiviert über <code class="inline" style="font-size:11px;">utm-status</code> in der Policy.</p></div>
-        <div class="lesson-card"><div class="lesson-number">D</div><div class="lesson-title">Eval-Limits kennen</div><p class="lesson-desc">10 Sensoren, 3 Policies/Routen — Limits beim Design einplanen, vorhandene Objekte wiederverwenden.</p></div>
-    </div>
+    <p>
+        Die Custom-Signatur läuft über die F-SBID-Syntax — <code class="inline" style="font-size:11px;">--pattern</code>,
+        <code class="inline" style="font-size:11px;">--service</code> und <code class="inline" style="font-size:11px;">--flow</code>
+        definieren sie so, dass sie deterministisch testbar bleibt. Im Sensor-Eintrag referenziert
+        <code class="inline" style="font-size:11px;">set rule</code> dabei die <em>numerische</em> Signatur-ID,
+        nicht den Namen — ein Detail, das leicht übersehen wird. IPS und Application Control laufen
+        beide flow-based und werden über <code class="inline" style="font-size:11px;">utm-status</code> in der
+        Policy aktiviert. Und weil die Eval-Lizenz nur 10 Sensoren und 3 Policies/Routen erlaubt,
+        muss man diese Limits von Anfang an einplanen und vorhandene Objekte wiederverwenden.
+    </p>
 
     <div class="callout callout-green">
                 <p class="callout-text">
