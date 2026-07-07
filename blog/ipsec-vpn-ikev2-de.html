@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IKEv2 Route-based VPN mit XFRM-VTI in Docker | Yasin Kilic</title>
+    <meta name="description" content="Vom Policy-based IKEv1 zum Route-based IKEv2 mit XFRM-Virtual-Tunnel-Interface. StrongSwan in Docker auf dem MacBook Air – der direkte Vergleich und die Migration.">
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="blog.css">
+</head>
+<body>
+
+<header class="header">
+    <div class="container">
+        <h1 class="site-name"><a href="../index.html">Yasin Kilic</a></h1>
+        <nav class="nav">
+            <ul class="nav-list">
+                <li><a href="../index.html" class="nav-link">Home</a></li>
+                <li><a href="index.html" class="nav-link active">Blog</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<section class="hero">
+    <div class="hero-meta">
+        <span class="badge badge-green">VPN LAB</span>
+        <span class="badge badge-blue">IKEv2 · VTI</span>
+        <span class="meta-date">Juli 2026</span>
+    </div>
+    <h1>IKEv2 Route-based VPN mit <span>XFRM-VTI in Docker</span><br>— Migration von Policy-based zu Route-based</h1>
+    <p class="hero-summary">
+        Nach dem Policy-based-IKEv1-Lab war der logische nächste Schritt: IKEv2 mit einem
+        XFRM-Virtual-Tunnel-Interface. Dieses Projekt baut auf dem Vorgänger auf, ersetzt das
+        Protokoll und führt ein virtuelles Tunnel-Interface ein. Der Unterschied: Policy-based
+        matcht Subnetz-Paare im Kernel – Route-based lenkt Traffic per Route in ein Interface
+        und verschlüsselt alles, was es durchquert. Flexibler, erweiterbarer und die Basis
+        für ADVPN und SD-WAN.
+    </p>
+    <div class="tags">
+        <span class="tag">IKEv2</span>
+        <span class="tag">XFRM VTI</span>
+        <span class="tag">Route-based VPN</span>
+        <span class="tag">StrongSwan</span>
+        <span class="tag">Docker</span>
+        <span class="tag">Policy-based vs Route-based</span>
+        <span class="tag">Alpine Linux</span>
+        <span class="tag">IPSec</span>
+        <span class="tag">xfrm</span>
+    </div>
+</section>
+
+<main class="content">
+
+    <!-- STATS -->
+    <div class="stat-bar">
+        <div class="stat-item">
+            <span class="stat-number">IKEv2</span>
+            <span class="stat-label">4 Messages statt 6 (IKEv1 Main Mode)</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">xfrm0</span>
+            <span class="stat-label">Virtuelles Tunnel-Interface (if_id=42)</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">&lt; 1 ms</span>
+            <span class="stat-label">Latenz LAN-to-LAN über den VTI-Tunnel</span>
+        </div>
+    </div>
+
+    <!-- MOTIVATION -->
+    <h2>Warum Route-based?</h2>
+    <p>
+        Das erste Labor hat gezeigt, wie ein Policy-based-VPN funktioniert: StrongSwan installiert
+        xfrm-Policies im Kernel, die genau definieren, welche Subnetz-Paare verschlüsselt werden.
+        Sobald man aber ein neues Subnetz hinzufügt oder eine komplexere Topologie aufbaut
+        (Hub-Spoke, dynamische Routen), wird dieser Ansatz unflexibel.
+    </p>
+    <p>
+        Ein <strong>Route-based-VPN</strong> entkoppelt Routing und Verschlüsselung. Der Tunnel
+        bekommt ein eigenes virtuelles Interface (hier: <code class="inline">xfrm0</code>), das
+        eine IP-Adresse aus einem Tunnel-Netz trägt. Statt Subnetz-Paaren definiert die
+        xfrm-Policy nur noch: „Alles, was dieses Interface verlässt, wird verschlüsselt".
+        Die Steuerung, welcher Traffic den Tunnel nimmt, liegt in der Routingtabelle –
+        nicht im IPSec-Config.
+    </p>
+
+    <div class="callout callout-blue">
+        <p class="callout-text">
+            <strong>Der entscheidende Unterschied:</strong> Policy-based = <em>„Verschlüssele alles von
+            10.0.1.0/24 nach 10.0.2.0/24"</em>. Route-based = <em>„Verschlüssele alles, was durch
+            Interface xfrm0 geht"</em>. Ein neues Subnetz? Einfach eine Route hinzufügen – kein
+            IPSec-Config-Change.
+        </p>
+    </div>
+
+    <!-- ARCHITEKTUR -->
+    <h2>Topologie und Datenfluss</h2>
+    <p>
+        Die IP-Adressen und Docker-Netze sind gegenüber dem Vorgänger unverändert, das
+        Tunnel-Netz <code class="inline">10.99.0.0/30</code> kommt neu hinzu.
+    </p>
+
+    <div class="arch-box">
+<span class="highlight">Container: Site-A (Mannheim)</span>    <span class="highlight" style="float:right;">Container: Site-B (Heidelberg)</span>
+<span class="highlight2">10.255.1.10 (eth0)</span>                           <span class="highlight2" style="float:right;">10.255.1.20 (eth0)</span>
+     │                                                        │
+     │  ┌────────────────────────────────────────────────┐     │
+     │  │  IKEv2 SA (AES-256 / SHA-256 / DH-14)          │     │
+     │  │  PSK: @site-a.mannheim ↔ @site-b.heidelberg    │     │
+     │  └────────────────────────────────────────────────┘     │
+     │                                                        │
+<span class="highlight3">10.99.0.1 (xfrm0)</span>                               <span class="highlight3" style="float:right;">10.99.0.2 (xfrm0)</span>
+     │                                                        │
+     │  Route: 10.0.2.0/24 → dev xfrm0                        │
+     │                                                        │
+<span class="highlight3">10.0.1.1 (lo)</span>                                  <span class="highlight3" style="float:right;">10.0.2.1 (lo)</span>
+    </div>
+
+    <h3>Der Datenpfad im Detail</h3>
+    <p>
+        Wenn Site-A ein Paket an Site-Bs LAN (10.0.2.1) sendet, durchläuft es diesen Weg:
+    </p>
+
+    <div class="arch-box">
+<span class="highlight2">Paket: src=10.0.1.1, dst=10.0.2.1</span>
+
+<span class="highlight3">1. Routing-Table</span>  →  Match: <strong>10.0.2.0/24 dev xfrm0</strong>
+       │
+<span class="highlight3">2. xfrm0-Interface</span>  →  Interface if_id=42, Paket wird „VTI-intern"
+       │
+<span class="highlight3">3. xfrm Policy (OUT)</span>  →  Interface-Match → ESP-Verschlüsselung mit SPI
+       │                    →  Neuer Outer-Header: 10.255.1.10 → 10.255.1.20
+       │
+<span class="highlight3">4. eth0 sendet</span>  →  ESP-Paket (Protokoll 50) über das Docker-Netz
+       │
+<span class="highlight3">5. Site-B eth0 empfängt</span>  →  Entschlüsselung via xfrm Policy (IN/FWD)
+       │
+<span class="highlight3">6. xfrm0</span>  →  Klartext-Paket erscheint auf xfrm0 (if_id=42)
+       │
+<span class="highlight3">7. Routing</span>  →  10.0.2.1 → Zustellung via Loopback
+    </div>
+
+    <!-- KONFIGURATION -->
+    <h2>Die Konfiguration — was sich geändert hat</h2>
+
+    <h3>ipsec.conf – IKEv2 + if_id</h3>
+    <p>
+        Die wichtigsten Änderungen gegenüber dem IKEv1-Projekt:
+        <code class="inline">keyexchange=ikev2</code>, die Traffic-Selectors enthalten jetzt auch
+        das Tunnel-Netz, und <code class="inline">if_id=42</code> bindet die SA an das
+        xfrm-Interface.
+    </p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">IPSEC.CONF</span>
+            <span class="code-desc">Site-A – IKEv2 + XFRM-VTI (Auszug)</span>
+        </div>
+        <div class="code-body"><span class="keyword">conn</span> site-to-site-vti
+    <span class="keyword">auto</span>=start
+    <span class="keyword">keyexchange</span>=ikev2
+    <span class="keyword">authby</span>=secret
+
+    <span class="comment"># Site-A (Mannheim)</span>
+    <span class="keyword">left</span>=<span class="number">10.255.1.10</span>
+    <span class="keyword">leftid</span>=@site-a.mannheim
+    <span class="keyword">leftsubnet</span>=<span class="number">10.0.1.0/24,10.99.0.1/32</span>
+
+    <span class="comment"># Site-B (Heidelberg)</span>
+    <span class="keyword">right</span>=<span class="number">10.255.1.20</span>
+    <span class="keyword">rightid</span>=@site-b.heidelberg
+    <span class="keyword">rightsubnet</span>=<span class="number">10.0.2.0/24,10.99.0.2/32</span>
+
+    <span class="comment"># XFRM-Interface-Bindung</span>
+    <span class="keyword">if_id</span>=<span class="number">42</span>
+
+    <span class="comment"># Krypto wie gehabt</span>
+    <span class="keyword">ike</span>=aes256-sha256-modp2048<span class="keyword">!</span>
+    <span class="keyword">esp</span>=aes256-sha256-modp2048<span class="keyword">!</span></div>
+    </div>
+
+    <h3>ipsec.secrets – Wildcard-PSK</h3>
+    <p>
+        IKEv2 authentisiert nicht mehr über IP-Paare, sondern über die IKE-IDs
+        (<code class="inline">@site-a.mannheim</code>). Das Secrets-Format verwendet daher
+        einen Wildcard-Eintrag, der für alle Peers gilt.
+    </p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">IPSEC.SECRETS</span>
+            <span class="code-desc">Wildcard-PSK – gilt für jede ID</span>
+        </div>
+        <div class="code-body"><span class="keyword">:</span> PSK <span class="string">"Mannheim-Heidelberg-2024-Gizli-Anahtar"</span></div>
+    </div>
+
+    <h3>entrypoint.sh – VTI-Interface erstellen</h3>
+    <p>
+        Das Skript erstellt das xfrm0-Interface und die Route zum remote LAN – alles
+        über Umgebungsvariablen aus der <code class="inline">docker-compose.yml</code>.
+    </p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">BASH</span>
+            <span class="code-desc">entrypoint.sh – VTI-Setup (Auszug)</span>
+        </div>
+        <div class="code-body">ip link add <span class="string">xfrm0</span> type xfrm dev eth0 if_id <span class="number">42</span>
+ip addr add <span class="number">10.99.0.1/30</span> dev xfrm0
+ip link set xfrm0 up
+
+ip route add <span class="number">10.0.2.0/24</span> dev xfrm0</div>
+    </div>
+
+    <div class="callout callout-yellow">
+        <p class="callout-text">
+            <strong>Das xfrm-Interface:</strong> Anders als ein klassisches VTI benötigt das
+            XFRM-Interface (<code class="inline" style="font-size:12px;">type xfrm</code>) kein
+            eigenes Tunnel-Modul mehr – es ist direkt in den Linux-Kernel integriert.
+            Die <code class="inline" style="font-size:12px;">if_id</code> muss mit dem Wert in
+            <code class="inline" style="font-size:12px;">ipsec.conf</code> übereinstimmen.
+        </p>
+    </div>
+
+    <!-- VERIFIKATION -->
+    <h2>Verifikation – Tunnel und Datenpfad</h2>
+
+    <h3>IKEv2-Aushandlung (4 Messages)</h3>
+    <p>
+        IKEv2 kommt mit zwei Roundtrips aus: IKE_SA_INIT (DH-Key-Exchange + Nonces) und
+        IKE_AUTH (ID + PSK-Authentisierung + erster CHILD_SA). Der Log-Ausschnitt zeigt
+        den kompletten Ablauf.
+    </p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">STRONGSWAN LOG</span>
+            <span class="code-desc">IKEv2 INIT + AUTH in zwei Roundtrips</span>
+        </div>
+        <div class="code-body"><span class="number">09</span>[IKE] initiating IKE_SA site-to-site-vti[<span class="number">1</span>] to <span class="number">10.255.1.20</span>
+<span class="number">09</span>[ENC] generating <span class="string">IKE_SA_INIT</span> request
+<span class="number">07</span>[ENC] parsed <span class="string">IKE_SA_INIT</span> response
+<span class="number">07</span>[CFG] selected proposal: IKE:AES_CBC_256/HMAC_SHA2_256_128/MODP_2048
+<span class="number">07</span>[IKE] authentication of <span class="string">'site-a.mannheim'</span> with pre-shared key
+<span class="number">07</span>[IKE] IKE_SA site-to-site-vti[<span class="number">1</span>] state change: CONNECTING ⇒ <span class="string">ESTABLISHED</span>
+<span class="number">07</span>[IKE] scheduling reauthentication in <span class="number">86219</span>s
+<span class="number">07</span>[IKE] <span class="string">CHILD_SA</span> site-to-site-vti{<span class="number">1</span>} established</div>
+    </div>
+
+    <h3>VTI-Tunnel und Routing</h3>
+    <p>
+        Das xfrm0-Interface ist aktiv, die Route zum remote LAN liegt darauf, und die
+        Ping-Tests bestätigen den Datenpfad.
+    </p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">BASH</span>
+            <span class="code-desc">Ping über den VTI-Tunnel</span>
+        </div>
+        <div class="code-body">$ docker exec ipsec-vpn-ikev2-site-a-1 ping -c <span class="number">4</span> -I <span class="number">10.99.0.1</span> <span class="number">10.99.0.2</span>
+<span class="number">4</span> packets transmitted, <span class="number">4</span> packets received, <span class="number">0</span>% packet loss
+
+$ docker exec ipsec-vpn-ikev2-site-a-1 ping -c <span class="number">4</span> -I <span class="number">10.0.1.1</span> <span class="number">10.0.2.1</span>
+<span class="number">4</span> packets transmitted, <span class="number">4</span> packets received, <span class="number">0</span>% packet loss</div>
+    </div>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">BASH</span>
+            <span class="code-desc">Routing-Table und xfrm-Policies</span>
+        </div>
+        <div class="code-body">$ docker exec ipsec-vpn-ikev2-site-a-1 ip route show dev xfrm0
+<span class="number">10.0.2.0/24</span> scope link
+<span class="number">10.99.0.0/30</span> proto kernel scope link src <span class="number">10.99.0.1</span>
+
+$ docker exec ipsec-vpn-ikev2-site-a-1 ip xfrm policy | head -<span class="number">10</span>
+src <span class="number">10.99.0.1/32</span> dst <span class="number">10.99.0.2/32</span>
+    dir <span class="cmd">out</span> priority <span class="number">367231</span>
+    tmpl src <span class="number">10.255.1.10</span> dst <span class="number">10.255.1.20</span>
+        proto esp spi <span class="number">0xc52dee40</span> reqid <span class="number">1</span> mode tunnel</div>
+    </div>
+
+    <!-- VERGLEICH -->
+    <h2>Policy-based vs. Route-based – der direkte Vergleich</h2>
+    <p>
+        Beide Labore (Proje 1 und Proje 2) liegen jetzt als getrennte Projekte vor. Die
+        Unterschiede lassen sich direkt an den Konfigurationen ablesen.
+    </p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">PROJE 1 / PROJE 2</span>
+            <span class="code-desc">Die zwei xfrm-Ansätze im Kernel</span>
+        </div>
+        <div class="code-body"><span class="comment"># Policy-based (Proje 1): Kernel matcht Subnetz-Paare</span>
+src <span class="number">10.0.1.0/24</span> dst <span class="number">10.0.2.0/24</span> dir out
+    → <span class="cmd">Verschlüsseln</span>
+
+<span class="comment"># Route-based (Proje 2): Kernel matcht Interface + if_id</span>
+Paket verlässt <span class="number">xfrm0</span> (if_id=<span class="number">42</span>)
+    → <span class="cmd">Verschlüsseln</span> (egal welche src/dst)</div>
+    </div>
+
+    <div class="callout callout-blue">
+        <p class="callout-text">
+            <strong>Wann nehme ich was?</strong> Policy-based ist einfacher für statische
+            Site-to-Site-Verbindungen mit wenigen Subnetzen. Route-based wird ab drei oder mehr
+            Standorten und dynamischem Routing (BGP/OSPF über den Tunnel) zwingend notwendig –
+            und ist die Architektur, die Fortinet mit ADVPN und SD-WAN umsetzt.
+        </p>
+    </div>
+
+    <!-- LESSONS -->
+    <h2>Was ich gelernt habe</h2>
+
+    <div class="component-grid lessons-grid">
+        <div class="component-card">
+            <h4>IKEv2 ist schlanker</h4>
+            <p class="lesson-desc">Vier statt sechs Nachrichten. Kein Aggressive Mode nötig. NAT-T und MOBIKE sind nativ integriert. Die Aushandlung ist robuster bei wechselnden IPs.</p>
+        </div>
+        <div class="component-card">
+            <h4>PSK-Lookup in IKEv2</h4>
+            <p class="lesson-desc">IKEv2 authentisiert über die IKE-ID (<code class="inline" style="font-size:12px;">@site-a.mannheim</code>), nicht über die Quell-IP. Das Secrets-Format musste von <code class="inline" style="font-size:12px;">IP IP : PSK</code> auf Wildcard <code class="inline" style="font-size:12px;">: PSK</code> geändert werden.</p>
+        </div>
+        <div class="component-card">
+            <h4>Das xfrm-Interface</h4>
+            <p class="lesson-desc">Der Linux-Kernel unterstützt XFRM-Interfaces nativ (kein Kernel-Modul nötig). Die <code class="inline" style="font-size:12px;">if_id</code>-Bindung ist eleganter als das alte VTI-Modell.</p>
+        </div>
+        <div class="component-card">
+            <h4>Ein Projekt, zwei Zweige</h4>
+            <p class="lesson-desc">Durch die Trennung in zwei getrennte Docker-Compose-Projekte mit unterschiedlichen Netzwerken (<code class="inline" style="font-size:12px;">10.255.0.0/24</code> vs. <code class="inline" style="font-size:12px;">10.255.1.0/24</code>) können beide Parallel laufen – ideal für den direkten Vergleich.</p>
+        </div>
+    </div>
+
+    <!-- NÄCHSTE SCHRITTE -->
+    <h2>Nächste Schritte</h2>
+    <p>
+        Der VTI-Tunnel ist die Basis für komplexere Topologien. Die geplanten Erweiterungen:
+    </p>
+
+    <div class="callout callout-yellow">
+        <p class="callout-text">
+            <strong>Als Nächstes:</strong> Ein <strong>ADVPN-Hub-Spoke</strong> mit vier Standorten,
+            BGP over VTI und dynamischen Shortcut-Tunneln zwischen den Spokes – die direkte
+            Vorbereitung auf SD-WAN.
+        </p>
+    </div>
+
+    <!-- SOURCE -->
+    <div class="callout callout-green">
+        <p class="callout-text">
+            <strong>Quellcode auf GitHub:</strong> Vollständige Konfiguration, Dockerfile und
+            Dokumentation versioniert und öffentlich.
+            <a href="https://github.com/yasinkilicma/ipsec-vpn-ikev2" target="_blank"
+               style="color:var(--accent3);text-decoration:none;"> → yasinkilicma/ipsec-vpn-ikev2</a>
+        </p>
+    </div>
+
+</main>
+
+<footer class="footer">
+    <div class="container">
+        <p>© 2026 Yasin Kilic</p>
+    </div>
+</footer>
+
+</body>
+</html>
