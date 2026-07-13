@@ -31,7 +31,7 @@
         <span class="badge badge-blue">SLA · PATH SELECTION</span>
         <span class="meta-date">Juli 2026</span>
     </div>
-    <h1>SD-WAN SLA-Path-Selection in <span>Docker</span><br>— wenn ein Link stirbt, nimmt der Traffic die andere Straße</h1>
+    <h1>SD-WAN SLA-Path-Selection in <span>Docker</span><br>— automatisches WAN-Failover bei SLA-Verletzung</h1>
     <p class="hero-summary">
         Das Kernprinzip von SD-WAN in einem Docker-Lab: ein Python-Controller auf
         <code class="inline">site-a</code> pingt sekündlich zwei simulierte WAN-Links, entscheidet
@@ -76,25 +76,17 @@
     <h2>Das Problem, das SD-WAN löst</h2>
     <p>
         Eine Zweigstelle hat zwei Internetanschlüsse: einen schnellen Glasfaser-Link (WAN-1)
-        und einen langsameren LTE-Backup (WAN-2). Normalerweise läuft alles über WAN-1. Was
-        passiert, wenn ein Bagger das Glasfaserkabel durchtrennt? Ohne SD-WAN bricht die
-        Verbindung ab, Mitarbeiter können nicht arbeiten, jemand muss manuell umschalten.
+        und einen langsameren LTE-Backup (WAN-2). Im Normalbetrieb läuft alles über WAN-1.
+        Fällt WAN-1 aus — Kabelschaden, Provider-Störung — bricht ohne Gegenmaßnahme die
+        Verbindung ab, bis jemand manuell auf den Backup-Anschluss umschaltet.
     </p>
     <p>
-        <strong>Mit SD-WAN</strong> merkt ein Controller in Sekunden, dass WAN-1 kaputt ist,
-        und schaltet automatisch auf WAN-2 um. Niemand merkt etwas außer einem kurzen Blinzeln.
-        Das ist der ganze Zauber — und genau das baut dieses Lab nach, mit zwei Alpine-Containern
-        und zwei isolierten Docker-Netzwerken.
+        SD-WAN löst das, indem ein Controller die Link-Qualität kontinuierlich misst und
+        die Route bei einer Schwellwertverletzung automatisch umschaltet, ohne manuellen
+        Eingriff. Dieses Lab baut genau diesen Mechanismus nach: zwei Alpine-Container,
+        zwei isolierte Docker-Netzwerke als WAN-1/WAN-2-Simulation, und ein Python-Controller,
+        der die Entscheidung trifft.
     </p>
-
-    <div class="callout callout-blue">
-        <p class="callout-text">
-            <strong>Die Analogie:</strong> Stell dir vor, du fährst zur Arbeit und hast zwei
-            Straßen. Auf dem Beifahrersitz sitzt ein Freund, der ständig Google Maps checkt.
-            *"Straße A ist frei? Bleib auf A. Oh — Stau mit 150&nbsp;ms Latenz und 20&nbsp;% Loss?
-            Nimm Straße B!"* Genau das macht der Controller — nur mit ICMP-Pings statt Google Maps.
-        </p>
-    </div>
 
     <!-- ARCHITEKTUR -->
     <h2>Topologie und Datenfluss</h2>
@@ -120,16 +112,16 @@
 
     <p>
         Die Service-IP <code class="inline">10.100.0.1/32</code> ist an das Loopback-Interface
-        von <code class="inline">site-b</code> gebunden. Das ist das Ziel, das
-        <code class="inline">site-a</code> erreichen will — stell dir vor, das ist die IP des
-        Firmen-Wikis oder der Datenbank. Der Controller schaltet nur die Route zu dieser IP
-        zwischen den zwei Next-Hops um, nicht den gesamten Default-Route-Traffic.
+        von <code class="inline">site-b</code> gebunden und steht stellvertretend für einen
+        Anwendungs-Endpunkt hinter der Zentrale (z. B. eine interne Datenbank). Der Controller
+        schaltet nur die Route zu dieser einen IP zwischen den zwei Next-Hops um, nicht den
+        gesamten Default-Route-Traffic.
     </p>
 
     <!-- IMPLEMENTIERUNG -->
     <h2>Die drei Bausteine des Controllers</h2>
 
-    <h3>1. Das Gehirn — <code class="inline">sla_policy.py</code> (pure, unit-getestet)</h3>
+    <h3>1. Entscheidungslogik — <code class="inline">sla_policy.py</code> (pure, unit-getestet)</h3>
     <p>
         Die Entscheidungslogik ist bewusst I/O-frei gehalten: keine Pings, keine
         <code class="inline">ip route</code>-Aufrufe. Nur Datenklassen und eine
@@ -175,8 +167,8 @@
 
     <p>
         13 Unit-Tests decken alle Edge-Cases ab: beide Links gesund, WAN-1 kaputt, beide kaputt
-        ("bleib auf der kaputten Hauptstraße statt dich auf der kaputten Landstraße zu
-        verfahren"), Hysterese-Reset bei Relapse, plus eine Regression für einen echten Parsing-Bug
+        (bleib auf dem aktuellen Pfad statt gegen einen anderen kaputten zu tauschen),
+        Hysterese-Reset bei Relapse, plus eine Regression für einen echten Parsing-Bug
         (dazu weiter unten mehr). Ergebnis:
     </p>
 
@@ -196,9 +188,9 @@
 ============================== <span class="number">13</span> passed <span class="keyword">in 0.03s</span> =============================</div>
     </div>
 
-    <h3>2. Die Hände — <code class="inline">controller.py</code> (ping + route)</h3>
+    <h3>2. Probe-Loop — <code class="inline">controller.py</code> (ping + route)</h3>
     <p>
-        Der Controller verbindet das Gehirn mit dem Kernel. Pro Sekunde: zwei Pings
+        Der Controller verbindet die Entscheidungslogik mit dem Kernel. Pro Sekunde: zwei Pings
         (einer über WAN-1, einer über WAN-2), Parsen der stdout, <code class="inline">decide()</code>,
         und falls der Entscheid vom aktuellen Pfad abweicht: <code class="inline">ip route replace</code>
         mit Zeitstempel loggen.
@@ -222,12 +214,14 @@
         time.sleep(PROBE_INTERVAL_SECONDS)</div>
     </div>
 
-    <h3>3. Der Bagger-Joker — <code class="inline">scripts/degrade.sh</code></h3>
+    <h3>3. WAN-Degradation — <code class="inline">scripts/degrade.sh</code></h3>
     <p>
-        Um Failover live zu demonstrieren, braucht man eine künstliche Baustelle.
+        Um Failover live zu demonstrieren, braucht es eine kontrollierte Störung.
         <code class="inline">tc netem</code> ist ein Linux-Kernel-Tool, das Traffic gezielt
-        verschlechtert — Latenz, Paketverlust, Jitter. Das Skript auto-detektiert das
-        WAN-1-Interface anhand der IP-Adresse (kein hardcodiertes <code class="inline">eth0</code>).
+        verschlechtert — Latenz, Paketverlust, Jitter. Das Skript ermittelt das
+        WAN-1-Interface zur Laufzeit über die IP-Adresse, statt <code class="inline">eth0</code>
+        hart zu codieren, weil die Interface-Reihenfolge bei einem Container-Neustart nicht
+        garantiert ist.
     </p>
 
     <div class="code-block">
@@ -280,23 +274,22 @@ WAN-1 restored on eth0</div>
             <strong>Gemessene Failover-Zeit: 6-9 Sekunden</strong> (über mehrere Läufe) — vom
             <code class="inline" style="font-size:12px;">degrade.sh on</code>-Zeitpunkt
             bis zum <code class="inline" style="font-size:12px;">switching wan1 -> wan2</code>-Zeitstempel im Log.
-            Die Spanne kommt vom Ping-Timeout-Zyklus (bis zu 3×1s pro Link und Runde) —
-            kein Platzhalter, keine Schätzung, reproduzierbar messbar.
+            Die Spanne kommt vom Ping-Timeout-Zyklus (bis zu 3×1s pro Link und Runde).
         </p>
     </div>
 
     <!-- ENTSCHEIDUNGSBAUM -->
-    <h2>Der Entscheidungsbaum (für Neugierige)</h2>
+    <h2>Der Entscheidungsbaum</h2>
 
     <div class="code-block">
         <div class="code-header">
             <span class="code-lang">LOGIK</span>
-            <span class="code-desc">decide() in Worten — keine Magie, nur Schwellwerte</span>
+            <span class="code-desc">decide() in Worten, Schwellwertlogik ohne Kommentare</span>
         </div>
         <div class="code-body"><span class="comment"># Auf WAN-1:</span>
 <span class="keyword">if</span> wan1 ok:      <span class="cmd">→ bleib auf wan1</span>
 <span class="keyword">else if</span> wan2 ok: <span class="cmd">→ wechsle zu wan2</span>
-<span class="keyword">else</span>:           <span class="cmd">→ bleib auf wan1</span> (kaputte Hauptstraße &gt; kaputte Landstraße)
+<span class="keyword">else</span>:           <span class="cmd">→ bleib auf wan1</span> (aktuellen Pfad nicht gegen einen anderen kaputten tauschen)
 
 <span class="comment"># Auf WAN-2:</span>
 <span class="keyword">if</span> wan1 ok:
@@ -307,9 +300,9 @@ WAN-1 restored on eth0</div>
     </div>
 
     <p>
-        Das ist alles. Keine KI, kein Machine-Learning. Nur Schwellwerte, ein Zähler und
-        gesunder Menschenverstand — und genau das ist es, was unter der Haube teurer
-        SD-WAN-Appliances passiert.
+        Schwellwerte und ein Zähler reichen für den Kern der SLA-basierten Pfadselektion —
+        kommerzielle SD-WAN-Appliances bauen im Kern auf demselben Prinzip auf, meist erweitert
+        um mehr Metriken (Jitter, Bandbreite) und mehr als zwei Pfade.
     </p>
 
     <!-- LESSONS -->
@@ -325,8 +318,8 @@ WAN-1 restored on eth0</div>
             <p class="lesson-desc">Ohne "3 gute Messungen"-Regel würde der Controller beim kleinsten Flackern ping-pong-spielen. Hysterese ist Schwingungsdämpfung — in echten Netzwerken genauso wichtig wie im Lab.</p>
         </div>
         <div class="component-card">
-            <h4>tc netem ist Gold</h4>
-            <p class="lesson-desc">Man braucht keine echten kaputten Internetanschlüsse. Ein Befehl, und man hat jede WAN-Pathologie: Latenz, Jitter, Loss, Bandbreiten-Limit. Reproduzierbar testbar.</p>
+            <h4>tc netem statt echter Störung</h4>
+            <p class="lesson-desc">Kein kaputter Internetanschluss nötig, um Failover zu testen. Ein Befehl simuliert jede WAN-Pathologie — Latenz, Jitter, Loss, Bandbreiten-Limit — reproduzierbar und ohne Seiteneffekte auf andere Verbindungen.</p>
         </div>
         <div class="component-card">
             <h4>Kein dev-Iface-Hardcoding</h4>
