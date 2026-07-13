@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SD-WAN SLA-Path-Selection Lab in Docker | Yasin Kilic</title>
-    <meta name="description" content="Ein SD-WAN-Lab in Docker: kontinuierliche Latenz/Loss-Messung über zwei WAN-Links, automatisches Failover bei SLA-Verletzung, Hysterese, tc netem — gemessene Failover-Zeit 9 Sekunden.">
+    <meta name="description" content="Ein SD-WAN-Lab in Docker: kontinuierliche Latenz/Loss-Messung über zwei WAN-Links, automatisches Failover bei SLA-Verletzung, Hysterese, tc netem — gemessene Failover-Zeit 6-9 Sekunden.">
     <link rel="icon" type="image/svg+xml" href="../favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -39,7 +39,7 @@
         eine Host-Route per <code class="inline">ip route replace</code> um. Ein
         <code class="inline">tc netem</code>-Skript injiziert künstliche Latenz und Paketverlust,
         um Failover live zu demonstrieren. Gemessene Erkennungs- und Umschaltzeit:
-        <strong>9 Sekunden</strong>.
+        <strong>6-9 Sekunden</strong>.
     </p>
     <div class="tags">
         <span class="tag">SD-WAN</span>
@@ -59,7 +59,7 @@
     <!-- STATS -->
     <div class="stat-bar">
         <div class="stat-item">
-            <span class="stat-number">9 s</span>
+            <span class="stat-number">6-9 s</span>
             <span class="stat-label">Gemessene Failover-Zeit (Erkennung + Umschaltung)</span>
         </div>
         <div class="stat-item">
@@ -67,7 +67,7 @@
             <span class="stat-label">Latenz-Schwelle (LATENCY_THRESHOLD_MS)</span>
         </div>
         <div class="stat-item">
-            <span class="stat-number">12/12</span>
+            <span class="stat-number">13/13</span>
             <span class="stat-label">Unit-Tests grün — pure Policy-Logik ohne Docker</span>
         </div>
     </div>
@@ -174,15 +174,16 @@
     </div>
 
     <p>
-        12 Unit-Tests decken alle Edge-Cases ab: beide Links gesund, WAN-1 kaputt, beide kaputt
+        13 Unit-Tests decken alle Edge-Cases ab: beide Links gesund, WAN-1 kaputt, beide kaputt
         ("bleib auf der kaputten Hauptstraße statt dich auf der kaputten Landstraße zu
-        verfahren"), Hysterese-Reset bei Relapse. Ergebnis:
+        verfahren"), Hysterese-Reset bei Relapse, plus eine Regression für einen echten Parsing-Bug
+        (dazu weiter unten mehr). Ergebnis:
     </p>
 
     <div class="code-block">
         <div class="code-header">
             <span class="code-lang">PYTEST</span>
-            <span class="code-desc">12 Tests, 0,17 Sekunden — kein Docker nötig</span>
+            <span class="code-desc">13 Tests, 0,03 Sekunden — kein Docker nötig</span>
         </div>
         <div class="code-body">$ ./venv/bin/pytest tests/ -v
 <span class="keyword">tests/test_sla_policy.py::test_decide_stays_on_wan1_when_both_healthy</span>   PASSED
@@ -190,8 +191,9 @@
 <span class="keyword">tests/test_sla_policy.py::test_decide_stays_on_wan1_if_wan2_also_bad</span>  PASSED
 <span class="keyword">tests/test_sla_policy.py::test_decide_requires_hysteresis_before_reverting</span> PASSED
 <span class="keyword">tests/test_sla_policy.py::test_decide_resets_hysteresis_counter_on_relapse</span> PASSED
+<span class="keyword">tests/test_sla_policy.py::test_parse_ping_output_loss_pct_never_exceeds_100</span> PASSED
 ...
-============================== <span class="number">12</span> passed <span class="keyword">in 0.17s</span> =============================</div>
+============================== <span class="number">13</span> passed <span class="keyword">in 0.03s</span> =============================</div>
     </div>
 
     <h3>2. Die Hände — <code class="inline">controller.py</code> (ping + route)</h3>
@@ -243,9 +245,10 @@ WAN-1 restored on eth0</div>
     </div>
 
     <!-- LIVE DEMO -->
-    <h2>Live-Failover-Demo — die gemessenen 9 Sekunden</h2>
+    <h2>Live-Failover-Demo — die gemessenen 6-9 Sekunden</h2>
     <p>
-        Der komplette Demo-Ablauf mit echten Log-Zeitstempeln. T0 ist der Moment, in dem
+        Der komplette Demo-Ablauf mit echten Log-Zeitstempeln (nach dem Parsing-Bugfix,
+        siehe Lektion 5 weiter unten). T0 ist der Moment, in dem
         <code class="inline">degrade.sh on</code> die künstliche Baustelle auf WAN-1 legt.
     </p>
 
@@ -254,29 +257,31 @@ WAN-1 restored on eth0</div>
             <span class="code-lang">CONTROLLER LOG</span>
             <span class="code-desc">Failover wan1→wan2 und Rückkehr nach Hysterese</span>
         </div>
-        <div class="code-body"><span class="comment"># T0 = 13:53:06Z  ← degrade.sh on  (Baustelle auf WAN-1)</span>
+        <div class="code-body"><span class="comment"># T0 = 14:11:46Z  ← degrade.sh on  (Baustelle auf WAN-1)</span>
 
-[<span class="number">2026-07-13T13:48:39+00:00</span>] controller started, active_path=<span class="string">wan1</span>
-[<span class="number">2026-07-13T13:53:15+00:00</span>] SLA violation detected -> switching wan1 -> wan2
-    (wan1=LinkMetrics(latency_ms=<span class="number">150.717</span>, loss_pct=<span class="number">6667.0</span>)
-     wan2=LinkMetrics(latency_ms=<span class="number">0.178</span>,  loss_pct=<span class="number">0.0</span>))
+[<span class="number">2026-07-13T14:11:46+00:00</span>] active_path=<span class="string">wan1</span> wan1=LinkMetrics(latency_ms=<span class="number">0.223</span>, loss_pct=<span class="number">0.0</span>)
+[<span class="number">2026-07-13T14:11:52+00:00</span>] SLA violation detected -> switching wan1 -> wan2
+    (wan1=LinkMetrics(latency_ms=<span class="number">152.137</span>, loss_pct=<span class="number">33.3333</span>)
+     wan2=LinkMetrics(latency_ms=<span class="number">0.179</span>,  loss_pct=<span class="number">0.0</span>))
 
-<span class="comment">#            ↑ 9 Sekunden nach T0 — Failover komplett</span>
+<span class="comment">#            ↑ 6 Sekunden nach T0 — Failover komplett</span>
 
-<span class="comment"># 13:53:28Z  ← degrade.sh off (Baustelle weg)</span>
+<span class="comment"># 14:12:14Z  ← degrade.sh off (Baustelle weg)</span>
 
-[<span class="number">2026-07-13T13:53:42+00:00</span>] SLA violation detected -> switching wan2 -> wan1
-    (wan1=LinkMetrics(latency_ms=<span class="number">0.255</span>,  loss_pct=<span class="number">0.0</span>)
-     wan2=LinkMetrics(latency_ms=<span class="number">0.186</span>,  loss_pct=<span class="number">0.0</span>))
+[<span class="number">2026-07-13T14:12:19+00:00</span>] SLA violation detected -> switching wan2 -> wan1
+    (wan1=LinkMetrics(latency_ms=<span class="number">0.405</span>,  loss_pct=<span class="number">0.0</span>)
+     wan2=LinkMetrics(latency_ms=<span class="number">0.311</span>,  loss_pct=<span class="number">0.0</span>))
 
-<span class="comment">#            ↑ 14 Sekunden nach degrade off — 3 gute Probes (Hysterese) dann zurück</span></div>
+<span class="comment">#            ↑ 5 Sekunden nach degrade off — 3 gute Probes (Hysterese) dann zurück</span></div>
     </div>
 
     <div class="callout callout-green">
         <p class="callout-text">
-            <strong>Gemessene Failover-Zeit: 9 Sekunden</strong> — vom <code class="inline" style="font-size:12px;">degrade.sh on</code>-Zeitpunkt
+            <strong>Gemessene Failover-Zeit: 6-9 Sekunden</strong> (über mehrere Läufe) — vom
+            <code class="inline" style="font-size:12px;">degrade.sh on</code>-Zeitpunkt
             bis zum <code class="inline" style="font-size:12px;">switching wan1 -> wan2</code>-Zeitstempel im Log.
-            Kein Platzhalter, keine Schätzung — reproduzierbar messbar.
+            Die Spanne kommt vom Ping-Timeout-Zyklus (bis zu 3×1s pro Link und Runde) —
+            kein Platzhalter, keine Schätzung, reproduzierbar messbar.
         </p>
     </div>
 
@@ -313,7 +318,7 @@ WAN-1 restored on eth0</div>
     <div class="component-grid lessons-grid">
         <div class="component-card">
             <h4>TDD lohnt sich</h4>
-            <p class="lesson-desc">Die 12 Unit-Tests haben zwei Denkfehler im Entscheidungsbaum aufgedeckt, bevor ich eine Zeile Controller-Code geschrieben habe. Der Test "beide kaputt → bleib auf WAN-1" war der wichtigste.</p>
+            <p class="lesson-desc">Die 13 Unit-Tests haben zwei Denkfehler im Entscheidungsbaum aufgedeckt, bevor ich eine Zeile Controller-Code geschrieben habe. Der Test "beide kaputt → bleib auf WAN-1" war der wichtigste.</p>
         </div>
         <div class="component-card">
             <h4>Hysterese ist nicht optional</h4>
@@ -326,6 +331,10 @@ WAN-1 restored on eth0</div>
         <div class="component-card">
             <h4>Kein dev-Iface-Hardcoding</h4>
             <p class="lesson-desc">Der Kernel löst das ausgehende Interface aus der Connected-Subnet-Route zum Gateway automatisch. <code class="inline" style="font-size:12px;">ip route ... via 10.81.0.20</code> ohne <code class="inline" style="font-size:12px;">dev eth0</code> — nie wieder Interface-Reihenfolge raten.</p>
+        </div>
+        <div class="component-card">
+            <h4>Handgeschriebene Testdaten reichen nicht</h4>
+            <p class="lesson-desc">Live-Log zeigte einen unmöglichen Wert: <code class="inline" style="font-size:12px;">loss_pct=6667.0</code>. Ursache: Alpines <code class="inline" style="font-size:12px;">ping</code> schreibt Verlust bei nicht-runden Quoten mit Nachkommastellen (<code class="inline" style="font-size:12px;">66.6667%</code>), meine Regex <code class="inline" style="font-size:12px;">(\d+)% packet loss</code> erwartete nur Ganzzahlen und griff sich die Ziffern hinter dem Komma. Die Entscheidung war trotzdem richtig (Schwellwert längst überschritten), aber die Metrik war Unsinn. Meine Tests hatten nie das reale Format genutzt — daher Test 13.</p>
         </div>
     </div>
 
@@ -371,7 +380,7 @@ docker compose up -d
 docker logs -f sdwan-sla-lab-site-a-1
 
 <span class="comment"># In anderem Terminal: Baustelle auf WAN-1</span>
-./scripts/degrade.sh on     <span class="comment"># → switching wan1 -> wan2 in ~9s</span>
+./scripts/degrade.sh on     <span class="comment"># → switching wan1 -> wan2 in ~6-9s</span>
 ./scripts/degrade.sh off    <span class="comment"># → switching wan2 -> wan1 nach Hysterese</span></div>
     </div>
 
