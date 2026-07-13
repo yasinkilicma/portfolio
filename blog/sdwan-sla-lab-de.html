@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SD-WAN SLA-Path-Selection Lab in Docker | Yasin Kilic</title>
+    <meta name="description" content="Ein SD-WAN-Lab in Docker: kontinuierliche Latenz/Loss-Messung über zwei WAN-Links, automatisches Failover bei SLA-Verletzung, Hysterese, tc netem — gemessene Failover-Zeit 9 Sekunden.">
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="blog.css">
+</head>
+<body>
+
+<header class="header">
+    <div class="container">
+        <h1 class="site-name"><a href="../index.html">Yasin Kilic</a></h1>
+        <nav class="nav">
+            <ul class="nav-list">
+                <li><a href="../index.html" class="nav-link">Home</a></li>
+                <li><a href="index.html" class="nav-link active">Blog</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<section class="hero">
+    <div class="hero-meta">
+        <span class="badge badge-green">SD-WAN LAB</span>
+        <span class="badge badge-blue">SLA · PATH SELECTION</span>
+        <span class="meta-date">Juli 2026</span>
+    </div>
+    <h1>SD-WAN SLA-Path-Selection in <span>Docker</span><br>— wenn ein Link stirbt, nimmt der Traffic die andere Straße</h1>
+    <p class="hero-summary">
+        Das Kernprinzip von SD-WAN in einem Docker-Lab: ein Python-Controller auf
+        <code class="inline">site-a</code> pingt sekündlich zwei simulierte WAN-Links, entscheidet
+        mit einer reinen, unit-getesteten Policy-Funktion, welcher Pfad aktiv ist, und schaltet
+        eine Host-Route per <code class="inline">ip route replace</code> um. Ein
+        <code class="inline">tc netem</code>-Skript injiziert künstliche Latenz und Paketverlust,
+        um Failover live zu demonstrieren. Gemessene Erkennungs- und Umschaltzeit:
+        <strong>9 Sekunden</strong>.
+    </p>
+    <div class="tags">
+        <span class="tag">SD-WAN</span>
+        <span class="tag">SLA Path Selection</span>
+        <span class="tag">tc netem</span>
+        <span class="tag">Docker</span>
+        <span class="tag">Python</span>
+        <span class="tag">Hysterese</span>
+        <span class="tag">pytest</span>
+        <span class="tag">iproute2</span>
+        <span class="tag">Alpine Linux</span>
+    </div>
+</section>
+
+<main class="content">
+
+    <!-- STATS -->
+    <div class="stat-bar">
+        <div class="stat-item">
+            <span class="stat-number">9 s</span>
+            <span class="stat-label">Gemessene Failover-Zeit (Erkennung + Umschaltung)</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">80 ms</span>
+            <span class="stat-label">Latenz-Schwelle (LATENCY_THRESHOLD_MS)</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">12/12</span>
+            <span class="stat-label">Unit-Tests grün — pure Policy-Logik ohne Docker</span>
+        </div>
+    </div>
+
+    <!-- MOTIVATION -->
+    <h2>Das Problem, das SD-WAN löst</h2>
+    <p>
+        Eine Zweigstelle hat zwei Internetanschlüsse: einen schnellen Glasfaser-Link (WAN-1)
+        und einen langsameren LTE-Backup (WAN-2). Normalerweise läuft alles über WAN-1. Was
+        passiert, wenn ein Bagger das Glasfaserkabel durchtrennt? Ohne SD-WAN bricht die
+        Verbindung ab, Mitarbeiter können nicht arbeiten, jemand muss manuell umschalten.
+    </p>
+    <p>
+        <strong>Mit SD-WAN</strong> merkt ein Controller in Sekunden, dass WAN-1 kaputt ist,
+        und schaltet automatisch auf WAN-2 um. Niemand merkt etwas außer einem kurzen Blinzeln.
+        Das ist der ganze Zauber — und genau das baut dieses Lab nach, mit zwei Alpine-Containern
+        und zwei isolierten Docker-Netzwerken.
+    </p>
+
+    <div class="callout callout-blue">
+        <p class="callout-text">
+            <strong>Die Analogie:</strong> Stell dir vor, du fährst zur Arbeit und hast zwei
+            Straßen. Auf dem Beifahrersitz sitzt ein Freund, der ständig Google Maps checkt.
+            *"Straße A ist frei? Bleib auf A. Oh — Stau mit 150&nbsp;ms Latenz und 20&nbsp;% Loss?
+            Nimm Straße B!"* Genau das macht der Controller — nur mit ICMP-Pings statt Google Maps.
+        </p>
+    </div>
+
+    <!-- ARCHITEKTUR -->
+    <h2>Topologie und Datenfluss</h2>
+    <p>
+        Zwei Alpine-Container, zwei isolierte Docker-Bridges, eine Service-IP auf dem Loopback
+        des Responders. Der Controller auf <code class="inline">site-a</code> misst beide Links
+        und hält eine Host-Route <code class="inline">10.100.0.1/32</code>, die er zwischen den
+        zwei Next-Hops hin- und herschaltet.
+    </p>
+
+    <div class="arch-box">
+<span class="highlight">Container: Site-A (Controller / Branch)</span>    <span class="highlight" style="float:right;">Container: Site-B (Responder / Hub)</span>
+<span class="highlight2">10.81.0.10 (WAN-1)</span>                              <span class="highlight2" style="float:right;">10.81.0.20 (WAN-1)</span>
+<span class="highlight2">10.82.0.10 (WAN-2)</span>                              <span class="highlight2" style="float:right;">10.82.0.20 (WAN-2)</span>
+      │                                                        │
+      │  wan1-net (10.81.0.0/24)  ─────────────────────────    │
+      │  wan2-net (10.82.0.0/24)  ─────────────────────────    │
+      │                                                        │
+      │  controller.py: ping → decide → ip route replace       │
+      │                                                        │
+<span class="highlight3">Route: 10.100.0.1/32 via 10.81.0.20 (WAN-1, aktiv)</span>     <span class="highlight3" style="float:right;">10.100.0.1/32 auf lo</span>
+    </div>
+
+    <p>
+        Die Service-IP <code class="inline">10.100.0.1/32</code> ist an das Loopback-Interface
+        von <code class="inline">site-b</code> gebunden. Das ist das Ziel, das
+        <code class="inline">site-a</code> erreichen will — stell dir vor, das ist die IP des
+        Firmen-Wikis oder der Datenbank. Der Controller schaltet nur die Route zu dieser IP
+        zwischen den zwei Next-Hops um, nicht den gesamten Default-Route-Traffic.
+    </p>
+
+    <!-- IMPLEMENTIERUNG -->
+    <h2>Die drei Bausteine des Controllers</h2>
+
+    <h3>1. Das Gehirn — <code class="inline">sla_policy.py</code> (pure, unit-getestet)</h3>
+    <p>
+        Die Entscheidungslogik ist bewusst I/O-frei gehalten: keine Pings, keine
+        <code class="inline">ip route</code>-Aufrufe. Nur Datenklassen und eine
+        <code class="inline">decide()</code>-Funktion. Dadurch lässt sie sich in Millisekunden
+        mit pytest testen — ohne Docker, ohne Root.
+    </p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">PYTHON</span>
+            <span class="code-desc">sla_policy.py — Schwellwerte und Hysterese</span>
+        </div>
+        <div class="code-body"><span class="keyword">LATENCY_THRESHOLD_MS</span> = <span class="number">80.0</span>
+<span class="keyword">LOSS_THRESHOLD_PCT</span>   = <span class="number">5.0</span>
+<span class="keyword">HYSTERESIS_GOOD_COUNT</span> = <span class="number">3</span>
+
+<span class="keyword">def</span> <span class="cmd">link_ok</span>(metrics: LinkMetrics) -> bool:
+    <span class="keyword">if</span> metrics.latency_ms <span class="keyword">is</span> <span class="keyword">None</span>:
+        <span class="keyword">return</span> <span class="keyword">False</span>
+    <span class="keyword">return</span> (metrics.latency_ms &lt;= LATENCY_THRESHOLD_MS
+            <span class="keyword">and</span> metrics.loss_pct &lt;= LOSS_THRESHOLD_PCT)
+
+<span class="keyword">def</span> <span class="cmd">decide</span>(state, wan1, wan2) -> str:
+    <span class="keyword">if</span> state.active_path == <span class="string">"wan1"</span>:
+        <span class="keyword">if</span> link_ok(wan1): <span class="keyword">return</span> <span class="string">"wan1"</span>
+        <span class="keyword">return</span> <span class="string">"wan2"</span> <span class="keyword">if</span> link_ok(wan2) <span class="keyword">else</span> <span class="string">"wan1"</span>
+    <span class="comment"># active_path == "wan2" — Hysterese vor Rückwechsel</span>
+    <span class="keyword">if</span> link_ok(wan1):
+        state.good_streak_on_primary += <span class="number">1</span>
+        <span class="keyword">if</span> state.good_streak_on_primary &gt;= HYSTERESIS_GOOD_COUNT:
+            <span class="keyword">return</span> <span class="string">"wan1"</span>
+    <span class="keyword">return</span> <span class="string">"wan2"</span></div>
+    </div>
+
+    <div class="callout callout-yellow">
+        <p class="callout-text">
+            <strong>Warum Hysterese?</strong> Ohne die "3 gute Messungen"-Regel würde der
+            Controller beim kleinsten Flackern hin- und herspringen — TCP-Verbindungen brechen
+            ständig ab und werden neu aufgebaut, schlimmer als der ursprüngliche Fehler.
+            Hysterese ist Schwingungsdämpfung für Netzwerk-Entscheidungen.
+        </p>
+    </div>
+
+    <p>
+        12 Unit-Tests decken alle Edge-Cases ab: beide Links gesund, WAN-1 kaputt, beide kaputt
+        ("bleib auf der kaputten Hauptstraße statt dich auf der kaputten Landstraße zu
+        verfahren"), Hysterese-Reset bei Relapse. Ergebnis:
+    </p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">PYTEST</span>
+            <span class="code-desc">12 Tests, 0,17 Sekunden — kein Docker nötig</span>
+        </div>
+        <div class="code-body">$ ./venv/bin/pytest tests/ -v
+<span class="keyword">tests/test_sla_policy.py::test_decide_stays_on_wan1_when_both_healthy</span>   PASSED
+<span class="keyword">tests/test_sla_policy.py::test_decide_fails_over_when_wan1_degrades</span>    PASSED
+<span class="keyword">tests/test_sla_policy.py::test_decide_stays_on_wan1_if_wan2_also_bad</span>  PASSED
+<span class="keyword">tests/test_sla_policy.py::test_decide_requires_hysteresis_before_reverting</span> PASSED
+<span class="keyword">tests/test_sla_policy.py::test_decide_resets_hysteresis_counter_on_relapse</span> PASSED
+...
+============================== <span class="number">12</span> passed <span class="keyword">in 0.17s</span> =============================</div>
+    </div>
+
+    <h3>2. Die Hände — <code class="inline">controller.py</code> (ping + route)</h3>
+    <p>
+        Der Controller verbindet das Gehirn mit dem Kernel. Pro Sekunde: zwei Pings
+        (einer über WAN-1, einer über WAN-2), Parsen der stdout, <code class="inline">decide()</code>,
+        und falls der Entscheid vom aktuellen Pfad abweicht: <code class="inline">ip route replace</code>
+        mit Zeitstempel loggen.
+    </p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">PYTHON</span>
+            <span class="code-desc">controller.py — Probe-Loop mit Route-Switching</span>
+        </div>
+        <div class="code-body"><span class="keyword">def</span> <span class="cmd">probe_loop</span>():
+    state = ControllerState(active_path=<span class="string">"wan1"</span>)
+    <span class="keyword">while</span> <span class="keyword">True</span>:
+        wan1 = run_ping(WAN1_GW)
+        wan2 = run_ping(WAN2_GW)
+        new_path = decide(state, wan1, wan2)
+        <span class="keyword">if</span> new_path != state.active_path:
+            log(<span class="string">f"SLA violation -> switching {state.active_path} -> {new_path}"</span>)
+            apply_route(new_path)   <span class="comment"># ip route replace 10.100.0.1/32 via &lt;gw&gt;</span>
+            state.active_path = new_path
+        time.sleep(PROBE_INTERVAL_SECONDS)</div>
+    </div>
+
+    <h3>3. Der Bagger-Joker — <code class="inline">scripts/degrade.sh</code></h3>
+    <p>
+        Um Failover live zu demonstrieren, braucht man eine künstliche Baustelle.
+        <code class="inline">tc netem</code> ist ein Linux-Kernel-Tool, das Traffic gezielt
+        verschlechtert — Latenz, Paketverlust, Jitter. Das Skript auto-detektiert das
+        WAN-1-Interface anhand der IP-Adresse (kein hardcodiertes <code class="inline">eth0</code>).
+    </p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">BASH</span>
+            <span class="code-desc">degrade.sh — künstliche WAN-Degradation an/aus</span>
+        </div>
+        <div class="code-body"><span class="comment"># WAN-1 verschlechtern: 150ms Latenz + 20% Paketverlust</span>
+$ ./scripts/degrade.sh on
+WAN-1 degraded on eth0 (150ms delay, 20% loss)
+
+<span class="comment"># WAN-1 wiederherstellen</span>
+$ ./scripts/degrade.sh off
+WAN-1 restored on eth0</div>
+    </div>
+
+    <!-- LIVE DEMO -->
+    <h2>Live-Failover-Demo — die gemessenen 9 Sekunden</h2>
+    <p>
+        Der komplette Demo-Ablauf mit echten Log-Zeitstempeln. T0 ist der Moment, in dem
+        <code class="inline">degrade.sh on</code> die künstliche Baustelle auf WAN-1 legt.
+    </p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">CONTROLLER LOG</span>
+            <span class="code-desc">Failover wan1→wan2 und Rückkehr nach Hysterese</span>
+        </div>
+        <div class="code-body"><span class="comment"># T0 = 13:53:06Z  ← degrade.sh on  (Baustelle auf WAN-1)</span>
+
+[<span class="number">2026-07-13T13:48:39+00:00</span>] controller started, active_path=<span class="string">wan1</span>
+[<span class="number">2026-07-13T13:53:15+00:00</span>] SLA violation detected -> switching wan1 -> wan2
+    (wan1=LinkMetrics(latency_ms=<span class="number">150.717</span>, loss_pct=<span class="number">6667.0</span>)
+     wan2=LinkMetrics(latency_ms=<span class="number">0.178</span>,  loss_pct=<span class="number">0.0</span>))
+
+<span class="comment">#            ↑ 9 Sekunden nach T0 — Failover komplett</span>
+
+<span class="comment"># 13:53:28Z  ← degrade.sh off (Baustelle weg)</span>
+
+[<span class="number">2026-07-13T13:53:42+00:00</span>] SLA violation detected -> switching wan2 -> wan1
+    (wan1=LinkMetrics(latency_ms=<span class="number">0.255</span>,  loss_pct=<span class="number">0.0</span>)
+     wan2=LinkMetrics(latency_ms=<span class="number">0.186</span>,  loss_pct=<span class="number">0.0</span>))
+
+<span class="comment">#            ↑ 14 Sekunden nach degrade off — 3 gute Probes (Hysterese) dann zurück</span></div>
+    </div>
+
+    <div class="callout callout-green">
+        <p class="callout-text">
+            <strong>Gemessene Failover-Zeit: 9 Sekunden</strong> — vom <code class="inline" style="font-size:12px;">degrade.sh on</code>-Zeitpunkt
+            bis zum <code class="inline" style="font-size:12px;">switching wan1 -> wan2</code>-Zeitstempel im Log.
+            Kein Platzhalter, keine Schätzung — reproduzierbar messbar.
+        </p>
+    </div>
+
+    <!-- ENTSCHEIDUNGSBAUM -->
+    <h2>Der Entscheidungsbaum (für Neugierige)</h2>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">LOGIK</span>
+            <span class="code-desc">decide() in Worten — keine Magie, nur Schwellwerte</span>
+        </div>
+        <div class="code-body"><span class="comment"># Auf WAN-1:</span>
+<span class="keyword">if</span> wan1 ok:      <span class="cmd">→ bleib auf wan1</span>
+<span class="keyword">else if</span> wan2 ok: <span class="cmd">→ wechsle zu wan2</span>
+<span class="keyword">else</span>:           <span class="cmd">→ bleib auf wan1</span> (kaputte Hauptstraße &gt; kaputte Landstraße)
+
+<span class="comment"># Auf WAN-2:</span>
+<span class="keyword">if</span> wan1 ok:
+    streak += 1
+    <span class="keyword">if</span> streak &gt;= <span class="number">3</span>: <span class="cmd">→ wechsle zurück zu wan1, streak=0</span>
+    <span class="keyword">else</span>:          <span class="cmd">→ bleib auf wan2</span> (noch nicht genug Beweise)
+<span class="keyword">else</span>:               <span class="cmd">→ streak=0, bleib auf wan2</span></div>
+    </div>
+
+    <p>
+        Das ist alles. Keine KI, kein Machine-Learning. Nur Schwellwerte, ein Zähler und
+        gesunder Menschenverstand — und genau das ist es, was unter der Haube teurer
+        SD-WAN-Appliances passiert.
+    </p>
+
+    <!-- LESSONS -->
+    <h2>Was ich gelernt habe</h2>
+
+    <div class="component-grid lessons-grid">
+        <div class="component-card">
+            <h4>TDD lohnt sich</h4>
+            <p class="lesson-desc">Die 12 Unit-Tests haben zwei Denkfehler im Entscheidungsbaum aufgedeckt, bevor ich eine Zeile Controller-Code geschrieben habe. Der Test "beide kaputt → bleib auf WAN-1" war der wichtigste.</p>
+        </div>
+        <div class="component-card">
+            <h4>Hysterese ist nicht optional</h4>
+            <p class="lesson-desc">Ohne "3 gute Messungen"-Regel würde der Controller beim kleinsten Flackern ping-pong-spielen. Hysterese ist Schwingungsdämpfung — in echten Netzwerken genauso wichtig wie im Lab.</p>
+        </div>
+        <div class="component-card">
+            <h4>tc netem ist Gold</h4>
+            <p class="lesson-desc">Man braucht keine echten kaputten Internetanschlüsse. Ein Befehl, und man hat jede WAN-Pathologie: Latenz, Jitter, Loss, Bandbreiten-Limit. Reproduzierbar testbar.</p>
+        </div>
+        <div class="component-card">
+            <h4>Kein dev-Iface-Hardcoding</h4>
+            <p class="lesson-desc">Der Kernel löst das ausgehende Interface aus der Connected-Subnet-Route zum Gateway automatisch. <code class="inline" style="font-size:12px;">ip route ... via 10.81.0.20</code> ohne <code class="inline" style="font-size:12px;">dev eth0</code> — nie wieder Interface-Reihenfolge raten.</p>
+        </div>
+    </div>
+
+    <!-- NÄCHSTE SCHRITTE -->
+    <h2>Nächste Schritte</h2>
+    <p>
+        Dieses Lab deckt bewusst nur einen Aspekt von SD-WAN ab: die SLA-basierte
+        Pfadselektion. Was noch fehlt — und anhand der Vorgängerprojekte
+        <code class="inline">ipsec-vpn-lab</code> und <code class="inline">ipsec-vpn-ikev2</code>
+        direkt weitergeht:
+    </p>
+
+    <div class="callout callout-yellow">
+        <p class="callout-text">
+            <strong>Als Nächstes:</strong> <strong>ADVPN Hub-Spoke</strong> (3+ Sites,
+            dynamische Shortcut-Tunnel), <strong>BGP over VTI</strong> (richtiges dynamisches
+            Routing statt einer statischen Host-Route), und die Kombination mit
+            <strong>IPSec</strong> — dann hat man genau das, was kommerzielle SD-WAN-Produkte
+            machen.
+        </p>
+    </div>
+
+    <!-- QUICKSTART -->
+    <h2>Selbst ausprobieren</h2>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">BASH</span>
+            <span class="code-desc">Schnellstart — Unit-Tests ohne Docker, dann das ganze Lab</span>
+        </div>
+        <div class="code-body">git clone https://github.com/yasinkilicma/sdwan-sla-lab
+<span class="cmd">cd</span> sdwan-sla-lab
+
+<span class="comment"># Unit-Tests — kein Docker nötig</span>
+python3 -m venv venv && ./venv/bin/pip install -r requirements-dev.txt
+./venv/bin/pytest tests/ -v
+
+<span class="comment"># Das ganze Lab hochfahren</span>
+docker compose build
+docker compose up -d
+
+<span class="comment"># Controller-Log live ansehen</span>
+docker logs -f sdwan-sla-lab-site-a-1
+
+<span class="comment"># In anderem Terminal: Baustelle auf WAN-1</span>
+./scripts/degrade.sh on     <span class="comment"># → switching wan1 -> wan2 in ~9s</span>
+./scripts/degrade.sh off    <span class="comment"># → switching wan2 -> wan1 nach Hysterese</span></div>
+    </div>
+
+    <!-- SOURCE -->
+    <div class="callout callout-green">
+        <p class="callout-text">
+            <strong>Quellcode auf GitHub:</strong> Vollständige Implementierung, Docker-Compose,
+            Unit-Tests und Dokumentation versioniert und öffentlich.
+            <a href="https://github.com/yasinkilicma/sdwan-sla-lab" target="_blank"
+               style="color:var(--accent3);text-decoration:none;"> → yasinkilicma/sdwan-sla-lab</a>
+        </p>
+    </div>
+
+</main>
+
+<footer class="footer">
+    <div class="container">
+        <p>© 2026 Yasin Kilic</p>
+    </div>
+</footer>
+
+</body>
+</html>
