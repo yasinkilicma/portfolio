@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FortiGate CLI Grundlagen &amp; eine Splunk-Lizenzverletzung zurückverfolgt | Yasin Kilic</title>
+    <meta name="description" content="Die fünf FortiOS-CLI-Grundbefehle, ein read-only Rundgang durch eine FortiGate-VM — und wie die Session-Liste zur Ursache einer Splunk-Lizenzverletzung führte.">
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="blog.css">
+</head>
+<body>
+
+<header class="header">
+    <div class="container">
+        <h1 class="site-name"><a href="../index.html">Yasin Kilic</a></h1>
+        <nav class="nav">
+            <ul class="nav-list">
+                <li><a href="../index.html" class="nav-link">Home</a></li>
+                <li><a href="index.html" class="nav-link active">Blog</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<section class="hero">
+    <div class="hero-meta">
+        <span class="badge badge-green">CLI GRUNDLAGEN</span>
+        <span class="badge badge-blue">FORTIOS · SPLUNK</span>
+        <span class="meta-date">Juli 2026</span>
+    </div>
+    <h1>FortiGate CLI Grundlagen — und eine <span>Splunk-Lizenzverletzung</span> zurückverfolgt</h1>
+    <p class="hero-summary">
+        Begonnen als reine CLI-Übung auf einer FortiGate-VM: die fünf Grundbefehle, die
+        Config-Navigation, ein read-only Rundgang durch Interfaces, Routing und Policies.
+        Am Ende erklärte genau dieser Rundgang einen ganz anderen Fehler von früher am Tag —
+        warum Splunk plötzlich keine Suchen mehr zuließ.
+    </p>
+    <div class="tags">
+        <span class="tag">FortiOS CLI</span>
+        <span class="tag">get / show / config</span>
+        <span class="tag">Firewall Policy</span>
+        <span class="tag">Syslog Forwarding</span>
+        <span class="tag">Splunk Lizenz</span>
+        <span class="tag">Log-Volumen</span>
+    </div>
+</section>
+
+<main class="content">
+
+    <div class="stat-bar">
+        <div class="stat-item">
+            <span class="stat-number">5</span>
+            <span class="stat-label">CLI-Grundbefehle: get / show / config / execute / diagnose</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">5514/udp</span>
+            <span class="stat-label">Syslog-Port, über den die Logs liefen</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">logtraffic all</span>
+            <span class="stat-label">Die Policy-Einstellung, die die Lizenz sprengte</span>
+        </div>
+    </div>
+
+    <h2>Fünf Verben, eine Grammatik</h2>
+    <p>
+        Fast alles in der FortiOS-CLI reduziert sich auf einen von fünf Befehlen. Sobald man
+        weiß, wofür jeder einzelne gedacht ist, hört unbekannte Ausgabe auf, einschüchternd zu sein.
+    </p>
+
+    <div class="component-grid">
+        <div class="component-card">
+            <h4 class="comp-title">get</h4>
+            <p class="comp-desc">Liest den laufenden Zustand — was die Box gerade tatsächlich tut. <code class="inline">get system status</code></p>
+        </div>
+        <div class="component-card">
+            <h4 class="comp-title">show</h4>
+            <p class="comp-desc">Liest die gespeicherte Konfiguration, im Config-Script-Format. <code class="inline">show firewall policy</code></p>
+        </div>
+        <div class="component-card">
+            <h4 class="comp-title">config</h4>
+            <p class="comp-desc">Betritt einen Config-Kontext, um Einstellungen zu ändern. <code class="inline">config system interface</code></p>
+        </div>
+        <div class="component-card">
+            <h4 class="comp-title">execute</h4>
+            <p class="comp-desc">Führt eine einmalige Aktion aus — keine Einstellung. <code class="inline">execute ping 8.8.8.8</code></p>
+        </div>
+        <div class="component-card">
+            <h4 class="comp-title">diagnose</h4>
+            <p class="comp-desc">Low-Level-Troubleshooting, nah am Kernel. <code class="inline">diagnose sys top</code></p>
+        </div>
+    </div>
+
+    <h3>Die eine Regel, über die jeder Neuling stolpert</h3>
+    <p>
+        <code class="inline">execute</code>, <code class="inline">get</code> und <code class="inline">diagnose</code>
+        funktionieren nur auf der Root-Ebene. Sobald man einen <code class="inline">config</code>-Block betritt,
+        ändert sich die Grammatik — <code class="inline">edit</code>, <code class="inline">next</code>,
+        <code class="inline">end</code>, <code class="inline">abort</code> übernehmen, bis man wieder rausklettert.
+    </p>
+
+    <div class="arch-box">FGVMEVIJFXCOFND1 #  <span class="highlight">config system interface</span>
+     │
+FGVMEVIJFXCOFND1 (interface) #  <span class="highlight">edit "port1"</span>
+     │
+FGVMEVIJFXCOFND1 (port1) #  <span class="highlight2">set ip 192.168.1.1 255.255.255.0</span>
+     │
+FGVMEVIJFXCOFND1 (port1) #  <span class="highlight3">next</span>     → Objekt speichern, zurück zur Tabelle
+FGVMEVIJFXCOFND1 (interface) #  <span class="highlight3">end</span>       → alles speichern, zurück zur Root-Ebene
+     │
+FGVMEVIJFXCOFND1 #</div>
+
+    <div class="callout callout-yellow">
+        <span class="callout-icon">⚠️</span>
+        <p class="callout-text">
+            <strong>Typischer Fehler:</strong> <code class="inline">execute ping 8.8.8.8</code> innerhalb von
+            <code class="inline">(interface) #</code> eingeben — <em>command parse error</em>. Kein kaputtes
+            Gerät, nur die falsche Grammatik für die aktuelle Ebene. Erst <code class="inline">end</code> oder
+            <code class="inline">abort</code>, dann funktioniert <code class="inline">execute</code> wieder.
+        </p>
+    </div>
+
+    <h2>Durch die Box: ein read-only Rundgang</h2>
+    <p>
+        Ein reiner Lesedurchgang über eine FortiGate-ARM64-KVM-VM — Version, Interfaces,
+        Nachbarn, Routing, Policy — ausschließlich mit <code class="inline">get</code>,
+        <code class="inline">show</code> und <code class="inline">diagnose</code>.
+    </p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">GET SYSTEM STATUS</span>
+            <span class="code-desc">Identität und Lizenzstatus der VM</span>
+        </div>
+        <div class="code-body">FGVMEVIJFXCOFND1 # get system status
+<span class="comment"># Version, Lizenz, HA-Modus — der Ausweis der Box</span>
+Version: FortiGate-ARM64-KVM v7.4.12,build2902,260505 (GA.M)
+License Status: <span class="cmd">Valid</span>
+VM Resources: 1 CPU/1 allowed, 1990 MB RAM/2048 MB allowed
+Operation Mode: NAT   Current HA mode: standalone</div>
+    </div>
+    <p>
+        Eine virtuelle FortiGate unter KVM, standalone, im gerouteten/NAT-Modus, auf Lab-Größe
+        zugeschnitten (1 vCPU / 2&nbsp;GB Cap). Signaturdatenbanken aus 2015–2018 sind bei einer
+        Offline-Eval-Box normal — kein Fehler.
+    </p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">GET SYSTEM INTERFACE PHYSICAL</span>
+            <span class="code-desc">Live-Zustand statt gespeicherter Config</span>
+        </div>
+        <div class="code-body">FGVMEVIJFXCOFND1 # get system interface physical
+==[port1]  mode: dhcp    ip: 192.168.64.2/24   status: <span class="cmd">up</span>
+==[port2]  mode: static  ip: 10.66.66.1/24     status: <span class="cmd">up</span>
+==[port3]  mode: static  ip: 192.168.1.99/24   status: <span class="cmd">up</span></div>
+    </div>
+    <p>
+        <code class="inline">show system interface</code> zeigt, was <em>konfiguriert</em> wurde;
+        <code class="inline">get … physical</code> zeigt, was gerade tatsächlich <em>läuft</em>.
+        Port1 ist der DHCP-WAN-Uplink, Port2 und Port3 sind statische interne Lab-Segmente.
+    </p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">GET ROUTER INFO ROUTING-TABLE ALL</span>
+            <span class="code-desc">Cisco-Style Route-Codes statt Kernel-Rohdaten</span>
+        </div>
+        <div class="code-body">FGVMEVIJFXCOFND1 # get router info routing-table all
+<span class="cmd">S*</span>      0.0.0.0/0 [5/0] via 192.168.64.1, port1
+<span class="cmd">S</span>       10.0.0.0/8 [10/0] via 192.168.64.1, port1
+<span class="comment">C</span>       10.66.66.0/24 is directly connected, port2
+<span class="comment">C</span>       192.168.1.0/24 is directly connected, port3
+<span class="comment">C</span>       192.168.64.0/24 is directly connected, port1</div>
+    </div>
+    <p>
+        <code class="inline">S*</code> markiert die Default-Route, die tatsächlich greift, wenn nichts
+        Spezifischeres passt. <code class="inline">C</code>-Routen entstehen automatisch, weil ein
+        Interface diese Adresse trägt. Die breite <code class="inline">10.0.0.0/8</code>-Route fängt nur
+        Adressen ab, die nicht schon von den spezifischeren <code class="inline">/24</code>-Netzen
+        abgedeckt sind — Longest-Prefix-Match wie bei jedem Router.
+    </p>
+
+    <div class="code-block">
+        <div class="code-header">
+            <span class="code-lang">SHOW FIREWALL POLICY</span>
+            <span class="code-desc">Drei Regeln, zwei sehr unterschiedliche Sicherheitshaltungen</span>
+        </div>
+        <div class="code-body"><span class="keyword">edit 1</span>  "LAN-to-WAN"        port3 → port1   ALL     nat, av, ips, <span class="cmd">logtraffic all</span>
+<span class="keyword">edit 2</span>  "Management-HTTPS"  port1 → port1   HTTPS   —
+<span class="keyword">edit 3</span>  "Test-Policy"       port2 → port1   ALL     nat, <span class="comment">keine Profile</span></div>
+    </div>
+    <p>
+        Policy&nbsp;1 schickt den Traffic von Port3 vollständig inspiziert und vollständig geloggt
+        ins Internet; Policy&nbsp;3 macht dasselbe für Port2 — ganz ohne Security-Profile. Policy&nbsp;2s
+        <code class="inline">port1 → port1</code>-Paarung ist kein durchlaufender Traffic, sondern regelt
+        den Zugriff <em>auf die Box selbst</em> über ihr WAN-Interface.
+    </p>
+
+    <h2>Die Spur: warum Splunk keine Suche mehr zuließ</h2>
+    <p>
+        Die Session begann als CLI-Übung ohne Bezug zu irgendetwas anderem. Am Ende erklärte sie
+        einen Splunk-Fehler von früher am selben Tag.
+    </p>
+
+    <div class="callout callout-red">
+        <span class="callout-icon">⛔</span>
+        <p class="callout-text">
+            <strong>Symptom:</strong> Error in 'litsearch' command: Your Splunk license expired or
+            you have exceeded your license limit too many times.
+        </p>
+    </div>
+
+    <div class="kc-item">
+        <div class="kc-left"><div class="kc-dot">1</div><div class="kc-line"></div></div>
+        <div class="kc-body">
+            <div class="kc-phase">SESSION-LISTE</div>
+            <div class="kc-title">Ein ruhiger, aber ununterbrochener Traffic-Flow</div>
+            <div class="kc-desc"><code class="inline">get system session list</code> zeigt eine UDP-Session
+            von der FortiGate zu <code class="inline">192.168.64.1:5514</code> — dem Mac Mini Host, auf
+            dem klassischen Syslog-Port.</div>
+        </div>
+    </div>
+    <div class="kc-item">
+        <div class="kc-left"><div class="kc-dot">2</div><div class="kc-line"></div></div>
+        <div class="kc-body">
+            <div class="kc-phase">BESTÄTIGUNG</div>
+            <div class="kc-title">Der Forwarder, live nachgelesen</div>
+            <div class="kc-desc">
+                <div class="code-block" style="margin:10px 0 0;">
+                    <div class="code-header"><span class="code-lang">SHOW LOG SYSLOGD SETTING</span></div>
+                    <div class="code-body">config log syslogd setting
+    set status <span class="cmd">enable</span>
+    set server "192.168.64.1"
+    set port 5514
+end</div>
+                </div>
+                Die FortiGate streamt ihre Logs kontinuierlich auf denselben Host, auf dem Splunk läuft —
+                über Splunks Syslog-Input-Port.
+            </div>
+        </div>
+    </div>
+    <div class="kc-item">
+        <div class="kc-left"><div class="kc-dot">3</div><div class="kc-line"></div></div>
+        <div class="kc-body">
+            <div class="kc-phase">URSACHE</div>
+            <div class="kc-title">Die Verbindung zu Policy 1</div>
+            <div class="kc-desc">Policy&nbsp;1 (<em>LAN-to-WAN</em>) läuft mit <code class="inline">logtraffic all</code>
+            — nicht nur Security-Events, sondern jede einzelne Session. Jede DNS-Anfrage, jeder Ping,
+            jede Management-HTTPS-Session: alles, kontinuierlich, ins tägliche Ingest-Kontingent von
+            Splunk. Über Tage hinweg im Dauerbetrieb genau die Art von Hintergrundvolumen, die
+            Lizenzverletzungen anhäuft.</div>
+        </div>
+    </div>
+    <div class="kc-item">
+        <div class="kc-left"><div class="kc-dot">4</div></div>
+        <div class="kc-body">
+            <div class="kc-phase">FIX</div>
+            <div class="kc-title">Den Hahn zudrehen — und nachprüfen, nicht vertrauen</div>
+            <div class="kc-desc">
+                <div class="code-block" style="margin:10px 0 0;">
+                    <div class="code-header"><span class="code-lang">CONFIG LOG SYSLOGD SETTING</span></div>
+                    <div class="code-body">FGVMEVIJFXCOFND1 # config log syslogd setting
+(setting) # set status disable
+(setting) # end
+FGVMEVIJFXCOFND1 # show log syslogd setting
+config log syslogd setting
+end</div>
+                </div>
+                Keine <code class="inline">set status enable</code>-Zeile mehr — Forwarding ist aus,
+                bestätigt durch erneutes Auslesen der Config statt durch bloßes Vertrauen auf den
+                Befehl, der sie geändert hat.
+            </div>
+        </div>
+    </div>
+
+    <h2>Was ich gelernt habe</h2>
+
+    <div class="component-grid lessons-grid">
+        <div class="component-card">
+            <h4>Prompt = Grammatik</h4>
+            <p class="lesson-desc">Der Prompt zeigt die aktuelle Ebene. <code class="inline" style="font-size:12px;">FGVM… #</code> erlaubt <code class="inline" style="font-size:12px;">execute</code>/<code class="inline" style="font-size:12px;">diagnose</code>; <code class="inline" style="font-size:12px;">(interface) #</code> erlaubt nur <code class="inline" style="font-size:12px;">edit</code>/<code class="inline" style="font-size:12px;">next</code>/<code class="inline" style="font-size:12px;">end</code>.</p>
+        </div>
+        <div class="component-card">
+            <h4>get ≠ show</h4>
+            <p class="lesson-desc"><code class="inline" style="font-size:12px;">show</code> liest die gespeicherte Absicht, <code class="inline" style="font-size:12px;">get</code> liest den tatsächlichen Live-Zustand. Beide Blickwinkel zu kennen erklärt Diskrepanzen sofort.</p>
+        </div>
+        <div class="component-card">
+            <h4>logtraffic all ist teuer</h4>
+            <p class="lesson-desc">Volles Session-Logging auf einer Policy zählt gegen jedes nachgelagerte SIEM-Lizenzkontingent — auch für uninteressanten Traffic wie DNS-Lookups und Pings.</p>
+        </div>
+        <div class="component-card">
+            <h4>Nach dem Fix nachlesen</h4>
+            <p class="lesson-desc"><code class="inline" style="font-size:12px;">set status disable</code> im Editor zu tippen beweist nichts — erst <code class="inline" style="font-size:12px;">show log syslogd setting</code> danach bestätigt, dass es auch angekommen ist.</p>
+        </div>
+    </div>
+
+    <div class="callout callout-blue">
+        <span class="callout-icon">💡</span>
+        <p class="callout-text">
+            <strong>Nächster Schritt:</strong> Syslog-Forwarding wieder aktivieren, aber gezielt —
+            <code class="inline">set logtraffic utm</code> auf Policy&nbsp;1, damit nur sicherheitsrelevante
+            Events zählen, statt jeder einzelnen Session.
+        </p>
+    </div>
+
+</main>
+
+<footer class="footer">
+    <div class="container">
+        <p>© 2026 Yasin Kilic</p>
+    </div>
+</footer>
+
+</body>
+</html>
